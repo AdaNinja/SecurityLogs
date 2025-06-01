@@ -1,0 +1,7 @@
+<Sysmon schemaversion="4.21">
+  <!-- 进程创建 -->
+  <EventFiltering>
+    <ProcessCreate onmatch="include" />
+    <!-- 文件创建、网络连接等可按需开启 -->
+  </EventFiltering>
+</Sysmon>

@@ -1,0 +1,10 @@
+{
+    "initial_malicious_pids": [3456, 7890],
+    "malicious_ips": ["10.0.0.5","1.2.3.4"],
+    "host_csv": {
+      "win_vm": "windows_security.csv",
+      "victim1": "victim1_audit.csv",
+      "victim2": "victim2_audit.csv"
+    }
+  }
+  

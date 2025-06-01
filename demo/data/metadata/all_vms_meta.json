@@ -1,0 +1,27 @@
+{
+  "run_timestamp": "2025-05-25T16:23:42.570575Z",
+  "random_seed": 2280497841,
+  "files_included": [
+    "Security.evtx",
+    "SysmonOperational.evtx",
+    "sysmon_operational.xml",
+    "victim1.pcap",
+    "victim2.pcap",
+    "windows_security_4688_4663.xml"
+  ],
+  "data_sources": {
+    "windows_vm": [
+      "Security.evtx",
+      "SysmonOperational.evtx",
+      "sysmon_operational.xml",
+      "windows_security_4688_4663.xml"
+    ],
+    "kali_victim1": [
+      "victim1.pcap"
+    ],
+    "kali_victim2": [
+      "victim2.pcap"
+    ],
+    "unknown": []
+  }
+}
