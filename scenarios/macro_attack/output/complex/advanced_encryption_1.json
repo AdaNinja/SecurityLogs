@@ -1,7 +1,0 @@
-{
-  "algorithm": "RSA-2048",
-  "padding": "PKCS1_OAEP",
-  "key_size": 2048,
-  "timestamp": "2025-06-27T00:50:42.184738",
-  "session_id": "c4ca4238a0b923820dcc509a6f75849b"
-}

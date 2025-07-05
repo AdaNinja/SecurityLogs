@@ -1,3 +1,0 @@
-Macro attack test file created at 2025-06-27 00:44:22.257192
-User: karma
-Working directory: /Users/karma/Desktop/securityDataset/SecurityLogs/scenarios/macro_attack

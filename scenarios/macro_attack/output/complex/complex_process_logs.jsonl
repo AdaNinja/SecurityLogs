@@ -1,7 +1,0 @@
-{"type": "process_log", "attack_type": "complex", "timestamp": "2025-06-27T00:50:32.847781"}
-{"timestamp": "2025-06-27T00:50:55.230434", "process_name": "bash", "pid": 12345, "parent_pid": 1234, "command_line": "whoami && id && groups", "attack_type": "complex"}
-{"timestamp": "2025-06-27T00:50:55.403239", "process_name": "bash", "pid": 12345, "parent_pid": 1234, "command_line": "ps aux | grep -E '(macro|script|python)' | grep -v grep", "attack_type": "complex"}
-{"timestamp": "2025-06-27T00:50:55.455378", "process_name": "bash", "pid": 12345, "parent_pid": 1234, "command_line": "netstat -tuln | grep -E ':(22|80|443|3389)'", "attack_type": "complex"}
-{"timestamp": "2025-06-27T00:50:55.497631", "process_name": "bash", "pid": 12345, "parent_pid": 1234, "command_line": "find /tmp /var/tmp -name '*.tmp' -o -name '*.log' -type f", "attack_type": "complex"}
-{"timestamp": "2025-06-27T00:51:08.360122", "process_name": "bash", "pid": 12345, "parent_pid": 1234, "command_line": "lsof -i | grep LISTEN", "attack_type": "complex"}
-{"timestamp": "2025-06-27T00:51:08.424936", "process_name": "bash", "pid": 12345, "parent_pid": 1234, "command_line": "cat /etc/passwd | grep -E ':(0|1):'", "attack_type": "complex"}
