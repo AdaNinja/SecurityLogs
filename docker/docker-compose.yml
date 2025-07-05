@@ -1,44 +1,36 @@
 version: "3.8"
 
 services:
-  # victim host1：自动化 auditd + tcpdump，通过 Dockerfile/entrypoint.sh 配置
   victim1:
     build:
       context: ./victim1
-    hostname: victim1
+      dockerfile: Dockerfile
+    container_name: docker_victim1_1
     privileged: true
+    network_mode: bridge
+    cap_add:
+      - SYS_ADMIN
+      - NET_ADMIN
+      - AUDIT_CONTROL
+      - AUDIT_WRITE
+    volumes:
+      - ./victim1/raw:/data/raw
     environment:
       - SERVICE_NAME=victim1
-    volumes:
-      - ../demo/data/raw/:/data/raw/
-    networks:
-      - demo-net
 
-  # victim host2：同上
   victim2:
     build:
       context: ./victim2
-    hostname: victim2
+      dockerfile: Dockerfile
+    container_name: docker_victim2_1
     privileged: true
+    network_mode: bridge
+    cap_add:
+      - SYS_ADMIN
+      - NET_ADMIN
+      - AUDIT_CONTROL
+      - AUDIT_WRITE
+    volumes:
+      - ./victim2/raw:/data/raw
     environment:
       - SERVICE_NAME=victim2
-    volumes:
-      - ../demo/data/raw/:/data/raw/
-    networks:
-      - demo-net
-
-  # attacker：host PowerShell scripts
-  attacker:
-    image: python:3.11-alpine
-    volumes:
-      - ../demo:/demo
-    networks:
-      - demo-net
-    ports:
-      - "8000:8000"
-    command: >
-      sh -c "cd /demo && python3 -m http.server 8000"
-
-networks:
-  demo-net:
-    driver: bridge

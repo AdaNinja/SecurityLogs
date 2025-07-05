@@ -1,0 +1,16 @@
+{
+  "mechanisms": [
+    "cron_job",
+    "startup_script",
+    "registry_modification",
+    "service_installation"
+  ],
+  "status": "installed",
+  "timestamp": "2025-06-26 13:18:11",
+  "files_created": [
+    "/Users/karma/Desktop/securityDataset/SecurityLogs/scenarios/macro_attack/output/complex/persistence_0.sh",
+    "/Users/karma/Desktop/securityDataset/SecurityLogs/scenarios/macro_attack/output/complex/persistence_1.sh",
+    "/Users/karma/Desktop/securityDataset/SecurityLogs/scenarios/macro_attack/output/complex/persistence_2.sh",
+    "/Users/karma/Desktop/securityDataset/SecurityLogs/scenarios/macro_attack/output/complex/persistence_3.sh"
+  ]
+}

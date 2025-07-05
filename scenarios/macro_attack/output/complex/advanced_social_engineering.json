@@ -1,0 +1,18 @@
+{
+  "urgency_level": "critical",
+  "sender": "Microsoft Security Team",
+  "subject": "URGENT: Your account has been compromised",
+  "target_emotion": "fear",
+  "psychological_triggers": [
+    "authority",
+    "urgency",
+    "fear",
+    "social_proof"
+  ],
+  "personalization": true,
+  "credibility_indicators": [
+    "official_logo",
+    "security_badges",
+    "professional_language"
+  ]
+}

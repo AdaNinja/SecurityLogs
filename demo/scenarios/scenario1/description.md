@@ -1,31 +1,31 @@
-# 钓鱼攻击场景 (Scenario 1)
+# Phishing Attack Scenario (Scenario 1)
 
-## 场景描述
-本场景模拟了一个典型的钓鱼攻击过程，攻击者通过发送钓鱼邮件，诱导用户点击恶意链接，从而触发一系列恶意行为。
+## Scenario Description
+This scenario simulates a typical phishing attack process where attackers send phishing emails to induce users to click malicious links, triggering a series of malicious behaviors.
 
-## 攻击流程
-1. 攻击者发送钓鱼邮件给目标用户
-2. 用户点击邮件中的恶意链接
-3. 恶意链接触发下载和执行恶意程序
-4. 恶意程序在系统中建立持久化
-5. 攻击者获取系统控制权
+## Attack Process
+1. Attacker sends phishing email to target user
+2. User clicks malicious link in the email
+3. Malicious link triggers download and execution of malicious program
+4. Malicious program establishes persistence in the system
+5. Attacker gains system control
 
-## 文件说明
-- `config.json`: 场景配置文件，包含攻击参数和配置
-- `attack.py`: 攻击模拟脚本
-- `data/`: 存放场景相关的数据文件
-  - `raw/`: 原始日志数据
-  - `processed/`: 处理后的数据
+## File Description
+- `config.json`: Scenario configuration file, containing attack parameters and configuration
+- `attack.py`: Attack simulation script
+- `data/`: Directory for scenario-related data files
+  - `raw/`: Raw log data
+  - `processed/`: Processed data
 
-## 数据收集
-本场景收集以下类型的数据：
-- Windows 安全日志
-- Sysmon 日志
-- 网络流量数据 (PCAP)
-- 系统行为数据
+## Data Collection
+This scenario collects data of the following types:
+- Windows security logs
+- Sysmon logs
+- Network traffic data (PCAP)
+- System behavior data
 
-## 标签说明
-- L1: 钓鱼邮件发送和点击
-- L2: 恶意程序下载和执行
-- L3: 系统持久化
-- L4: 攻击者控制
+## Tag Description
+- L1: Phishing email sending and clicking
+- L2: Malicious program download and execution
+- L3: System persistence
+- L4: Attacker control

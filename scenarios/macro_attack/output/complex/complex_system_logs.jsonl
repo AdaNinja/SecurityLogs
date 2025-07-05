@@ -1,0 +1,95 @@
+{"type": "system_log", "attack_type": "complex", "timestamp": "2025-06-27T00:50:32.847751"}
+{"timestamp": "2025-06-27T00:50:32.848851", "event_type": "simulation_start", "severity": "INFO", "attack_type": "complex", "details": "Complex macro attack simulation started"}
+{"timestamp": "2025-06-27T00:50:32.848912", "event_type": "phase_start", "severity": "INFO", "attack_type": "complex", "details": "Phase 1: Background Activity"}
+{"timestamp": "2025-06-27T00:50:32.848964", "event_type": "background_activity_start", "severity": "INFO", "attack_type": "complex", "details": "Starting complex background activity simulation"}
+{"timestamp": "2025-06-27T00:50:32.849308", "event_type": "file_created", "severity": "INFO", "attack_type": "complex", "details": "Created background file: quarterly_report.txt"}
+{"timestamp": "2025-06-27T00:50:32.849516", "event_type": "file_created", "severity": "INFO", "attack_type": "complex", "details": "Created background file: project_planning.txt"}
+{"timestamp": "2025-06-27T00:50:32.849818", "event_type": "file_created", "severity": "INFO", "attack_type": "complex", "details": "Created background file: meeting_minutes.txt"}
+{"timestamp": "2025-06-27T00:50:32.850118", "event_type": "file_created", "severity": "INFO", "attack_type": "complex", "details": "Created background file: presentation_notes.txt"}
+{"timestamp": "2025-06-27T00:50:32.850306", "event_type": "file_created", "severity": "INFO", "attack_type": "complex", "details": "Created background file: project_status.txt"}
+{"timestamp": "2025-06-27T00:50:32.850496", "event_type": "file_created", "severity": "INFO", "attack_type": "complex", "details": "Created background file: project_team.txt"}
+{"timestamp": "2025-06-27T00:50:32.850690", "event_type": "file_created", "severity": "INFO", "attack_type": "complex", "details": "Created background file: budget_analysis.txt"}
+{"timestamp": "2025-06-27T00:50:32.850893", "event_type": "file_created", "severity": "INFO", "attack_type": "complex", "details": "Created background file: general_chat.txt"}
+{"timestamp": "2025-06-27T00:50:32.851153", "event_type": "backup_created", "severity": "INFO", "attack_type": "complex", "details": "Created backup version 0: quarterly_report.txt.backup.0"}
+{"timestamp": "2025-06-27T00:50:32.851408", "event_type": "backup_created", "severity": "INFO", "attack_type": "complex", "details": "Created backup version 1: quarterly_report.txt.backup.1"}
+{"timestamp": "2025-06-27T00:50:32.851634", "event_type": "backup_created", "severity": "INFO", "attack_type": "complex", "details": "Created backup version 2: quarterly_report.txt.backup.2"}
+{"timestamp": "2025-06-27T00:50:32.851868", "event_type": "backup_created", "severity": "INFO", "attack_type": "complex", "details": "Created backup version 0: meeting_minutes.txt.backup.0"}
+{"timestamp": "2025-06-27T00:50:32.852101", "event_type": "backup_created", "severity": "INFO", "attack_type": "complex", "details": "Created backup version 1: meeting_minutes.txt.backup.1"}
+{"timestamp": "2025-06-27T00:50:32.852339", "event_type": "backup_created", "severity": "INFO", "attack_type": "complex", "details": "Created backup version 2: meeting_minutes.txt.backup.2"}
+{"timestamp": "2025-06-27T00:50:32.852570", "event_type": "backup_created", "severity": "INFO", "attack_type": "complex", "details": "Created backup version 0: presentation_notes.txt.backup.0"}
+{"timestamp": "2025-06-27T00:50:32.852799", "event_type": "backup_created", "severity": "INFO", "attack_type": "complex", "details": "Created backup version 1: presentation_notes.txt.backup.1"}
+{"timestamp": "2025-06-27T00:50:32.853026", "event_type": "backup_created", "severity": "INFO", "attack_type": "complex", "details": "Created backup version 2: presentation_notes.txt.backup.2"}
+{"timestamp": "2025-06-27T00:50:32.853264", "event_type": "backup_created", "severity": "INFO", "attack_type": "complex", "details": "Created backup version 0: project_planning.txt.backup.0"}
+{"timestamp": "2025-06-27T00:50:32.853488", "event_type": "backup_created", "severity": "INFO", "attack_type": "complex", "details": "Created backup version 1: project_planning.txt.backup.1"}
+{"timestamp": "2025-06-27T00:50:32.853747", "event_type": "backup_created", "severity": "INFO", "attack_type": "complex", "details": "Created backup version 2: project_planning.txt.backup.2"}
+{"timestamp": "2025-06-27T00:50:32.854008", "event_type": "backup_created", "severity": "INFO", "attack_type": "complex", "details": "Created backup version 0: budget_analysis.txt.backup.0"}
+{"timestamp": "2025-06-27T00:50:32.854244", "event_type": "backup_created", "severity": "INFO", "attack_type": "complex", "details": "Created backup version 1: budget_analysis.txt.backup.1"}
+{"timestamp": "2025-06-27T00:50:32.854483", "event_type": "backup_created", "severity": "INFO", "attack_type": "complex", "details": "Created backup version 2: budget_analysis.txt.backup.2"}
+{"timestamp": "2025-06-27T00:50:32.854532", "event_type": "web_browsing_start", "severity": "INFO", "attack_type": "complex", "details": "Starting extensive web browsing simulation"}
+{"timestamp": "2025-06-27T00:50:33.335605", "event_type": "web_activity", "severity": "INFO", "attack_type": "complex", "details": "Visited https://httpbin.org/get for email_check"}
+{"timestamp": "2025-06-27T00:50:33.693790", "event_type": "web_activity", "severity": "INFO", "attack_type": "complex", "details": "Visited https://httpbin.org/status/200 for news_site"}
+{"timestamp": "2025-06-27T00:50:35.113075", "event_type": "web_activity", "severity": "INFO", "attack_type": "complex", "details": "Visited https://httpbin.org/delay/1 for social_media"}
+{"timestamp": "2025-06-27T00:50:35.467449", "event_type": "web_activity", "severity": "INFO", "attack_type": "complex", "details": "Visited https://httpbin.org/user-agent for work_portal"}
+{"timestamp": "2025-06-27T00:50:35.859929", "event_type": "web_activity", "severity": "INFO", "attack_type": "complex", "details": "Visited https://httpbin.org/headers for banking_site"}
+{"timestamp": "2025-06-27T00:50:36.221882", "event_type": "web_activity", "severity": "INFO", "attack_type": "complex", "details": "Visited https://httpbin.org/ip for shopping_site"}
+{"timestamp": "2025-06-27T00:50:36.607906", "event_type": "web_activity", "severity": "INFO", "attack_type": "complex", "details": "Visited https://httpbin.org/json for research_site"}
+{"timestamp": "2025-06-27T00:50:36.951516", "event_type": "web_activity", "severity": "INFO", "attack_type": "complex", "details": "Visited https://httpbin.org/xml for documentation_site"}
+{"timestamp": "2025-06-27T00:50:36.952151", "event_type": "multimedia_activity", "severity": "INFO", "attack_type": "complex", "details": "Created multimedia file: music_streaming.json"}
+{"timestamp": "2025-06-27T00:50:36.952925", "event_type": "multimedia_activity", "severity": "INFO", "attack_type": "complex", "details": "Created multimedia file: video_session_1.json"}
+{"timestamp": "2025-06-27T00:50:36.953400", "event_type": "multimedia_activity", "severity": "INFO", "attack_type": "complex", "details": "Created multimedia file: video_session_2.json"}
+{"timestamp": "2025-06-27T00:50:36.953783", "event_type": "multimedia_activity", "severity": "INFO", "attack_type": "complex", "details": "Created multimedia file: video_session_3.json"}
+{"timestamp": "2025-06-27T00:50:36.954090", "event_type": "multimedia_activity", "severity": "INFO", "attack_type": "complex", "details": "Created multimedia file: zoom_meeting.json"}
+{"timestamp": "2025-06-27T00:50:36.954158", "event_type": "background_activity_complete", "severity": "INFO", "attack_type": "complex", "details": "Complex background activity simulation completed"}
+{"timestamp": "2025-06-27T00:50:39.960819", "event_type": "phase_start", "severity": "INFO", "attack_type": "complex", "details": "Phase 2: Polymorphic Code Generation"}
+{"timestamp": "2025-06-27T00:50:39.961868", "event_type": "polymorphic_code_start", "severity": "INFO", "attack_type": "complex", "details": "Starting polymorphic code generation"}
+{"timestamp": "2025-06-27T00:50:39.963706", "event_type": "polymorphic_variant_created", "severity": "INFO", "attack_type": "complex", "details": "Created polymorphic variant 0"}
+{"timestamp": "2025-06-27T00:50:39.964387", "event_type": "polymorphic_variant_created", "severity": "INFO", "attack_type": "complex", "details": "Created polymorphic variant 1"}
+{"timestamp": "2025-06-27T00:50:39.964901", "event_type": "polymorphic_variant_created", "severity": "INFO", "attack_type": "complex", "details": "Created polymorphic variant 2"}
+{"timestamp": "2025-06-27T00:50:39.965325", "event_type": "polymorphic_variant_created", "severity": "INFO", "attack_type": "complex", "details": "Created polymorphic variant 3"}
+{"timestamp": "2025-06-27T00:50:39.965741", "event_type": "polymorphic_variant_created", "severity": "INFO", "attack_type": "complex", "details": "Created polymorphic variant 4"}
+{"timestamp": "2025-06-27T00:50:39.965832", "event_type": "polymorphic_code_complete", "severity": "INFO", "attack_type": "complex", "details": "Polymorphic code generation completed"}
+{"timestamp": "2025-06-27T00:50:41.971331", "event_type": "phase_start", "severity": "INFO", "attack_type": "complex", "details": "Phase 3: Attack Execution"}
+{"timestamp": "2025-06-27T00:50:41.976446", "event_type": "attack_start", "severity": "INFO", "attack_type": "complex", "details": "Starting complex macro attack execution"}
+{"timestamp": "2025-06-27T00:50:41.978355", "event_type": "encryption_start", "severity": "INFO", "attack_type": "complex", "details": "Starting AES-256 encryption of output/complex/advanced_encryption_0.json"}
+{"timestamp": "2025-06-27T00:50:42.184476", "event_type": "encryption_complete", "severity": "INFO", "attack_type": "complex", "details": "Completed AES-256 encryption of output/complex/advanced_encryption_0.json"}
+{"timestamp": "2025-06-27T00:50:42.185420", "event_type": "encryption_start", "severity": "INFO", "attack_type": "complex", "details": "Starting RSA-2048 encryption of output/complex/advanced_encryption_1.json"}
+{"timestamp": "2025-06-27T00:50:42.389279", "event_type": "encryption_complete", "severity": "INFO", "attack_type": "complex", "details": "Completed RSA-2048 encryption of output/complex/advanced_encryption_1.json"}
+{"timestamp": "2025-06-27T00:50:42.390294", "event_type": "encryption_start", "severity": "INFO", "attack_type": "complex", "details": "Starting ChaCha20 encryption of output/complex/advanced_encryption_2.json"}
+{"timestamp": "2025-06-27T00:50:42.596024", "event_type": "encryption_complete", "severity": "INFO", "attack_type": "complex", "details": "Completed ChaCha20 encryption of output/complex/advanced_encryption_2.json"}
+{"timestamp": "2025-06-27T00:50:42.596762", "event_type": "encryption_start", "severity": "INFO", "attack_type": "complex", "details": "Starting Twofish encryption of output/complex/advanced_encryption_3.json"}
+{"timestamp": "2025-06-27T00:50:42.802271", "event_type": "encryption_complete", "severity": "INFO", "attack_type": "complex", "details": "Completed Twofish encryption of output/complex/advanced_encryption_3.json"}
+{"timestamp": "2025-06-27T00:50:42.802748", "event_type": "obfuscation_applied", "severity": "INFO", "attack_type": "complex", "details": "Applied base64_encoding obfuscation"}
+{"timestamp": "2025-06-27T00:50:42.803126", "event_type": "obfuscation_applied", "severity": "INFO", "attack_type": "complex", "details": "Applied zlib_compression obfuscation"}
+{"timestamp": "2025-06-27T00:50:42.803476", "event_type": "obfuscation_applied", "severity": "INFO", "attack_type": "complex", "details": "Applied xor_encryption obfuscation"}
+{"timestamp": "2025-06-27T00:50:42.803811", "event_type": "obfuscation_applied", "severity": "INFO", "attack_type": "complex", "details": "Applied rot13_substitution obfuscation"}
+{"timestamp": "2025-06-27T00:50:42.804077", "event_type": "obfuscation_applied", "severity": "INFO", "attack_type": "complex", "details": "Applied hex_encoding obfuscation"}
+{"timestamp": "2025-06-27T00:50:42.804398", "event_type": "persistence_install", "severity": "INFO", "attack_type": "complex", "details": "Installing advanced_script_0 persistence mechanism"}
+{"timestamp": "2025-06-27T00:50:42.804604", "event_type": "persistence_complete", "severity": "INFO", "attack_type": "complex", "details": "Persistence mechanism installed at output/complex/persistence_0.sh"}
+{"timestamp": "2025-06-27T00:50:42.804926", "event_type": "persistence_install", "severity": "INFO", "attack_type": "complex", "details": "Installing advanced_script_1 persistence mechanism"}
+{"timestamp": "2025-06-27T00:50:42.805084", "event_type": "persistence_complete", "severity": "INFO", "attack_type": "complex", "details": "Persistence mechanism installed at output/complex/persistence_1.sh"}
+{"timestamp": "2025-06-27T00:50:42.805360", "event_type": "persistence_install", "severity": "INFO", "attack_type": "complex", "details": "Installing advanced_script_2 persistence mechanism"}
+{"timestamp": "2025-06-27T00:50:42.805510", "event_type": "persistence_complete", "severity": "INFO", "attack_type": "complex", "details": "Persistence mechanism installed at output/complex/persistence_2.sh"}
+{"timestamp": "2025-06-27T00:50:42.805812", "event_type": "persistence_install", "severity": "INFO", "attack_type": "complex", "details": "Installing advanced_script_3 persistence mechanism"}
+{"timestamp": "2025-06-27T00:50:42.805972", "event_type": "persistence_complete", "severity": "INFO", "attack_type": "complex", "details": "Persistence mechanism installed at output/complex/persistence_3.sh"}
+{"timestamp": "2025-06-27T00:50:42.806047", "event_type": "network_recon_start", "severity": "INFO", "attack_type": "complex", "details": "Starting extensive network reconnaissance"}
+{"timestamp": "2025-06-27T00:50:55.104120", "event_type": "network_recon_complete", "severity": "INFO", "attack_type": "complex", "details": "Extensive network reconnaissance completed"}
+{"timestamp": "2025-06-27T00:50:55.230983", "event_type": "command_execution", "severity": "INFO", "attack_type": "complex", "details": "Executed command: whoami && id && groups"}
+{"timestamp": "2025-06-27T00:50:55.231121", "event_type": "command_output", "severity": "INFO", "attack_type": "complex", "details": "Output: karma\nuid=501(karma) gid=20(staff) groups=20(staff),12(everyone),61(localaccounts),79(_appserverusr),80(admin),81(_appserveradm),98(_lpadmin),101(access_bpf),703(com.apple.sharepoint.group.3),701(com.apple.sharepoint.group.1),702(com.apple.sharepoint.group.2),33(_appstore),100(_lpoperator),204(_deve"}
+{"timestamp": "2025-06-27T00:50:55.403629", "event_type": "command_execution", "severity": "INFO", "attack_type": "complex", "details": "Executed command: ps aux | grep -E '(macro|script|python)' | grep -v grep"}
+{"timestamp": "2025-06-27T00:50:55.403726", "event_type": "command_output", "severity": "INFO", "attack_type": "complex", "details": "Output: karma            46913   5.4  0.2 34502956  27844 s029  S+   12:50\u4e0a\u5348   0:00.58 python3 macro_simulation_complex.py\nkarma            73761   0.0  0.0 34857284   1744   ??  S     9:00\u4e0a\u5348   0:02.40 /Users/karma/opt/anaconda3/envs/intern/bin/python /Users/karma/.cursor/extensions/ms-python.isort-2025.0.0"}
+{"timestamp": "2025-06-27T00:50:55.455738", "event_type": "command_execution", "severity": "INFO", "attack_type": "complex", "details": "Executed command: netstat -tuln | grep -E ':(22|80|443|3389)'"}
+{"timestamp": "2025-06-27T00:50:55.497987", "event_type": "command_execution", "severity": "INFO", "attack_type": "complex", "details": "Executed command: find /tmp /var/tmp -name '*.tmp' -o -name '*.log' -type f"}
+{"timestamp": "2025-06-27T00:51:08.361205", "event_type": "command_execution", "severity": "INFO", "attack_type": "complex", "details": "Executed command: lsof -i | grep LISTEN"}
+{"timestamp": "2025-06-27T00:51:08.361380", "event_type": "command_output", "severity": "INFO", "attack_type": "complex", "details": "Output: rapportd    962 karma    8u  IPv4 0x2e184e56b3f5ee06      0t0  TCP *:58348 (LISTEN)\nrapportd    962 karma   12u  IPv6 0xd59d1d1a2d193380      0t0  TCP *:58348 (LISTEN)\nARDAgent   1024 karma   10u  IPv6 0xda099a7a73d92eb6      0t0  TCP *:net-assistant (LISTEN)\nQQMusic    1253 karma   54u  IPv4 0xcb82"}
+{"timestamp": "2025-06-27T00:51:08.425340", "event_type": "command_execution", "severity": "INFO", "attack_type": "complex", "details": "Executed command: cat /etc/passwd | grep -E ':(0|1):'"}
+{"timestamp": "2025-06-27T00:51:08.425428", "event_type": "command_output", "severity": "INFO", "attack_type": "complex", "details": "Output: root:*:0:0:System Administrator:/var/root:/bin/sh\ndaemon:*:1:1:System Services:/var/root:/usr/bin/false\n"}
+{"timestamp": "2025-06-27T00:51:08.426298", "event_type": "anti_analysis_created", "severity": "INFO", "attack_type": "complex", "details": "Created anti-analysis file: anti_analysis_results.json"}
+{"timestamp": "2025-06-27T00:51:08.426983", "event_type": "anti_analysis_created", "severity": "INFO", "attack_type": "complex", "details": "Created anti-analysis file: system_reconnaissance.json"}
+{"timestamp": "2025-06-27T00:51:08.427244", "event_type": "anti_analysis_created", "severity": "INFO", "attack_type": "complex", "details": "Created anti-analysis file: lateral_movement.json"}
+{"timestamp": "2025-06-27T00:51:08.427564", "event_type": "anti_analysis_created", "severity": "INFO", "attack_type": "complex", "details": "Created anti-analysis file: backup_status.json"}
+{"timestamp": "2025-06-27T00:51:08.427961", "event_type": "anti_analysis_created", "severity": "INFO", "attack_type": "complex", "details": "Created anti-analysis file: disk_cleanup.json"}
+{"timestamp": "2025-06-27T00:51:08.428271", "event_type": "system_update_created", "severity": "INFO", "attack_type": "complex", "details": "System update notification created"}
+{"timestamp": "2025-06-27T00:51:08.428564", "event_type": "urgent_notification_created", "severity": "INFO", "attack_type": "complex", "details": "Urgent security notification created"}
+{"timestamp": "2025-06-27T00:51:08.428612", "event_type": "attack_complete", "severity": "INFO", "attack_type": "complex", "details": "Complex macro attack execution completed"}
+{"timestamp": "2025-06-27T00:51:11.433745", "event_type": "phase_start", "severity": "INFO", "attack_type": "complex", "details": "Phase 4: Cleanup and Logging"}
+{"timestamp": "2025-06-27T00:51:11.436873", "event_type": "summary_created", "severity": "INFO", "attack_type": "complex", "details": "Log summary created with 289 total events"}

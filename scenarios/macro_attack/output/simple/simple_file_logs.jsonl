@@ -1,0 +1,10 @@
+{"type": "file_log", "attack_type": "simple", "timestamp": "2025-06-27T00:44:21.249749"}
+{"timestamp": "2025-06-27T00:44:21.250907", "operation": "create", "file_path": "output/simple/test_document.txt", "file_size": 50, "permissions": "rw-r--r--", "attack_type": "simple"}
+{"timestamp": "2025-06-27T00:44:21.251149", "operation": "create", "file_path": "output/simple/test_document_backup.txt", "file_size": 44, "permissions": "rw-r--r--", "attack_type": "simple"}
+{"timestamp": "2025-06-27T00:44:22.257786", "operation": "create", "file_path": "output/simple/macro_test_simple.txt", "file_size": 164, "permissions": "rw-r--r--", "attack_type": "simple"}
+{"timestamp": "2025-06-27T00:44:22.258082", "operation": "create", "file_path": "output/simple/macro_persistence_0.txt", "file_size": 52, "permissions": "rw-r--r--", "attack_type": "simple"}
+{"timestamp": "2025-06-27T00:44:22.258212", "operation": "create", "file_path": "output/simple/macro_persistence_0.txt", "file_size": null, "permissions": null, "attack_type": "simple"}
+{"timestamp": "2025-06-27T00:44:22.258448", "operation": "create", "file_path": "output/simple/macro_persistence_1.txt", "file_size": 52, "permissions": "rw-r--r--", "attack_type": "simple"}
+{"timestamp": "2025-06-27T00:44:22.258575", "operation": "create", "file_path": "output/simple/macro_persistence_1.txt", "file_size": null, "permissions": null, "attack_type": "simple"}
+{"timestamp": "2025-06-27T00:44:22.258804", "operation": "create", "file_path": "output/simple/macro_persistence_2.txt", "file_size": 52, "permissions": "rw-r--r--", "attack_type": "simple"}
+{"timestamp": "2025-06-27T00:44:22.258909", "operation": "create", "file_path": "output/simple/macro_persistence_2.txt", "file_size": null, "permissions": null, "attack_type": "simple"}

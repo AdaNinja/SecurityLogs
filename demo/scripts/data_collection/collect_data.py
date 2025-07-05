@@ -1,185 +1,171 @@
-# import os
-# import glob
-# import json
-# import zipfile
-# from datetime import datetime
-# import random
-
-# # Directory where demo data lives (adjust path if needed)
-# DEMO_DIR = os.path.expanduser("~/security-demo/demo")
-# OUTPUT_ZIP = os.path.join(DEMO_DIR, "raw_dataset.zip")
-# META_FILE = os.path.join(DEMO_DIR, "run_meta.json")
-
-# def collect_and_archive():
-#     # Generate a reproducible random seed
-#     seed = random.randint(0, 2**32 - 1)
-#     random.seed(seed)
-    
-#     # Find files to include in the archive
-#     patterns = ["*.evtx", "*.csv", "*.pcap", "*.log"]
-#     files = []
-#     for pat in patterns:
-#         files.extend(glob.glob(os.path.join(DEMO_DIR, pat)))
-    
-#     # Ensure the demo directory exists
-#     if not os.path.isdir(DEMO_DIR):
-#         print(f"Error: Demo directory not found: {DEMO_DIR}")
-#         return
-    
-#     # Create the ZIP archive
-#     with zipfile.ZipFile(OUTPUT_ZIP, "w", zipfile.ZIP_DEFLATED) as zf:
-#         for filepath in files:
-#             arcname = os.path.basename(filepath)
-#             zf.write(filepath, arcname)
-    
-#     # Build metadata
-#     metadata = {
-#         "run_timestamp": datetime.utcnow().isoformat() + "Z",
-#         "random_seed": seed,
-#         "files_included": [os.path.basename(f) for f in files]
-#     }
-#     with open(META_FILE, "w") as f:
-#         json.dump(metadata, f, indent=2)
-    
-#     print(f"Archived {len(files)} files to {OUTPUT_ZIP}")
-#     print(f"Metadata written to {META_FILE}")
-
-# if __name__ == "__main__":
-#     collect_and_archive()
-
+#!/usr/bin/env python3
+"""
+Data Collection Script
+Collect and organize security log data from various sources
+"""
 
 import os
-import glob
+import sys
 import json
-import zipfile
-from datetime import datetime
+import shutil
 import random
+from pathlib import Path
+from typing import Dict, List, Any
 
-# 基础目录
-BASE_DIR = os.path.expanduser("~/security-demo/demo")
-DATA_DIR = os.path.join(BASE_DIR, "data")
-RAW_DIR = os.path.join(DATA_DIR, "raw")
-META_DIR = os.path.join(DATA_DIR, "metadata")
-
-# 确保目录存在
-for directory in [RAW_DIR, META_DIR]:
-    if not os.path.exists(directory):
-        os.makedirs(directory)
-
-# 输出文件
-OUTPUT_ZIP = os.path.join(DATA_DIR, "all_vms_data.zip")
-META_FILE = os.path.join(META_DIR, "all_vms_meta.json")
-
-# 要收集的文件模式
-PATTERNS = ["*.evtx", "*.xml", "*.csv", "*.pcap", "*.log"]
-
-# 数据源标识
-DATA_SOURCES = {
-    "windows_vm": {
-        "patterns": ["windows", "win", "system", "security", "application", "sysmon"],
-        "file_types": ["evtx", "xml"]
-    },
-    "kali_victim1": {
-        "patterns": ["victim1"],
-        "file_types": ["pcap"],
-        "exact_matches": ["victim1.pcap"]  # 精确匹配
-    },
-    "kali_victim2": {
-        "patterns": ["victim2"],
-        "file_types": ["pcap"],
-        "exact_matches": ["victim2.pcap"]  # 精确匹配
-    }
-}
-
-def identify_data_source(filename):
+def collect_data(source_dir: str, output_dir: str, config_file: str = None):
     """
-    识别文件的数据源
-    :param filename: 文件名
-    :return: 数据源名称
+    Collect data from source directory and organize it into output directory
+    
+    Args:
+        source_dir: Source directory containing raw data
+        output_dir: Output directory for organized data
+        config_file: Configuration file path (optional)
     """
-    filename_lower = filename.lower()
     
-    # 首先检查精确匹配
-    for source, config in DATA_SOURCES.items():
-        if "exact_matches" in config and filename in config["exact_matches"]:
-            return source
+    # Load configuration
+    if config_file and os.path.exists(config_file):
+        with open(config_file, 'r', encoding='utf-8') as f:
+            config = json.load(f)
+    else:
+        config = get_default_config()
     
-    # 然后检查文件名模式
-    for source, config in DATA_SOURCES.items():
-        # 检查文件名是否包含数据源标识
-        if any(pattern in filename_lower for pattern in config["patterns"]):
-            return source
-        # 检查文件类型是否匹配
-        if any(filename_lower.endswith(ft) for ft in config["file_types"]):
-            return source
-    return "unknown"
-
-def collect_and_archive():
-    # 生成随机种子
-    seed = random.randint(0, 2**32 - 1)
-    random.seed(seed)
+    # Base directory
+    base_dir = Path(output_dir)
     
-    # 确保目录存在
-    if not os.path.isdir(RAW_DIR):
-        print(f"Error: Raw data directory not found: {RAW_DIR}")
-        return
-    if not os.path.isdir(META_DIR):
-        print(f"Error: Metadata directory not found: {META_DIR}")
-        return
-
-    # 查找要包含在归档中的文件
-    files = []
-    for pat in PATTERNS:
-        pattern_path = os.path.join(RAW_DIR, pat)
-        found = glob.glob(pattern_path)
-        if found:
-            print(f"Found {len(found)} files matching pattern {pat}")
-            for f in found:
-                print(f"  - {os.path.basename(f)}")
-        files.extend(found)
-    files = sorted(set(files))  # 去重并排序
+    # Ensure directory exists
+    base_dir.mkdir(parents=True, exist_ok=True)
     
-    if not files:
-        print(f"Warning: No files found in {RAW_DIR} matching patterns: {PATTERNS}")
-        return
+    # Output file
+    output_file = base_dir / "data_collection_summary.json"
     
-    # 创建ZIP归档
-    with zipfile.ZipFile(OUTPUT_ZIP, "w", zipfile.ZIP_DEFLATED) as zf:
-        for filepath in files:
-            arcname = os.path.basename(filepath)
-            zf.write(filepath, arcname)
+    # File patterns to collect
+    file_patterns = config.get("file_patterns", {})
     
-    # 按数据源分类文件
-    files_by_source = {source: [] for source in DATA_SOURCES.keys()}
-    files_by_source["unknown"] = []
-    
-    for filepath in files:
-        filename = os.path.basename(filepath)
-        source = identify_data_source(filename)
-        files_by_source[source].append(filename)
-    
-    # 构建元数据
-    metadata = {
-        "run_timestamp": datetime.utcnow().isoformat() + "Z",
-        "random_seed": seed,
-        "files_included": [os.path.basename(f) for f in files],
-        "data_sources": files_by_source
+    # Data source identifiers
+    data_sources = {
+        "victim1": {
+            "patterns": ["victim1", "vm1"],
+            "exact_matches": ["victim1.pcap"]  # Exact matches
+        },
+        "victim2": {
+            "patterns": ["victim2", "vm2"],
+            "exact_matches": ["victim2.pcap"]  # Exact matches
+        }
     }
     
-    # 保存元数据
-    with open(META_FILE, "w") as f:
-        json.dump(metadata, f, indent=2)
+    def identify_data_source(filename: str) -> str:
+        """
+        Identify data source from filename
+        :param filename: Filename
+        :return: Data source name
+        """
+        # First check exact matches
+        for source, patterns in data_sources.items():
+            if filename in patterns.get("exact_matches", []):
+                return source
+        
+        # Then check filename patterns
+        for source, patterns in data_sources.items():
+            # Check if filename contains data source identifier
+            for pattern in patterns.get("patterns", []):
+                if pattern.lower() in filename.lower():
+                    return source
+        
+        # Check if file type matches
+        for source, patterns in file_patterns.items():
+            if any(filename.endswith(ext) for ext in patterns):
+                return source
+        
+        return "unknown"
     
-    print(f"\nSummary:")
-    print(f"Archived {len(files)} files to {OUTPUT_ZIP}")
-    print(f"Metadata written to {META_FILE}")
-    print("\nFiles by source:")
-    for source, source_files in files_by_source.items():
-        print(f"{source}: {len(source_files)} files")
-        if source_files:
-            print("  Files:")
-            for f in source_files:
-                print(f"    - {f}")
+    # Generate random seed
+    random.seed(42)
+    
+    # Ensure directory exists
+    Path(source_dir).mkdir(parents=True, exist_ok=True)
+    
+    # Collect files
+    collected_files = []
+    
+    for root, dirs, files in os.walk(source_dir):
+        for file in files:
+            file_path = Path(root) / file
+            relative_path = file_path.relative_to(source_dir)
+            
+            # Identify data source
+            data_source = identify_data_source(file)
+            
+            # Determine target directory
+            target_dir = base_dir / data_source
+            target_dir.mkdir(parents=True, exist_ok=True)
+            
+            # Copy file
+            target_path = target_dir / file
+            shutil.copy2(file_path, target_path)
+            
+            collected_files.append({
+                "source_file": str(file_path),
+                "target_file": str(target_path),
+                "data_source": data_source,
+                "file_size": file_path.stat().st_size,
+                "relative_path": str(relative_path)
+            })
+    
+    # Save collection summary
+    summary = {
+        "collection_time": str(Path().cwd()),
+        "source_directory": source_dir,
+        "output_directory": output_dir,
+        "total_files": len(collected_files),
+        "files_by_source": {},
+        "collected_files": collected_files
+    }
+    
+    # Group files by data source
+    for file_info in collected_files:
+        source = file_info["data_source"]
+        if source not in summary["files_by_source"]:
+            summary["files_by_source"][source] = []
+        summary["files_by_source"][source].append(file_info)
+    
+    with open(output_file, 'w', encoding='utf-8') as f:
+        json.dump(summary, f, indent=2, ensure_ascii=False)
+    
+    print(f"Data collection completed. Summary saved to: {output_file}")
+    print(f"Total files collected: {len(collected_files)}")
+    
+    for source, files in summary["files_by_source"].items():
+        print(f"  {source}: {len(files)} files")
+    
+    return summary
+
+def get_default_config() -> Dict[str, Any]:
+    """Get default configuration"""
+    return {
+        "file_patterns": {
+            "logs": [".log", ".evtx", ".csv"],
+            "network": [".pcap", ".pcapng"],
+            "system": [".txt", ".json", ".xml"]
+        },
+        "data_sources": {
+            "victim1": {
+                "patterns": ["victim1", "vm1"],
+                "exact_matches": ["victim1.pcap"]
+            },
+            "victim2": {
+                "patterns": ["victim2", "vm2"],
+                "exact_matches": ["victim2.pcap"]
+            }
+        }
+    }
 
 if __name__ == "__main__":
-    collect_and_archive()
+    if len(sys.argv) < 3:
+        print("Usage: python collect_data.py <source_dir> <output_dir> [config_file]")
+        sys.exit(1)
+    
+    source_dir = sys.argv[1]
+    output_dir = sys.argv[2]
+    config_file = sys.argv[3] if len(sys.argv) > 3 else None
+    
+    collect_data(source_dir, output_dir, config_file)

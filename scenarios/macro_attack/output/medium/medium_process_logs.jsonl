@@ -1,0 +1,5 @@
+{"type": "process_log", "attack_type": "medium", "timestamp": "2025-06-27T00:46:48.338267"}
+{"timestamp": "2025-06-27T00:46:54.948389", "process_name": "bash", "pid": 12345, "parent_pid": 1234, "command_line": "whoami && id", "attack_type": "medium"}
+{"timestamp": "2025-06-27T00:46:55.135211", "process_name": "bash", "pid": 12345, "parent_pid": 1234, "command_line": "ps aux | grep -i macro", "attack_type": "medium"}
+{"timestamp": "2025-06-27T00:46:55.359250", "process_name": "bash", "pid": 12345, "parent_pid": 1234, "command_line": "netstat -tuln | head -10", "attack_type": "medium"}
+{"timestamp": "2025-06-27T00:46:55.403899", "process_name": "bash", "pid": 12345, "parent_pid": 1234, "command_line": "find /tmp -name '*.tmp' -type f", "attack_type": "medium"}

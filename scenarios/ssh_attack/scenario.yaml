@@ -1,0 +1,99 @@
+# SSH Weak Password Attack Scenario Configuration
+name: "ssh_weak_password_attack"
+description: "SSH brute force attack scenario with different complexity variants"
+
+# Scenario variant configuration
+variants:
+  simple:
+    name: "Simple Variant"
+    description: "Basic SSH brute force with minimal background activity"
+    complexity: "basic"
+    
+    # Background activity configuration (only type and intensity are used in calculation)
+    background_activities:
+      - type: "file_operations"
+        intensity: "minimal"
+      
+      - type: "network_activity"
+        intensity: "minimal"
+    
+    # Attack configuration (only stealth_level and evasion_techniques are used in calculation)
+    attack:
+      stealth_level: "low"
+      # No evasion techniques for simple variant
+
+  medium:
+    name: "Medium Variant"
+    description: "SSH brute force with moderate background activity and stealth"
+    complexity: "intermediate"
+    
+    # Background activities (only type and intensity are used)
+    background_activities:
+      - type: "office_work"
+        intensity: "moderate"
+      
+      - type: "multimedia"
+        intensity: "moderate"
+      
+      - type: "communication"
+        intensity: "moderate"
+    
+    # Attack configuration
+    attack:
+      stealth_level: "medium"
+      # No evasion techniques for medium variant
+
+  complex:
+    name: "Complex Variant"
+    description: "SSH brute force with rich background activity and high stealth"
+    complexity: "advanced"
+    
+    # Rich background activities
+    background_activities:
+      - type: "office_work"
+        intensity: "high"
+      
+      - type: "multimedia"
+        intensity: "high"
+      
+      - type: "communication"
+        intensity: "high"
+      
+      - type: "development"
+        intensity: "high"
+      
+      - type: "system_maintenance"
+        intensity: "moderate"
+    
+    # Attack configuration with evasion techniques
+    attack:
+      stealth_level: "high"
+      evasion_techniques:
+        - "time_randomization"
+        - "source_ip_rotation"
+        - "user_agent_spoofing"
+
+# Logging configuration
+logging:
+  ssh_logs: true
+  system_logs: true
+  network_logs: true
+  process_logs: true
+  file_access_logs: true
+  user_activity_logs: true
+
+# Data labeling configuration
+labeling:
+  attack_start_marker: "ssh_bruteforce_begin"
+  attack_end_marker: "ssh_bruteforce_end"
+  success_marker: "ssh_login_success"
+  failure_marker: "ssh_login_failed"
+  variant_marker: "variant_complexity_level"
+
+# Detection quality metrics
+detection_metrics:
+  - "false_positive_rate"
+  - "detection_time"
+  - "alert_accuracy"
+  - "investigation_complexity"
+  - "noise_level" 

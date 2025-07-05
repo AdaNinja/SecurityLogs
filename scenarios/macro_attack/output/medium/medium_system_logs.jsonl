@@ -1,0 +1,41 @@
+{"type": "system_log", "attack_type": "medium", "timestamp": "2025-06-27T00:46:48.337882"}
+{"timestamp": "2025-06-27T00:46:48.338893", "event_type": "simulation_start", "severity": "INFO", "attack_type": "medium", "details": "Medium macro attack simulation started"}
+{"timestamp": "2025-06-27T00:46:48.338960", "event_type": "phase_start", "severity": "INFO", "attack_type": "medium", "details": "Phase 1: Background Activity"}
+{"timestamp": "2025-06-27T00:46:48.339015", "event_type": "background_activity_start", "severity": "INFO", "attack_type": "medium", "details": "Starting medium-level background activity simulation"}
+{"timestamp": "2025-06-27T00:46:48.339394", "event_type": "file_created", "severity": "INFO", "attack_type": "medium", "details": "Created background file: budget_report.txt"}
+{"timestamp": "2025-06-27T00:46:48.339595", "event_type": "file_created", "severity": "INFO", "attack_type": "medium", "details": "Created background file: project_proposal.txt"}
+{"timestamp": "2025-06-27T00:46:48.339774", "event_type": "file_created", "severity": "INFO", "attack_type": "medium", "details": "Created background file: meeting_notes.txt"}
+{"timestamp": "2025-06-27T00:46:48.339955", "event_type": "file_created", "severity": "INFO", "attack_type": "medium", "details": "Created background file: draft_email.txt"}
+{"timestamp": "2025-06-27T00:46:48.340188", "event_type": "backup_created", "severity": "INFO", "attack_type": "medium", "details": "Created backup: budget_report.txt.backup"}
+{"timestamp": "2025-06-27T00:46:48.340452", "event_type": "backup_created", "severity": "INFO", "attack_type": "medium", "details": "Created backup: meeting_notes.txt.backup"}
+{"timestamp": "2025-06-27T00:46:48.340688", "event_type": "backup_created", "severity": "INFO", "attack_type": "medium", "details": "Created backup: project_proposal.txt.backup"}
+{"timestamp": "2025-06-27T00:46:48.340737", "event_type": "web_browsing_start", "severity": "INFO", "attack_type": "medium", "details": "Starting web browsing simulation"}
+{"timestamp": "2025-06-27T00:46:48.713892", "event_type": "web_activity", "severity": "INFO", "attack_type": "medium", "details": "Visited https://httpbin.org/get for email_check"}
+{"timestamp": "2025-06-27T00:46:49.053519", "event_type": "web_activity", "severity": "INFO", "attack_type": "medium", "details": "Visited https://httpbin.org/status/200 for news_site"}
+{"timestamp": "2025-06-27T00:46:50.686275", "event_type": "web_activity", "severity": "INFO", "attack_type": "medium", "details": "Visited https://httpbin.org/delay/1 for social_media"}
+{"timestamp": "2025-06-27T00:46:51.121319", "event_type": "web_activity", "severity": "INFO", "attack_type": "medium", "details": "Visited https://httpbin.org/user-agent for work_portal"}
+{"timestamp": "2025-06-27T00:46:51.121398", "event_type": "background_activity_complete", "severity": "INFO", "attack_type": "medium", "details": "Medium-level background activity simulation completed"}
+{"timestamp": "2025-06-27T00:46:53.128208", "event_type": "phase_start", "severity": "INFO", "attack_type": "medium", "details": "Phase 2: Attack Execution"}
+{"timestamp": "2025-06-27T00:46:53.128860", "event_type": "attack_start", "severity": "INFO", "attack_type": "medium", "details": "Starting medium-level macro attack execution"}
+{"timestamp": "2025-06-27T00:46:53.129660", "event_type": "obfuscation_applied", "severity": "INFO", "attack_type": "medium", "details": "Applied Base64 obfuscation to macro content"}
+{"timestamp": "2025-06-27T00:46:53.130662", "event_type": "registry_modify", "severity": "INFO", "attack_type": "medium", "details": "Modifying HKEY_CURRENT_USER\\Software\\MacroApp:Config"}
+{"timestamp": "2025-06-27T00:46:53.130946", "event_type": "registry_complete", "severity": "INFO", "attack_type": "medium", "details": "Registry modification completed"}
+{"timestamp": "2025-06-27T00:46:53.131521", "event_type": "persistence_install", "severity": "INFO", "attack_type": "medium", "details": "Installing script_based persistence mechanism"}
+{"timestamp": "2025-06-27T00:46:53.131782", "event_type": "persistence_complete", "severity": "INFO", "attack_type": "medium", "details": "Persistence mechanism installed at output/medium/macro_persistence.sh"}
+{"timestamp": "2025-06-27T00:46:53.131965", "event_type": "encryption_start", "severity": "INFO", "attack_type": "medium", "details": "Starting AES-128 encryption of output/medium/budget_report.txt"}
+{"timestamp": "2025-06-27T00:46:53.339074", "event_type": "encryption_complete", "severity": "INFO", "attack_type": "medium", "details": "Completed AES-128 encryption of output/medium/budget_report.txt"}
+{"timestamp": "2025-06-27T00:46:53.339938", "event_type": "encryption_start", "severity": "INFO", "attack_type": "medium", "details": "Starting AES-128 encryption of output/medium/project_proposal.txt"}
+{"timestamp": "2025-06-27T00:46:53.545886", "event_type": "encryption_complete", "severity": "INFO", "attack_type": "medium", "details": "Completed AES-128 encryption of output/medium/project_proposal.txt"}
+{"timestamp": "2025-06-27T00:46:53.546087", "event_type": "network_recon_start", "severity": "INFO", "attack_type": "medium", "details": "Starting network reconnaissance"}
+{"timestamp": "2025-06-27T00:46:54.811129", "event_type": "network_recon_complete", "severity": "INFO", "attack_type": "medium", "details": "Network reconnaissance completed"}
+{"timestamp": "2025-06-27T00:46:54.948733", "event_type": "command_execution", "severity": "INFO", "attack_type": "medium", "details": "Executed command: whoami && id"}
+{"timestamp": "2025-06-27T00:46:54.948820", "event_type": "command_output", "severity": "INFO", "attack_type": "medium", "details": "Output: karma\nuid=501(karma) gid=20(staff) groups=20(staff),12(everyone),61(localaccounts),79(_appserverusr),80(admin),81(_appserveradm),98(_lpadmin),101(access_bpf),703(com.apple.sharepoint.group.3),701(com."}
+{"timestamp": "2025-06-27T00:46:55.135569", "event_type": "command_execution", "severity": "INFO", "attack_type": "medium", "details": "Executed command: ps aux | grep -i macro"}
+{"timestamp": "2025-06-27T00:46:55.135651", "event_type": "command_output", "severity": "INFO", "attack_type": "medium", "details": "Output: karma            41463   5.5  0.0 33890080   3232 s029  S+   12:46\u4e0a\u5348   0:00.03 /bin/sh -c ps aux | grep -i macro\nkarma            41241   4.0  0.2 34896212  25856 s029  S+   12:46\u4e0a\u5348   0:00.35 python3 "}
+{"timestamp": "2025-06-27T00:46:55.359595", "event_type": "command_execution", "severity": "INFO", "attack_type": "medium", "details": "Executed command: netstat -tuln | head -10"}
+{"timestamp": "2025-06-27T00:46:55.359685", "event_type": "command_output", "severity": "INFO", "attack_type": "medium", "details": "Output: Active LOCAL (UNIX) domain sockets\nAddress          Type   Recv-Q Send-Q            Inode             Conn             Refs          Nextref Addr\n8b42de4de4f3510a stream      0      0                0"}
+{"timestamp": "2025-06-27T00:46:55.404279", "event_type": "command_execution", "severity": "INFO", "attack_type": "medium", "details": "Executed command: find /tmp -name '*.tmp' -type f"}
+{"timestamp": "2025-06-27T00:46:55.404725", "event_type": "social_engineering_created", "severity": "INFO", "attack_type": "medium", "details": "Social engineering payload created"}
+{"timestamp": "2025-06-27T00:46:55.404781", "event_type": "attack_complete", "severity": "INFO", "attack_type": "medium", "details": "Medium-level macro attack execution completed"}
+{"timestamp": "2025-06-27T00:46:57.409822", "event_type": "phase_start", "severity": "INFO", "attack_type": "medium", "details": "Phase 3: Cleanup and Logging"}
+{"timestamp": "2025-06-27T00:46:57.411104", "event_type": "summary_created", "severity": "INFO", "attack_type": "medium", "details": "Log summary created with 76 total events"}

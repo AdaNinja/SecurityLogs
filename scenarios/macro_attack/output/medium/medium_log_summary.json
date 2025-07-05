@@ -1,0 +1,17 @@
+{
+  "attack_type": "medium",
+  "timestamp": "2025-06-27T00:46:57.410762",
+  "log_counts": {
+    "medium_system_logs.jsonl": 39,
+    "medium_network_logs.jsonl": 16,
+    "medium_file_logs.jsonl": 17,
+    "medium_process_logs.jsonl": 4
+  },
+  "total_events": 76,
+  "log_files": [
+    "output/medium/medium_system_logs.jsonl",
+    "output/medium/medium_network_logs.jsonl",
+    "output/medium/medium_file_logs.jsonl",
+    "output/medium/medium_process_logs.jsonl"
+  ]
+}

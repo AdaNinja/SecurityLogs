@@ -1,0 +1,4 @@
+Variant,Total_Files,Total_Size,Total_Lines,Obfuscation_Files,Encryption_Files,Network_Files,Command_Files,Persistence_Files,Stealth_Level,Complexity_Level,Evasion_Techniques
+simple,11,7767,69,0,3,2,3,5,Low,Medium,8
+medium,20,16700,144,3,4,6,6,5,Medium,Medium,12
+complex,69,64289,583,9,25,24,15,12,Medium,High,46

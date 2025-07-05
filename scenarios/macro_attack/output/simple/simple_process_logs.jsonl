@@ -1,0 +1,4 @@
+{"type": "process_log", "attack_type": "simple", "timestamp": "2025-06-27T00:44:21.249751"}
+{"timestamp": "2025-06-27T00:44:22.318807", "process_name": "bash", "pid": 12345, "parent_pid": 1234, "command_line": "whoami", "attack_type": "simple"}
+{"timestamp": "2025-06-27T00:44:22.348566", "process_name": "bash", "pid": 12345, "parent_pid": 1234, "command_line": "pwd", "attack_type": "simple"}
+{"timestamp": "2025-06-27T00:44:22.585029", "process_name": "bash", "pid": 12345, "parent_pid": 1234, "command_line": "ls -la", "attack_type": "simple"}

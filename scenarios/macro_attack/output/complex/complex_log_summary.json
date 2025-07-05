@@ -1,0 +1,17 @@
+{
+  "attack_type": "complex",
+  "timestamp": "2025-06-27T00:51:11.436412",
+  "log_counts": {
+    "complex_system_logs.jsonl": 93,
+    "complex_network_logs.jsonl": 125,
+    "complex_file_logs.jsonl": 65,
+    "complex_process_logs.jsonl": 6
+  },
+  "total_events": 289,
+  "log_files": [
+    "output/complex/complex_system_logs.jsonl",
+    "output/complex/complex_network_logs.jsonl",
+    "output/complex/complex_file_logs.jsonl",
+    "output/complex/complex_process_logs.jsonl"
+  ]
+}

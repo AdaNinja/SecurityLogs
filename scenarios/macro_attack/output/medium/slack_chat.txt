@@ -1,0 +1,4 @@
+User1: Hi team, how's the project going?
+User2: Good progress, we should meet tomorrow
+User1: Sounds good, I'll send the agenda
+User3: I'll prepare the presentation

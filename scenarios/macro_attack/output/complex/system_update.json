@@ -1,0 +1,10 @@
+{
+  "update_type": "security_patch",
+  "priority": "critical",
+  "affected_systems": [
+    "windows",
+    "linux",
+    "macos"
+  ],
+  "description": "Critical security update required for all systems"
+}
