@@ -1,0 +1,52 @@
+version: "3.8"
+
+services:
+  victim1:
+    build:
+      context: ./victim1
+      dockerfile: Dockerfile
+    container_name: docker_victim1_1
+    privileged: true
+    networks:
+      - phishnet
+    ports:
+      - "1025:1025"   # SMTP
+      - "8025:8025"   # MailHog Web UI
+    cap_add:
+      - SYS_ADMIN
+      - NET_ADMIN
+      - AUDIT_CONTROL
+      - AUDIT_WRITE
+    volumes:
+      - ./victim1/raw:/data/raw
+    environment:
+      - SERVICE_NAME=victim1
+    
+
+  victim2:
+    build:
+      context: ./victim2
+      dockerfile: Dockerfile
+    container_name: docker_victim2_1
+    privileged: true
+    networks:
+      - phishnet
+    ports:
+      - "9000:9000"   # Collector HTTP
+      - "8025:8025"   # MailHog UI
+      - "8000:8000"   # C2 Beacon (Flask)
+      - "8080:8080"   # Static file server (下载 Payload)
+    cap_add:
+      - SYS_ADMIN
+      - NET_ADMIN
+      - AUDIT_CONTROL
+      - AUDIT_WRITE
+    volumes:
+      - ./victim2/raw:/data/raw
+    environment:
+      - SERVICE_NAME=victim2
+    
+
+networks:
+  phishnet:
+    driver:bridge

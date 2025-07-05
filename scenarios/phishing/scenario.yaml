@@ -1,0 +1,36 @@
+name: phishing
+description: "钓鱼邮件攻击场景 - 模拟真实的钓鱼邮件攻击链"
+parameters:
+  # 良性网站列表（用于Reconnaissance阶段）
+  benign_sites:
+    - "http://example.com"
+    - "http://example.org"
+    - "http://httpbin.org"
+    - "http://google.com"
+  
+  # 攻击延迟（秒）
+  attack_delay_s: 30
+  
+  # 钓鱼邮件配置
+  phishing_email:
+    subject: "重要通知：您的账户需要验证"
+    sender: "security@company.com"
+    body: "请点击以下链接验证您的账户信息"
+  
+  # 目标链接（钓鱼页面）
+  target_link: "http://victim2:9000/phish"
+  
+  # 凭证收集端点
+  capture_endpoint: "http://victim2:9000/collect"
+  
+  # 邮件服务器配置
+  mail_server:
+    host: "victim2"
+    port: 1025
+    web_ui: "http://victim2:8025"
+  
+  # 浏览器自动化配置
+  browser:
+    headless: true
+    timeout: 30
+    user_agent: "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36"
