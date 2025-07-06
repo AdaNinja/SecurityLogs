@@ -21,6 +21,9 @@ services:
       - ./victim1/raw:/data/raw
     environment:
       - SERVICE_NAME=victim1
+    dns:
+     - 8.8.8.8
+     - 223.5.5.5
     
 
   victim2:
@@ -33,7 +36,6 @@ services:
       - phishnet
     ports:
       - "9000:9000"   # Collector HTTP
-      - "8025:8025"   # MailHog UI
       - "8000:8000"   # C2 Beacon (Flask)
       - "8080:8080"   # Static file server (下载 Payload)
     cap_add:
@@ -45,8 +47,12 @@ services:
       - ./victim2/raw:/data/raw
     environment:
       - SERVICE_NAME=victim2
+    dns:
+      - 8.8.8.8
+      - 223.5.5.5
     
 
 networks:
   phishnet:
-    driver:bridge
+    driver: bridge
+
