@@ -1,0 +1,214 @@
+version: '3.8'
+
+services:
+  # Victim 1 - SSH Server with users A, B
+  victim1:
+    build:
+      context: ../../containers/victim
+      dockerfile: Dockerfile
+    container_name: securitylogs-victim1
+    hostname: victim1
+    networks:
+      - attacknet
+    ports:
+      - "2221:22"
+      - "8081:80"
+    volumes:
+      # Log mounts
+      - ../../logs/victim1:/var/log
+      - ../../logs/ssh:/var/log/auth.log
+      # Data mounts
+      - ../../pcap_data/ssh-tunnel-lateral:/data/raw
+      - ../../output/victim1:/opt/output
+      # Script mounts
+      - ../../containers/victim/scripts:/opt/scripts
+    environment:
+      - SERVICE_NAME=securitylogs-victim1
+      - TARGET_HOST=victim1
+      - SCENARIO_TYPE=ssh-victim
+    depends_on:
+      - tcpdump1
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "sshd", "-t"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  # Victim 2 - SSH Server with users A, B
+  victim2:
+    build:
+      context: ../../containers/victim
+      dockerfile: Dockerfile
+    container_name: securitylogs-victim2
+    hostname: victim2
+    networks:
+      - attacknet
+    ports:
+      - "2222:22"
+      - "8082:80"
+    volumes:
+      # Log mounts
+      - ../../logs/victim2:/var/log
+      - ../../logs/ssh:/var/log/auth.log
+      # Data mounts
+      - ../../pcap_data/ssh-tunnel-lateral:/data/raw
+      - ../../output/victim2:/opt/output
+      # Script mounts
+      - ../../containers/victim/scripts:/opt/scripts
+    environment:
+      - SERVICE_NAME=securitylogs-victim2
+      - TARGET_HOST=victim2
+      - SCENARIO_TYPE=ssh-victim
+    depends_on:
+      - tcpdump2
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "sshd", "-t"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  # Attacker Container
+  attacker:
+    build:
+      context: ../../containers/attacker
+      dockerfile: Dockerfile
+    container_name: securitylogs-ssh-attacker
+    hostname: attacker
+    networks:
+      - attacknet
+    volumes:
+      # Script and output mounts
+      - ../../containers/attacker/scripts:/opt/scripts
+      - ../../output/attacker:/opt/output
+      - ../../logs/attacker:/opt/logs
+      # Configuration mounts
+      - ./config:/opt/config
+      - ../../.env:/opt/.env
+      # Data mounts
+      - ../../pcap_data/ssh-tunnel-lateral:/data/raw
+    environment:
+      - SERVICE_NAME=securitylogs-ssh-attacker
+      - TARGET_HOST1=victim1
+      - TARGET_HOST2=victim2
+      - TARGET_PORT=22
+      # Load from environment files
+      - HYDRA_RATE=${HYDRA_RATE:-10}
+      - SSH_TIMEOUT=${SSH_TIMEOUT:-30}
+      - TUNNEL_PORT=${TUNNEL_PORT:-2222}
+    depends_on:
+      victim1:
+        condition: service_healthy
+      victim2:
+        condition: service_healthy
+      c2-server:
+        condition: service_started
+    restart: unless-stopped
+    stdin_open: true
+    tty: true
+
+  # C2 Server for reverse tunnels
+  c2-server:
+    build:
+      context: ../../containers/c2-server
+      dockerfile: Dockerfile
+    container_name: securitylogs-c2-server
+    hostname: c2-server
+    networks:
+      - attacknet
+    ports:
+      - "2223:2222"
+      - "8083:8080"
+    volumes:
+      # C2 data and logs
+      - ../../output/c2-server:/opt/output
+      - ../../logs/c2-server:/opt/logs
+      - ../../pcap_data/ssh-tunnel-lateral:/data/raw
+      # Script mounts
+      - ../../containers/c2-server/scripts:/opt/scripts
+    environment:
+      - SERVICE_NAME=securitylogs-c2-server
+      - C2_PROTOCOL=ssh
+      - C2_PORT=2222
+      - SCENARIO_TYPE=ssh-c2
+    restart: unless-stopped
+
+  # Network Traffic Capture Container 1
+  tcpdump1:
+    build:
+      context: ../../containers/tcpdump
+      dockerfile: Dockerfile
+    container_name: securitylogs-tcpdump1
+    hostname: tcpdump1
+    networks:
+      - attacknet
+    volumes:
+      # PCAP storage
+      - ../../pcap_data/ssh-tunnel-lateral:/pcaps
+      - ../../logs/tcpdump1:/logs
+      # Script mounts
+      - ../../containers/tcpdump/scripts:/usr/local/bin
+    environment:
+      - SERVICE_NAME=securitylogs-tcpdump1
+      - CAPTURE_INTERFACE=eth0
+      - CAPTURE_FILTER=host victim1 or host attacker or host c2-server
+    cap_add:
+      - NET_ADMIN
+      - NET_RAW
+    restart: unless-stopped
+    command: ["tcpdump", "-i", "eth0", "-w", "/pcaps/victim1_traffic.pcap", "-s", "65535"]
+
+  # Network Traffic Capture Container 2
+  tcpdump2:
+    build:
+      context: ../../containers/tcpdump
+      dockerfile: Dockerfile
+    container_name: securitylogs-tcpdump2
+    hostname: tcpdump2
+    networks:
+      - attacknet
+    volumes:
+      # PCAP storage
+      - ../../pcap_data/ssh-tunnel-lateral:/pcaps
+      - ../../logs/tcpdump2:/logs
+      # Script mounts
+      - ../../containers/tcpdump/scripts:/usr/local/bin
+    environment:
+      - SERVICE_NAME=securitylogs-tcpdump2
+      - CAPTURE_INTERFACE=eth0
+      - CAPTURE_FILTER=host victim2 or host attacker or host c2-server
+    cap_add:
+      - NET_ADMIN
+      - NET_RAW
+    restart: unless-stopped
+    command: ["tcpdump", "-i", "eth0", "-w", "/pcaps/victim2_traffic.pcap", "-s", "65535"]
+
+# Custom network for attack simulation
+networks:
+  attacknet:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.21.0.0/16
+          gateway: 172.21.0.1
+    driver_opts:
+      com.docker.network.bridge.name: securitylogs_ssh_attacknet
+    labels:
+      - "securitylogs.network=attack"
+      - "securitylogs.scenario=ssh-tunnel-lateral"
+
+# Volume definitions for persistent data
+volumes:
+  victim1_logs:
+    driver: local
+  victim2_logs:
+    driver: local
+  attacker_output:
+    driver: local
+  c2_data:
+    driver: local
+  pcap_data:
+    driver: local 

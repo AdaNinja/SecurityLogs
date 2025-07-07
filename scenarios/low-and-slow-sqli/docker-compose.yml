@@ -1,0 +1,150 @@
+version: '3.8'
+
+services:
+  # Web Application Container (Target)
+  webapp:
+    build:
+      context: ../../containers/webapp
+      dockerfile: Dockerfile
+    container_name: securitylogs-webapp
+    hostname: victim-web
+    networks:
+      - attacknet
+    ports:
+      - "8080:80"
+    volumes:
+      # Log mounts
+      - ../../logs/webapp:/var/log
+      - ../../logs/nginx:/var/log/nginx
+      - ../../logs/mysql:/var/log/mysql
+      - ../../logs/php:/var/log/php
+      # Data mounts
+      - ../../pcap_data/low-and-slow-sqli:/data/raw
+      - ../../output/webapp:/opt/output
+      # Script mounts
+      - ../../containers/webapp/scripts:/opt/scripts
+    environment:
+      - SERVICE_NAME=securitylogs-webapp
+      - TARGET_HOST=victim-web
+      - TARGET_PORT=80
+    depends_on:
+      - tcpdump
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  # Attacker Container
+  attacker:
+    build:
+      context: ../../containers/attacker
+      dockerfile: Dockerfile
+    container_name: securitylogs-attacker
+    hostname: attacker
+    networks:
+      - attacknet
+    volumes:
+      # Script and output mounts
+      - ../../containers/attacker/scripts:/opt/scripts
+      - ../../output/attacker:/opt/output
+      - ../../logs/attacker:/opt/logs
+      # Configuration mounts
+      - ./config:/opt/config
+      - ../../.env:/opt/.env
+      # Data mounts
+      - ../../pcap_data/low-and-slow-sqli:/data/raw
+    environment:
+      - SERVICE_NAME=securitylogs-attacker
+      - TARGET_HOST=victim-web
+      - TARGET_PORT=80
+      - TARGET_URL=http://victim-web/login.php
+      # Load from environment files
+      - NMAP_RATE=${NMAP_RATE:-0.016}
+      - SQL_DELAY=${SQL_DELAY:-120}
+      - SQLMAP_THREADS=${SQLMAP_THREADS:-1}
+    depends_on:
+      webapp:
+        condition: service_healthy
+      tcpdump:
+        condition: service_started
+    restart: unless-stopped
+    stdin_open: true
+    tty: true
+
+  # Network Traffic Capture Container (Sidecar)
+  tcpdump:
+    build:
+      context: ../../containers/tcpdump
+      dockerfile: Dockerfile
+    container_name: securitylogs-tcpdump
+    hostname: tcpdump-sidecar
+    networks:
+      - attacknet
+    volumes:
+      # PCAP storage
+      - ../../pcap_data/low-and-slow-sqli:/pcaps
+      - ../../logs/tcpdump:/logs
+      # Script mounts
+      - ../../containers/tcpdump/scripts:/usr/local/bin
+    environment:
+      - SERVICE_NAME=securitylogs-tcpdump
+      - CAPTURE_INTERFACE=eth0
+      - CAPTURE_FILTER=host victim-web or host attacker
+    cap_add:
+      - NET_ADMIN
+      - NET_RAW
+    restart: unless-stopped
+    command: ["tcpdump", "-i", "eth0", "-w", "/pcaps/traffic.pcap", "-s", "65535"]
+
+  # Optional: Database Container (if needed for complex scenarios)
+  database:
+    image: mysql:8.0
+    container_name: securitylogs-database
+    hostname: database
+    networks:
+      - attacknet
+    environment:
+      MYSQL_ROOT_PASSWORD: rootpassword
+      MYSQL_DATABASE: vulnerable_db
+      MYSQL_USER: webapp
+      MYSQL_PASSWORD: webapp_password
+    volumes:
+      - ../../logs/mysql:/var/log/mysql
+      - ../../containers/webapp/scripts/init_db.sql:/docker-entrypoint-initdb.d/init.sql
+    ports:
+      - "3306:3306"
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+# Custom network for attack simulation
+networks:
+  attacknet:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.20.0.0/16
+          gateway: 172.20.0.1
+    driver_opts:
+      com.docker.network.bridge.name: securitylogs_attacknet
+    labels:
+      - "securitylogs.network=attack"
+      - "securitylogs.scenario=low-and-slow-sqli"
+
+# Volume definitions for persistent data
+volumes:
+  webapp_logs:
+    driver: local
+  attacker_output:
+    driver: local
+  pcap_data:
+    driver: local
+  mysql_data:
+    driver: local
