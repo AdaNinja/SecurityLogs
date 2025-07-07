@@ -1,38 +1,38 @@
-FROM ubuntu:22.04
+FROM python:3.9-slim
 
-# 避免互动提示
+# Avoid interactive prompts
 ARG DEBIAN_FRONTEND=noninteractive
+
+# Use domestic mirror sources
+RUN echo "deb http://mirrors.aliyun.com/debian/ bookworm main" > /etc/apt/sources.list \
+ && echo "deb http://mirrors.aliyun.com/debian/ bookworm-updates main" >> /etc/apt/sources.list \
+ && echo "deb http://mirrors.aliyun.com/debian-security bookworm-security main" >> /etc/apt/sources.list
 
 RUN apt-get update \
  && apt-get install -y --no-install-recommends \
-      auditd \
       tcpdump \
-      curl \
       rsyslog \
-      python3 \
-      python3-pip \
-      python3-flask \
-      python3-requests \
+      curl \
       wget \
-      ca-certificates \
  && rm -rf /var/lib/apt/lists/*
 
-# 安装Python依赖
+# Install Python dependencies
 RUN pip3 install flask requests
 
-# 下载并安装MailHog
-RUN wget -q https://github.com/mailhog/MailHog/releases/download/v1.0.1/MailHog_linux_amd64 \
- && chmod +x MailHog_linux_amd64 \
- && mv MailHog_linux_amd64 /usr/local/bin/mailhog
+# Skip MailHog for now, use simple mail simulation
+RUN echo "MailHog not available for ARM64, using simple mail simulation"
 
-# 创建日志目录
+# Create log directory
 RUN mkdir -p /data/raw
 
-# 复制 entrypoint 并赋可执行权限
+# Copy credential collector
+COPY credential_collector.py /usr/local/bin/credential_collector.py
+
+# Copy entrypoint and make executable
 COPY entrypoint.sh /usr/local/bin/entrypoint.sh
 RUN chmod +x /usr/local/bin/entrypoint.sh
 
-# 默认环境变量
+# Default environment variables
 ENV SERVICE_NAME=victim2
 
 ENTRYPOINT ["/usr/local/bin/entrypoint.sh"]

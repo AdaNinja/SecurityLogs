@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-场景调度入口 - 执行攻击场景的主控制器
+Scenario scheduler entry - Main controller for executing attack scenarios
 """
 
 import argparse
@@ -9,7 +9,7 @@ import importlib
 import logging
 from logger_utils import inject_label, sleep, log_attack_event
 
-# 配置日志
+# Configure logging
 logging.basicConfig(
     level=logging.INFO,
     format='%(asctime)s - %(levelname)s - %(message)s'
@@ -17,27 +17,27 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 def main():
-    """主函数"""
-    parser = argparse.ArgumentParser(description='执行攻击场景')
-    parser.add_argument("--config", required=True, help="场景配置文件路径")
-    parser.add_argument("--dry-run", action="store_true", help="仅显示配置，不执行")
+    """Main function"""
+    parser = argparse.ArgumentParser(description='Execute attack scenario')
+    parser.add_argument("--config", required=True, help="Scenario configuration file path")
+    parser.add_argument("--dry-run", action="store_true", help="Only display configuration, do not execute")
     args = parser.parse_args()
     
     try:
-        # 加载配置文件
-        logger.info(f"加载配置文件: {args.config}")
+        # Load configuration file
+        logger.info(f"Loading configuration file: {args.config}")
         with open(args.config, 'r', encoding='utf-8') as f:
             cfg = yaml.safe_load(f)
         
         if args.dry_run:
-            logger.info("DRY RUN 模式 - 配置内容:")
+            logger.info("DRY RUN mode - Configuration content:")
             logger.info(yaml.dump(cfg, default_flow_style=False))
             return
         
-        logger.info(f"开始执行场景: {cfg['name']}")
+        logger.info(f"Starting scenario execution: {cfg['name']}")
         
-        # 1. Reconnaissance 阶段
-        logger.info("=== 阶段 1: Reconnaissance ===")
+        # 1. Reconnaissance phase
+        logger.info("=== Phase 1: Reconnaissance ===")
         inject_label("phase=Reconnaissance")
         log_attack_event("reconnaissance_start", {"scenario": cfg['name']})
         
@@ -46,17 +46,17 @@ def main():
             benign_module.run(cfg["parameters"])
             log_attack_event("reconnaissance_complete")
         except Exception as e:
-            logger.error(f"Reconnaissance 阶段失败: {e}")
+            logger.error(f"Reconnaissance phase failed: {e}")
             log_attack_event("reconnaissance_failed", {"error": str(e)})
             return
         
-        # 2. 延迟
+        # 2. Delay
         delay_seconds = cfg["parameters"].get("attack_delay_s", 30)
-        logger.info(f"=== 延迟 {delay_seconds} 秒 ===")
+        logger.info(f"=== Delay {delay_seconds} seconds ===")
         sleep(delay_seconds)
         
-        # 3. Delivery 阶段
-        logger.info("=== 阶段 2: Delivery ===")
+        # 3. Delivery phase
+        logger.info("=== Phase 2: Delivery ===")
         inject_label("phase=Delivery")
         log_attack_event("delivery_start")
         
@@ -65,29 +65,29 @@ def main():
             attack_module.run(cfg["parameters"])
             log_attack_event("delivery_complete")
         except Exception as e:
-            logger.error(f"Delivery 阶段失败: {e}")
+            logger.error(f"Delivery phase failed: {e}")
             log_attack_event("delivery_failed", {"error": str(e)})
             return
         
-        # 4. Exploitation 阶段
-        logger.info("=== 阶段 3: Exploitation ===")
+        # 4. Exploitation phase
+        logger.info("=== Phase 3: Exploitation ===")
         inject_label("phase=Exploitation")
         log_attack_event("exploitation_start")
         
-        # 这里可以添加额外的利用逻辑
-        sleep(5)  # 模拟利用过程
+        # Additional exploitation logic can be added here
+        sleep(5)  # Simulate exploitation process
         log_attack_event("exploitation_complete")
         
-        logger.info("=== 场景执行完成 ===")
+        logger.info("=== Scenario execution completed ===")
         inject_label("phase=Complete")
         log_attack_event("scenario_complete", {"scenario": cfg['name']})
         
     except FileNotFoundError:
-        logger.error(f"配置文件不存在: {args.config}")
+        logger.error(f"Configuration file not found: {args.config}")
     except yaml.YAMLError as e:
-        logger.error(f"配置文件格式错误: {e}")
+        logger.error(f"Configuration file format error: {e}")
     except Exception as e:
-        logger.error(f"执行场景时出错: {e}")
+        logger.error(f"Error executing scenario: {e}")
         log_attack_event("scenario_failed", {"error": str(e)})
 
 if __name__ == "__main__":

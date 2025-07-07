@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
 """
-日志工具模块 - 提供日志打标和延迟功能
-    在系统日志中注入攻击阶段标签
-    提供可控的延迟执行
-    记录详细的攻击事件信息
+Logging utility module - Provides log labeling and delay functionality
+    Inject attack phase labels into system logs
+    Provide controllable delayed execution
+    Record detailed attack event information
 """
 
 import subprocess
@@ -11,7 +11,7 @@ import time
 import logging
 from typing import Optional
 
-# 配置日志
+# Configure logging
 logging.basicConfig(
     level=logging.INFO,
     format='%(asctime)s - %(levelname)s - %(message)s'
@@ -20,10 +20,10 @@ logger = logging.getLogger(__name__)
 
 def inject_label(label: str):
     """
-    注入攻击阶段标签到系统日志
+    Inject attack phase label into system logs
     
     Args:
-        label: 标签字符串，格式如 "phase=Reconnaissance"
+        label: Label string, format like "phase=Reconnaissance"
     """
     try:
         result = subprocess.run(
@@ -33,32 +33,32 @@ def inject_label(label: str):
             timeout=5
         )
         if result.returncode == 0:
-            logger.info(f"成功注入标签: {label}")
+            logger.info(f"Successfully injected label: {label}")
         else:
-            logger.error(f"注入标签失败: {result.stderr}")
+            logger.error(f"Failed to inject label: {result.stderr}")
     except subprocess.TimeoutExpired:
-        logger.error("注入标签超时")
+        logger.error("Label injection timeout")
     except Exception as e:
-        logger.error(f"注入标签时出错: {e}")
+        logger.error(f"Error during label injection: {e}")
 
 def sleep(sec: int):
     """
-    延迟执行
+    Delay execution
     
     Args:
-        sec: 延迟秒数
+        sec: Delay seconds
     """
-    logger.info(f"延迟 {sec} 秒...")
+    logger.info(f"Delaying {sec} seconds...")
     time.sleep(sec)
-    logger.info("延迟完成")
+    logger.info("Delay completed")
 
 def log_attack_event(event_type: str, details: Optional[dict] = None):
     """
-    记录攻击事件
+    Log attack event
     
     Args:
-        event_type: 事件类型
-        details: 事件详情
+        event_type: Event type
+        details: Event details
     """
     event_data = {
         'event_type': event_type,
@@ -72,4 +72,4 @@ def log_attack_event(event_type: str, details: Optional[dict] = None):
             label += f" {key}={value}"
     
     inject_label(label)
-    logger.info(f"记录攻击事件: {event_type} - {details}")
+    logger.info(f"Logged attack event: {event_type} - {details}")

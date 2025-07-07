@@ -7,11 +7,8 @@ services:
       dockerfile: Dockerfile
     container_name: docker_victim1_1
     privileged: true
-    networks:
-      - phishnet
-    ports:
-      - "1025:1025"   # SMTP
-      - "8025:8025"   # MailHog Web UI
+    network_mode: host
+    # Using host network mode, no port mapping needed
     cap_add:
       - SYS_ADMIN
       - NET_ADMIN
@@ -21,9 +18,7 @@ services:
       - ./victim1/raw:/data/raw
     environment:
       - SERVICE_NAME=victim1
-    dns:
-     - 8.8.8.8
-     - 223.5.5.5
+
     
 
   victim2:
@@ -32,12 +27,8 @@ services:
       dockerfile: Dockerfile
     container_name: docker_victim2_1
     privileged: true
-    networks:
-      - phishnet
-    ports:
-      - "9000:9000"   # Collector HTTP
-      - "8000:8000"   # C2 Beacon (Flask)
-      - "8080:8080"   # Static file server (下载 Payload)
+    network_mode: host
+    # Using host network mode, no port mapping needed
     cap_add:
       - SYS_ADMIN
       - NET_ADMIN
@@ -47,9 +38,7 @@ services:
       - ./victim2/raw:/data/raw
     environment:
       - SERVICE_NAME=victim2
-    dns:
-      - 8.8.8.8
-      - 223.5.5.5
+
     
 
 networks:

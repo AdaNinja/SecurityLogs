@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-攻击场景启动脚本
+Attack scenario startup script
 """
 
 import os
@@ -9,43 +9,43 @@ import subprocess
 import time
 import logging
 
-# 配置日志
+# Configure logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)
 
 def check_dependencies():
-    """检查依赖"""
-    logger.info("检查依赖...")
+    """Check dependencies"""
+    logger.info("Checking dependencies...")
     
-    # 检查Docker
+    # Check Docker
     try:
         result = subprocess.run(["docker", "--version"], capture_output=True, text=True)
         if result.returncode == 0:
-            logger.info("✓ Docker 已安装")
+            logger.info("✓ Docker installed")
         else:
-            logger.error("✗ Docker 未安装或不可用")
+            logger.error("✗ Docker not installed or unavailable")
             return False
     except FileNotFoundError:
-        logger.error("✗ Docker 未安装")
+        logger.error("✗ Docker not installed")
         return False
     
-    # 检查Docker Compose
+    # Check Docker Compose
     try:
         result = subprocess.run(["docker-compose", "--version"], capture_output=True, text=True)
         if result.returncode == 0:
-            logger.info("✓ Docker Compose 已安装")
+            logger.info("✓ Docker Compose installed")
         else:
-            logger.error("✗ Docker Compose 未安装或不可用")
+            logger.error("✗ Docker Compose not installed or unavailable")
             return False
     except FileNotFoundError:
-        logger.error("✗ Docker Compose 未安装")
+        logger.error("✗ Docker Compose not installed")
         return False
     
     return True
 
 def build_containers():
-    """构建容器"""
-    logger.info("构建Docker容器...")
+    """Build containers"""
+    logger.info("Building Docker containers...")
     
     try:
         result = subprocess.run(
@@ -56,18 +56,18 @@ def build_containers():
         )
         
         if result.returncode == 0:
-            logger.info("✓ 容器构建成功")
+            logger.info("✓ Containers built successfully")
             return True
         else:
-            logger.error(f"✗ 容器构建失败: {result.stderr}")
+            logger.error(f"✗ Container build failed: {result.stderr}")
             return False
     except Exception as e:
-        logger.error(f"✗ 构建容器时出错: {e}")
+        logger.error(f"✗ Error building containers: {e}")
         return False
 
 def start_containers():
-    """启动容器"""
-    logger.info("启动Docker容器...")
+    """Start containers"""
+    logger.info("Starting Docker containers...")
     
     try:
         result = subprocess.run(
@@ -78,43 +78,43 @@ def start_containers():
         )
         
         if result.returncode == 0:
-            logger.info("✓ 容器启动成功")
+            logger.info("✓ Containers started successfully")
             return True
         else:
-            logger.error(f"✗ 容器启动失败: {result.stderr}")
+            logger.error(f"✗ Container startup failed: {result.stderr}")
             return False
     except Exception as e:
-        logger.error(f"✗ 启动容器时出错: {e}")
+        logger.error(f"✗ Error starting containers: {e}")
         return False
 
 def wait_for_services():
-    """等待服务就绪"""
-    logger.info("等待服务就绪...")
+    """Wait for services to be ready"""
+    logger.info("Waiting for services to be ready...")
     
     import requests
     
     services = [
         ("MailHog Web UI", "http://localhost:8025"),
-        ("凭证收集服务器", "http://localhost:9000/health")
+        ("Credential collection server", "http://localhost:9000/health")
     ]
     
     for service_name, url in services:
-        logger.info(f"检查 {service_name}...")
-        for i in range(30):  # 最多等待30秒
+        logger.info(f"Checking {service_name}...")
+        for i in range(30):  # Wait up to 30 seconds
             try:
                 response = requests.get(url, timeout=5)
                 if response.status_code == 200:
-                    logger.info(f"✓ {service_name} 就绪")
+                    logger.info(f"✓ {service_name} ready")
                     break
             except:
                 if i == 29:
-                    logger.warning(f"⚠ {service_name} 可能未就绪，但继续执行")
+                    logger.warning(f"⚠ {service_name} may not be ready, but continuing")
                 else:
                     time.sleep(1)
 
 def run_scenario():
-    """运行攻击场景"""
-    logger.info("运行钓鱼攻击场景...")
+    """Run attack scenario"""
+    logger.info("Running phishing attack scenario...")
     
     try:
         result = subprocess.run(
@@ -125,75 +125,75 @@ def run_scenario():
         )
         
         if result.returncode == 0:
-            logger.info("✓ 攻击场景执行成功")
-            logger.info("输出:")
+            logger.info("✓ Attack scenario executed successfully")
+            logger.info("Output:")
             print(result.stdout)
         else:
-            logger.error(f"✗ 攻击场景执行失败: {result.stderr}")
+            logger.error(f"✗ Attack scenario execution failed: {result.stderr}")
             return False
     except Exception as e:
-        logger.error(f"✗ 运行场景时出错: {e}")
+        logger.error(f"✗ Error running scenario: {e}")
         return False
     
     return True
 
 def show_results():
-    """显示结果"""
-    logger.info("=== 攻击结果 ===")
+    """Show results"""
+    logger.info("=== Attack Results ===")
     
-    # 检查凭证收集
+    # Check credential collection
     try:
         import requests
         response = requests.get("http://localhost:9000/credentials", timeout=5)
         if response.status_code == 200:
             data = response.json()
-            logger.info(f"收集到的凭证数量: {data.get('count', 0)}")
+            logger.info(f"Number of collected credentials: {data.get('count', 0)}")
             if data.get('credentials'):
-                logger.info("凭证详情:")
+                logger.info("Credential details:")
                 for cred in data['credentials']:
-                    logger.info(f"  - 时间: {cred.get('timestamp')}")
+                    logger.info(f"  - Time: {cred.get('timestamp')}")
                     logger.info(f"    IP: {cred.get('ip')}")
-                    logger.info(f"    凭证: {cred.get('credentials')}")
+                    logger.info(f"    Credentials: {cred.get('credentials')}")
         else:
-            logger.warning("无法获取凭证收集结果")
+            logger.warning("Unable to get credential collection results")
     except Exception as e:
-        logger.warning(f"检查结果时出错: {e}")
+        logger.warning(f"Error checking results: {e}")
 
 def main():
-    """主函数"""
-    logger.info("=== 钓鱼攻击场景启动器 ===")
+    """Main function"""
+    logger.info("=== Phishing Attack Scenario Launcher ===")
     
-    # 1. 检查依赖
+    # 1. Check dependencies
     if not check_dependencies():
-        logger.error("依赖检查失败，请安装必要的工具")
+        logger.error("Dependency check failed, please install necessary tools")
         return
     
-    # 2. 构建容器
+    # 2. Build containers
     if not build_containers():
-        logger.error("容器构建失败")
+        logger.error("Container build failed")
         return
     
-    # 3. 启动容器
+    # 3. Start containers
     if not start_containers():
-        logger.error("容器启动失败")
+        logger.error("Container startup failed")
         return
     
-    # 4. 等待服务就绪
+    # 4. Wait for services to be ready
     wait_for_services()
     
-    # 5. 运行攻击场景
+    # 5. Run attack scenario
     if not run_scenario():
-        logger.error("攻击场景执行失败")
+        logger.error("Attack scenario execution failed")
         return
     
-    # 6. 显示结果
+    # 6. Show results
     show_results()
     
-    logger.info("=== 攻击场景完成 ===")
-    logger.info("提示:")
-    logger.info("- 查看MailHog邮件: http://localhost:8025")
-    logger.info("- 查看凭证收集: http://localhost:9000/credentials")
-    logger.info("- 停止容器: docker-compose -f docker/docker-compose.yml down")
+    logger.info("=== Attack Scenario Completed ===")
+    logger.info("Tips:")
+    logger.info("- View MailHog emails: http://localhost:8025")
+    logger.info("- View credential collection: http://localhost:9000/credentials")
+    logger.info("- Stop containers: docker-compose -f docker/docker-compose.yml down")
 
 if __name__ == "__main__":
     main() 

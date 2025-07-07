@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-良性行为脚本 - 模拟正常的网络活动
+Benign behavior script - Simulate normal network activities
 """
 
 import time
@@ -9,18 +9,18 @@ import random
 import logging
 from logger_utils import log_attack_event
 
-# 配置日志
+# Configure logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 def run(params):
     """
-    执行良性网络活动
+    Execute benign network activities
     
     Args:
-        params: 场景参数字典
+        params: Scenario parameters dictionary
     """
-    logger.info("开始执行良性网络活动...")
+    logger.info("Starting benign network activities...")
     
     benign_sites = params.get("benign_sites", [
         "http://example.com",
@@ -28,37 +28,37 @@ def run(params):
         "http://httpbin.org"
     ])
     
-    # 模拟正常的网络浏览行为
+    # Simulate normal web browsing behavior
     for i in range(5):
         try:
-            # 随机选择一个网站
+            # Randomly select a website
             site = random.choice(benign_sites)
-            logger.info(f"访问网站: {site}")
+            logger.info(f"Accessing website: {site}")
             
-            # 发送HTTP请求
+            # Send HTTP request
             response = requests.get(site, timeout=10)
-            logger.info(f"响应状态码: {response.status_code}")
+            logger.info(f"Response status code: {response.status_code}")
             
-            # 记录良性活动
+            # Log benign activity
             log_attack_event("benign_web_access", {
                 "site": site,
                 "status_code": response.status_code,
                 "iteration": i + 1
             })
             
-            # 随机延迟
+            # Random delay
             delay = random.uniform(2, 8)
-            logger.info(f"等待 {delay:.1f} 秒...")
+            logger.info(f"Waiting {delay:.1f} seconds...")
             time.sleep(delay)
             
         except requests.RequestException as e:
-            logger.warning(f"访问 {site} 失败: {e}")
+            logger.warning(f"Failed to access {site}: {e}")
             log_attack_event("benign_access_failed", {
                 "site": site,
                 "error": str(e)
             })
         except Exception as e:
-            logger.error(f"良性活动执行出错: {e}")
+            logger.error(f"Error executing benign activity: {e}")
     
-    logger.info("良性网络活动完成")
+    logger.info("Benign network activities completed")
     log_attack_event("benign_activity_complete", {"total_requests": 5})

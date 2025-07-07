@@ -1,211 +1,211 @@
-# 安全日志数据集 - 钓鱼攻击场景
+# Security Log Dataset - Phishing Attack Scenario
 
-这是一个用于生成安全日志数据集的钓鱼邮件攻击场景，实现了完整的攻击链：Reconnaissance → Delivery → Exploitation。
+This is a phishing email attack scenario for generating security log datasets, implementing a complete attack chain: Reconnaissance → Delivery → Exploitation.
 
-## 项目结构
+## Project Structure
 
 ```
 .
 ├── docker/
-│   ├── docker-compose.yml          # Docker编排文件
-│   ├── victim1/                    # 受害者1容器（客户端）
+│   ├── docker-compose.yml          # Docker orchestration file
+│   ├── victim1/                    # Victim1 container (client)
 │   │   ├── Dockerfile
 │   │   ├── entrypoint.sh
-│   │   └── raw/                    # 日志存储目录
-│   └── victim2/                    # 受害者2容器（服务器）
+│   │   └── raw/                    # Log storage directory
+│   └── victim2/                    # Victim2 container (server)
 │       ├── Dockerfile
 │       ├── entrypoint.sh
-│       ├── credential_collector.py # 凭证收集服务器
-│       └── raw/                    # 日志存储目录
+│       ├── credential_collector.py # Credential collection server
+│       └── raw/                    # Log storage directory
 ├── scenarios/
-│   └── phishing/                   # 钓鱼攻击场景
-│       ├── scenario.yaml           # 场景配置
-│       ├── benign.py               # 良性行为脚本
-│       ├── attack.py               # 攻击脚本
-│       └── labels.py               # 标签函数
-├── logger_utils.py                 # 日志工具
-├── run_scenario.py                 # 场景调度器
-├── start_attack.py                 # 一键启动脚本
-└── requirements.txt                # Python依赖
+│   └── phishing/                   # Phishing attack scenario
+│       ├── scenario.yaml           # Scenario configuration
+│       ├── benign.py               # Benign behavior script
+│       ├── attack.py               # Attack script
+│       └── labels.py               # Label functions
+├── logger_utils.py                 # Logging utilities
+├── run_scenario.py                 # Scenario scheduler
+├── start_attack.py                 # One-click startup script
+└── requirements.txt                # Python dependencies
 ```
 
-## 攻击场景说明
+## Attack Scenario Description
 
-### 钓鱼邮件攻击链
+### Phishing Email Attack Chain
 
-1. **Reconnaissance（侦察）阶段**
-   - 模拟正常的网络浏览行为
-   - 访问良性网站（example.com, httpbin.org等）
-   - 生成正常的网络流量日志
+1. **Reconnaissance Phase**
+   - Simulate normal web browsing behavior
+   - Visit benign websites (example.com, httpbin.org, etc.)
+   - Generate normal network traffic logs
 
-2. **Delivery（投递）阶段**
-   - 发送钓鱼邮件到目标邮箱
-   - 模拟邮件打开行为
-   - 使用浏览器自动化点击钓鱼链接
+2. **Delivery Phase**
+   - Send phishing emails to target mailboxes
+   - Simulate email opening behavior
+   - Use browser automation to click phishing links
 
-3. **Exploitation（利用）阶段**
-   - 访问钓鱼页面
-   - 填写并提交登录表单
-   - 窃取用户凭证
-   - 将凭证发送到C2服务器
+3. **Exploitation Phase**
+   - Access phishing pages
+   - Fill and submit login forms
+   - Steal user credentials
+   - Send credentials to C2 server
 
-## 快速开始
+## Quick Start
 
-### 方法1：一键启动（推荐）
+### Method 1: One-click Startup (Recommended)
 
 ```bash
-# 安装Python依赖
+# Install Python dependencies
 pip3 install -r requirements.txt
 
-# 一键启动攻击场景
+# One-click attack scenario startup
 python3 start_attack.py
 ```
 
-### 方法2：手动步骤
+### Method 2: Manual Steps
 
 ```bash
-# 1. 安装依赖
+# 1. Install dependencies
 pip3 install -r requirements.txt
 
-# 2. 构建并启动容器
+# 2. Build and start containers
 cd docker
 docker-compose up -d
 
-# 3. 等待服务就绪（约30秒）
+# 3. Wait for services to be ready (about 30 seconds)
 sleep 30
 
-# 4. 运行攻击场景
+# 4. Run attack scenario
 cd ..
 python3 run_scenario.py --config scenarios/phishing/scenario.yaml
 ```
 
-## 验证结果
+## Verify Results
 
-### 1. 查看MailHog邮件界面
-访问 http://localhost:8025 查看发送的钓鱼邮件
+### 1. View MailHog Email Interface
+Visit http://localhost:8025 to view sent phishing emails
 
-### 2. 查看收集的凭证
-访问 http://localhost:9000/credentials 查看窃取的凭证
+### 2. View Collected Credentials
+Visit http://localhost:9000/credentials to view stolen credentials
 
-### 3. 查看容器日志
+### 3. View Container Logs
 ```bash
-# 查看victim1日志
+# View victim1 logs
 docker logs docker_victim1_1
 
-# 查看victim2日志
+# View victim2 logs
 docker logs docker_victim2_1
 ```
 
-### 4. 查看网络流量
+### 4. View Network Traffic
 ```bash
-# 查看victim1的pcap文件
+# View victim1 pcap files
 ls docker/victim1/raw/
 
-# 查看victim2的pcap文件
+# View victim2 pcap files
 ls docker/victim2/raw/
 ```
 
-## 重复演练
+## Repeat Exercise
 
-### 清理环境
+### Clean Environment
 ```bash
-# 停止并删除容器
+# Stop and remove containers
 docker-compose -f docker/docker-compose.yml down
 
-# 清理日志文件
+# Clean log files
 sudo truncate -s0 /var/log/audit/audit.log
 sudo truncate -s0 /var/log/syslog
 ```
 
-### 重新演练
+### Re-run Exercise
 ```bash
-# 重新启动
+# Restart
 python3 start_attack.py
 ```
 
-## 日志分析
+## Log Analysis
 
-### 系统日志标签
-攻击过程中会在系统日志中注入以下标签：
-- `phase=Reconnaissance` - 侦察阶段
-- `phase=Delivery` - 投递阶段  
-- `phase=Exploitation` - 利用阶段
-- `attack_event=*` - 各种攻击事件
+### System Log Labels
+During the attack process, the following labels will be injected into system logs:
+- `phase=Reconnaissance` - Reconnaissance phase
+- `phase=Delivery` - Delivery phase  
+- `phase=Exploitation` - Exploitation phase
+- `attack_event=*` - Various attack events
 
-### 网络流量
-- victim1容器：捕获所有网络流量
-- victim2容器：捕获服务器端流量
-- 包含HTTP请求、凭证提交等
+### Network Traffic
+- victim1 container: Captures all network traffic
+- victim2 container: Captures server-side traffic
+- Includes HTTP requests, credential submissions, etc.
 
-### 审计日志
-- Python进程执行记录
-- 系统调用审计
-- 文件访问记录
+### Audit Logs
+- Python process execution records
+- System call audits
+- File access records
 
-## 自定义配置
+## Custom Configuration
 
-### 修改攻击参数
-编辑 `scenarios/phishing/scenario.yaml`：
+### Modify Attack Parameters
+Edit `scenarios/phishing/scenario.yaml`:
 ```yaml
 parameters:
-  attack_delay_s: 30          # 攻击延迟
-  benign_sites:               # 良性网站列表
+  attack_delay_s: 30          # Attack delay
+  benign_sites:               # Benign website list
     - "http://example.com"
-  phishing_email:             # 钓鱼邮件配置
-    subject: "重要通知"
+  phishing_email:             # Phishing email configuration
+    subject: "Important Notice"
 ```
 
-### 添加新的攻击场景
-1. 在 `scenarios/` 下创建新目录
-2. 实现 `benign.py`、`attack.py`、`labels.py`
-3. 创建 `scenario.yaml` 配置文件
-4. 运行：`python3 run_scenario.py --config scenarios/新场景/scenario.yaml`
+### Add New Attack Scenarios
+1. Create new directory under `scenarios/`
+2. Implement `benign.py`, `attack.py`, `labels.py`
+3. Create `scenario.yaml` configuration file
+4. Run: `python3 run_scenario.py --config scenarios/new_scenario/scenario.yaml`
 
-## 故障排除
+## Troubleshooting
 
-### 常见问题
+### Common Issues
 
-1. **容器启动失败**
+1. **Container Startup Failure**
    ```bash
-   # 检查Docker服务
+   # Check Docker service
    sudo systemctl status docker
    
-   # 清理Docker缓存
+   # Clean Docker cache
    docker system prune -a
    ```
 
-2. **浏览器自动化失败**
+2. **Browser Automation Failure**
    ```bash
-   # 检查Firefox和geckodriver
+   # Check Firefox and geckodriver
    docker exec docker_victim1_1 which firefox
    docker exec docker_victim1_1 which geckodriver
    ```
 
-3. **网络连接问题**
+3. **Network Connection Issues**
    ```bash
-   # 检查容器网络
+   # Check container network
    docker network ls
    docker network inspect docker_phishnet
    ```
 
-## 安全注意事项
+## Security Considerations
 
-⚠️ **重要提醒**：
-- 此项目仅用于安全研究和教育目的
-- 请在隔离的测试环境中运行
-- 不要在生产环境或真实网络中使用
-- 遵守当地法律法规
+⚠️ **Important Reminder**:
+- This project is for security research and educational purposes only
+- Please run in an isolated test environment
+- Do not use in production environments or real networks
+- Comply with local laws and regulations
 
-## 技术栈
+## Technology Stack
 
-- **容器化**: Docker + Docker Compose
-- **邮件服务器**: MailHog
-- **浏览器自动化**: Selenium + Firefox
-- **Web框架**: Flask
-- **日志工具**: rsyslog + auditd
-- **网络抓包**: tcpdump
-- **编程语言**: Python 3
+- **Containerization**: Docker + Docker Compose
+- **Mail Server**: MailHog
+- **Browser Automation**: Selenium + Firefox
+- **Web Framework**: Flask
+- **Logging Tools**: rsyslog + auditd
+- **Network Capture**: tcpdump
+- **Programming Language**: Python 3
 
-## 贡献
+## Contributing
 
-欢迎提交Issue和Pull Request来改进这个项目。
+Welcome to submit Issues and Pull Requests to improve this project.

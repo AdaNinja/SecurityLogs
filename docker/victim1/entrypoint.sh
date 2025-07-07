@@ -9,12 +9,12 @@ rsyslogd -n &
 
 
 
-# 2. 启动 tcpdump
+# 2. Start tcpdump
 echo "[*] Starting tcpdump..."
 tcpdump -i any -s 65535 -w /data/raw/${SERVICE_NAME}_$(date +%s).pcap &
 sleep 2
 
-# 验证 tcpdump 状态
+# Verify tcpdump status
 if pgrep -f tcpdump > /dev/null; then
     echo "[+] tcpdump is running successfully"
     echo "[*] Capturing to: /data/raw/${SERVICE_NAME}_*.pcap"
@@ -22,12 +22,12 @@ else
     echo "[-] tcpdump failed to start"
 fi
 
-# 3. 显示服务状态摘要
+# 3. Display service status summary
 echo "[*] Service status summary:"
 echo "    - rsyslog: $(service rsyslog status | head -1)"
 echo "    - tcpdump: $(pgrep -f tcpdump | wc -l) process(es) running"
 
-# 4. 保持容器存活
+# 4. Keep container alive
 echo "[*] Container is ready. Keeping alive..."
 touch /data/raw/.keepalive
 exec tail -f /data/raw/.keepalive

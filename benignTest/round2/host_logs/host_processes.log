@@ -1,0 +1,236 @@
+USER         PID %CPU %MEM    VSZ   RSS TTY      STAT START   TIME COMMAND
+root           1  0.0  0.2 168112 11388 ?        Ss   Jul05   0:10 /sbin/init
+root           2  0.0  0.0      0     0 ?        S    Jul05   0:00 [kthreadd]
+root           3  0.0  0.0      0     0 ?        I<   Jul05   0:00 [rcu_gp]
+root           4  0.0  0.0      0     0 ?        I<   Jul05   0:00 [rcu_par_gp]
+root           5  0.0  0.0      0     0 ?        I<   Jul05   0:00 [slub_flushwq]
+root           6  0.0  0.0      0     0 ?        I<   Jul05   0:00 [netns]
+root           8  0.0  0.0      0     0 ?        I<   Jul05   0:00 [kworker/0:0H-events_highpri]
+root          10  0.0  0.0      0     0 ?        I<   Jul05   0:00 [mm_percpu_wq]
+root          11  0.0  0.0      0     0 ?        S    Jul05   0:00 [rcu_tasks_rude_]
+root          12  0.0  0.0      0     0 ?        S    Jul05   0:00 [rcu_tasks_trace]
+root          13  0.0  0.0      0     0 ?        S    Jul05   0:02 [ksoftirqd/0]
+root          14  0.0  0.0      0     0 ?        I    Jul05   0:25 [rcu_sched]
+root          15  0.0  0.0      0     0 ?        S    Jul05   0:00 [migration/0]
+root          16  0.0  0.0      0     0 ?        S    Jul05   0:00 [idle_inject/0]
+root          18  0.0  0.0      0     0 ?        S    Jul05   0:00 [cpuhp/0]
+root          19  0.0  0.0      0     0 ?        S    Jul05   0:00 [cpuhp/1]
+root          20  0.0  0.0      0     0 ?        S    Jul05   0:00 [idle_inject/1]
+root          21  0.0  0.0      0     0 ?        S    Jul05   0:00 [migration/1]
+root          22  0.0  0.0      0     0 ?        S    Jul05   0:02 [ksoftirqd/1]
+root          24  0.0  0.0      0     0 ?        I<   Jul05   0:00 [kworker/1:0H-events_highpri]
+root          25  0.0  0.0      0     0 ?        S    Jul05   0:00 [kdevtmpfs]
+root          26  0.0  0.0      0     0 ?        I<   Jul05   0:00 [inet_frag_wq]
+root          28  0.0  0.0      0     0 ?        S    Jul05   0:00 [kauditd]
+root          29  0.0  0.0      0     0 ?        S    Jul05   0:00 [khungtaskd]
+root          30  0.0  0.0      0     0 ?        S    Jul05   0:00 [oom_reaper]
+root          31  0.0  0.0      0     0 ?        I<   Jul05   0:00 [writeback]
+root          32  0.0  0.0      0     0 ?        S    Jul05   0:06 [kcompactd0]
+root          33  0.0  0.0      0     0 ?        SN   Jul05   0:00 [ksmd]
+root          34  0.0  0.0      0     0 ?        SN   Jul05   0:00 [khugepaged]
+root          80  0.0  0.0      0     0 ?        I<   Jul05   0:00 [kintegrityd]
+root          81  0.0  0.0      0     0 ?        I<   Jul05   0:00 [kblockd]
+root          82  0.0  0.0      0     0 ?        I<   Jul05   0:00 [blkcg_punt_bio]
+root          83  0.0  0.0      0     0 ?        I<   Jul05   0:00 [tpm_dev_wq]
+root          84  0.0  0.0      0     0 ?        I<   Jul05   0:00 [ata_sff]
+root          85  0.0  0.0      0     0 ?        I<   Jul05   0:00 [md]
+root          86  0.0  0.0      0     0 ?        I<   Jul05   0:00 [edac-poller]
+root          87  0.0  0.0      0     0 ?        I<   Jul05   0:00 [devfreq_wq]
+root          88  0.0  0.0      0     0 ?        S    Jul05   0:00 [watchdogd]
+root          90  0.0  0.0      0     0 ?        I<   Jul05   0:00 [kworker/0:1H-kblockd]
+root          91  0.0  0.0      0     0 ?        S    Jul05   0:01 [kswapd0]
+root          92  0.0  0.0      0     0 ?        S    Jul05   0:00 [ecryptfs-kthrea]
+root          94  0.0  0.0      0     0 ?        I<   Jul05   0:00 [kthrotld]
+root          95  0.0  0.0      0     0 ?        S    Jul05   0:00 [irq/13-pciehp]
+root          96  0.0  0.0      0     0 ?        S    Jul05   0:00 [irq/14-pciehp]
+root          97  0.0  0.0      0     0 ?        S    Jul05   0:00 [irq/15-pciehp]
+root          98  0.0  0.0      0     0 ?        S    Jul05   0:00 [irq/16-pciehp]
+root          99  0.0  0.0      0     0 ?        S    Jul05   0:00 [irq/17-pciehp]
+root         100  0.0  0.0      0     0 ?        S    Jul05   0:00 [irq/18-pciehp]
+root         101  0.0  0.0      0     0 ?        S    Jul05   0:00 [irq/19-pciehp]
+root         102  0.0  0.0      0     0 ?        S    Jul05   0:00 [irq/20-pciehp]
+root         103  0.0  0.0      0     0 ?        S    Jul05   0:00 [irq/21-pciehp]
+root         104  0.0  0.0      0     0 ?        S    Jul05   0:00 [irq/22-pciehp]
+root         105  0.0  0.0      0     0 ?        S    Jul05   0:00 [irq/23-pciehp]
+root         106  0.0  0.0      0     0 ?        S    Jul05   0:00 [irq/24-pciehp]
+root         107  0.0  0.0      0     0 ?        S    Jul05   0:00 [irq/25-pciehp]
+root         108  0.0  0.0      0     0 ?        S    Jul05   0:00 [irq/26-pciehp]
+root         109  0.0  0.0      0     0 ?        S    Jul05   0:00 [irq/27-pciehp]
+root         110  0.0  0.0      0     0 ?        S    Jul05   0:00 [irq/28-pciehp]
+root         111  0.0  0.0      0     0 ?        S    Jul05   0:00 [irq/29-pciehp]
+root         112  0.0  0.0      0     0 ?        S    Jul05   0:00 [irq/30-pciehp]
+root         113  0.0  0.0      0     0 ?        S    Jul05   0:00 [irq/31-pciehp]
+root         114  0.0  0.0      0     0 ?        S    Jul05   0:00 [irq/32-pciehp]
+root         115  0.0  0.0      0     0 ?        S    Jul05   0:00 [irq/33-pciehp]
+root         116  0.0  0.0      0     0 ?        S    Jul05   0:00 [irq/34-pciehp]
+root         117  0.0  0.0      0     0 ?        S    Jul05   0:00 [irq/35-pciehp]
+root         118  0.0  0.0      0     0 ?        S    Jul05   0:00 [irq/36-pciehp]
+root         119  0.0  0.0      0     0 ?        S    Jul05   0:00 [irq/37-pciehp]
+root         120  0.0  0.0      0     0 ?        S    Jul05   0:00 [irq/38-pciehp]
+root         121  0.0  0.0      0     0 ?        S    Jul05   0:00 [irq/39-pciehp]
+root         122  0.0  0.0      0     0 ?        S    Jul05   0:00 [irq/40-pciehp]
+root         123  0.0  0.0      0     0 ?        S    Jul05   0:00 [irq/41-pciehp]
+root         124  0.0  0.0      0     0 ?        S    Jul05   0:00 [irq/42-pciehp]
+root         125  0.0  0.0      0     0 ?        S    Jul05   0:00 [irq/43-pciehp]
+root         126  0.0  0.0      0     0 ?        S    Jul05   0:00 [irq/44-pciehp]
+root         127  0.0  0.0      0     0 ?        I<   Jul05   0:00 [acpi_thermal_pm]
+root         129  0.0  0.0      0     0 ?        I<   Jul05   0:00 [mld]
+root         130  0.0  0.0      0     0 ?        I<   Jul05   0:00 [kworker/1:1H-kblockd]
+root         131  0.0  0.0      0     0 ?        I<   Jul05   0:00 [ipv6_addrconf]
+root         141  0.0  0.0      0     0 ?        I<   Jul05   0:00 [kstrp]
+root         144  0.0  0.0      0     0 ?        I<   Jul05   0:00 [zswap-shrink]
+root         145  0.0  0.0      0     0 ?        I<   Jul05   0:00 [kworker/u5:0]
+root         148  0.0  0.0      0     0 ?        I<   Jul05   0:00 [cryptd]
+root         187  0.0  0.0      0     0 ?        I<   Jul05   0:00 [charger_manager]
+root         234  0.0  0.0      0     0 ?        S    Jul05   0:00 [scsi_eh_0]
+root         235  0.0  0.0      0     0 ?        I<   Jul05   0:00 [nvme-wq]
+root         236  0.0  0.0      0     0 ?        I<   Jul05   0:00 [scsi_tmf_0]
+root         237  0.0  0.0      0     0 ?        I<   Jul05   0:00 [ttm_swap]
+root         238  0.0  0.0      0     0 ?        S    Jul05   0:11 [irq/45-vmwgfx]
+root         239  0.0  0.0      0     0 ?        S    Jul05   0:00 [scsi_eh_1]
+root         240  0.0  0.0      0     0 ?        I<   Jul05   0:00 [scsi_tmf_1]
+root         241  0.0  0.0      0     0 ?        S    Jul05   0:00 [scsi_eh_2]
+root         242  0.0  0.0      0     0 ?        I<   Jul05   0:00 [scsi_tmf_2]
+root         243  0.0  0.0      0     0 ?        S    Jul05   0:00 [scsi_eh_3]
+root         244  0.0  0.0      0     0 ?        I<   Jul05   0:00 [scsi_tmf_3]
+root         245  0.0  0.0      0     0 ?        S    Jul05   0:00 [scsi_eh_4]
+root         246  0.0  0.0      0     0 ?        I<   Jul05   0:00 [scsi_tmf_4]
+root         247  0.0  0.0      0     0 ?        S    Jul05   0:00 [scsi_eh_5]
+root         248  0.0  0.0      0     0 ?        I<   Jul05   0:00 [scsi_tmf_5]
+root         249  0.0  0.0      0     0 ?        S    Jul05   0:00 [scsi_eh_6]
+root         250  0.0  0.0      0     0 ?        I<   Jul05   0:00 [scsi_tmf_6]
+root         251  0.0  0.0      0     0 ?        S    Jul05   0:00 [scsi_eh_7]
+root         252  0.0  0.0      0     0 ?        I<   Jul05   0:00 [scsi_tmf_7]
+root         253  0.0  0.0      0     0 ?        S    Jul05   0:00 [scsi_eh_8]
+root         254  0.0  0.0      0     0 ?        I<   Jul05   0:00 [scsi_tmf_8]
+root         255  0.0  0.0      0     0 ?        S    Jul05   0:00 [scsi_eh_9]
+root         256  0.0  0.0      0     0 ?        I<   Jul05   0:00 [scsi_tmf_9]
+root         257  0.0  0.0      0     0 ?        S    Jul05   0:00 [scsi_eh_10]
+root         258  0.0  0.0      0     0 ?        I<   Jul05   0:00 [scsi_tmf_10]
+root         259  0.0  0.0      0     0 ?        S    Jul05   0:00 [scsi_eh_11]
+root         260  0.0  0.0      0     0 ?        I<   Jul05   0:00 [scsi_tmf_11]
+root         261  0.0  0.0      0     0 ?        S    Jul05   0:00 [scsi_eh_12]
+root         262  0.0  0.0      0     0 ?        I<   Jul05   0:00 [scsi_tmf_12]
+root         263  0.0  0.0      0     0 ?        S    Jul05   0:00 [scsi_eh_13]
+root         264  0.0  0.0      0     0 ?        I<   Jul05   0:00 [scsi_tmf_13]
+root         265  0.0  0.0      0     0 ?        S    Jul05   0:00 [scsi_eh_14]
+root         266  0.0  0.0      0     0 ?        I<   Jul05   0:00 [scsi_tmf_14]
+root         267  0.0  0.0      0     0 ?        S    Jul05   0:00 [scsi_eh_15]
+root         268  0.0  0.0      0     0 ?        I<   Jul05   0:00 [scsi_tmf_15]
+root         269  0.0  0.0      0     0 ?        S    Jul05   0:00 [scsi_eh_16]
+root         270  0.0  0.0      0     0 ?        I<   Jul05   0:00 [scsi_tmf_16]
+root         271  0.0  0.0      0     0 ?        S    Jul05   0:00 [scsi_eh_17]
+root         272  0.0  0.0      0     0 ?        I<   Jul05   0:00 [scsi_tmf_17]
+root         273  0.0  0.0      0     0 ?        S    Jul05   0:00 [scsi_eh_18]
+root         274  0.0  0.0      0     0 ?        I<   Jul05   0:00 [scsi_tmf_18]
+root         275  0.0  0.0      0     0 ?        S    Jul05   0:00 [scsi_eh_19]
+root         276  0.0  0.0      0     0 ?        I<   Jul05   0:00 [scsi_tmf_19]
+root         277  0.0  0.0      0     0 ?        S    Jul05   0:00 [scsi_eh_20]
+root         278  0.0  0.0      0     0 ?        I<   Jul05   0:00 [scsi_tmf_20]
+root         279  0.0  0.0      0     0 ?        S    Jul05   0:00 [scsi_eh_21]
+root         280  0.0  0.0      0     0 ?        I<   Jul05   0:00 [scsi_tmf_21]
+root         281  0.0  0.0      0     0 ?        S    Jul05   0:00 [scsi_eh_22]
+root         282  0.0  0.0      0     0 ?        I<   Jul05   0:00 [scsi_tmf_22]
+root         283  0.0  0.0      0     0 ?        S    Jul05   0:00 [scsi_eh_23]
+root         284  0.0  0.0      0     0 ?        I<   Jul05   0:00 [scsi_tmf_23]
+root         285  0.0  0.0      0     0 ?        S    Jul05   0:00 [scsi_eh_24]
+root         286  0.0  0.0      0     0 ?        I<   Jul05   0:00 [scsi_tmf_24]
+root         287  0.0  0.0      0     0 ?        S    Jul05   0:00 [scsi_eh_25]
+root         288  0.0  0.0      0     0 ?        I<   Jul05   0:00 [nvme-reset-wq]
+root         289  0.0  0.0      0     0 ?        S    Jul05   0:00 [card0-crtc0]
+root         290  0.0  0.0      0     0 ?        S    Jul05   0:00 [card0-crtc1]
+root         291  0.0  0.0      0     0 ?        S    Jul05   0:00 [card0-crtc2]
+root         292  0.0  0.0      0     0 ?        S    Jul05   0:00 [card0-crtc3]
+root         293  0.0  0.0      0     0 ?        S    Jul05   0:00 [card0-crtc4]
+root         294  0.0  0.0      0     0 ?        S    Jul05   0:00 [card0-crtc5]
+root         295  0.0  0.0      0     0 ?        S    Jul05   0:00 [card0-crtc6]
+root         296  0.0  0.0      0     0 ?        S    Jul05   0:00 [card0-crtc7]
+root         297  0.0  0.0      0     0 ?        I<   Jul05   0:00 [scsi_tmf_25]
+root         298  0.0  0.0      0     0 ?        S    Jul05   0:00 [scsi_eh_26]
+root         299  0.0  0.0      0     0 ?        I<   Jul05   0:00 [scsi_tmf_26]
+root         300  0.0  0.0      0     0 ?        S    Jul05   0:00 [scsi_eh_27]
+root         301  0.0  0.0      0     0 ?        I<   Jul05   0:00 [scsi_tmf_27]
+root         302  0.0  0.0      0     0 ?        I<   Jul05   0:00 [nvme-delete-wq]
+root         303  0.0  0.0      0     0 ?        S    Jul05   0:00 [scsi_eh_28]
+root         304  0.0  0.0      0     0 ?        I<   Jul05   0:00 [scsi_tmf_28]
+root         305  0.0  0.0      0     0 ?        S    Jul05   0:00 [scsi_eh_29]
+root         306  0.0  0.0      0     0 ?        I<   Jul05   0:00 [scsi_tmf_29]
+root         387  0.0  0.0      0     0 ?        I<   Jul05   0:00 [kdmflush]
+root         418  0.0  0.0      0     0 ?        I<   Jul05   0:00 [raid5wq]
+root         466  0.0  0.0      0     0 ?        S    Jul05   0:06 [jbd2/dm-0-8]
+root         467  0.0  0.0      0     0 ?        I<   Jul05   0:00 [ext4-rsv-conver]
+root         539  0.0  0.7  89396 29128 ?        S<s  Jul05   0:05 /lib/systemd/systemd-journald
+root         567  0.0  0.0      0     0 ?        I<   Jul05   0:00 [kaluad]
+root         571  0.0  0.0      0     0 ?        I<   Jul05   0:00 [kmpath_rdacd]
+root         573  0.0  0.0      0     0 ?        I<   Jul05   0:00 [kmpathd]
+root         575  0.0  0.0      0     0 ?        I<   Jul05   0:00 [kmpath_handlerd]
+root         576  0.0  0.6 289660 25664 ?        SLsl Jul05   0:12 /sbin/multipathd -d -s
+root         580  0.0  0.1  25848  6448 ?        Ss   Jul05   0:01 /lib/systemd/systemd-udevd
+root         656  0.0  0.0      0     0 ?        S    Jul05   0:00 [jbd2/nvme0n1p2-]
+root         657  0.0  0.0      0     0 ?        I<   Jul05   0:00 [ext4-rsv-conver]
+systemd+     679  0.0  0.1  88660  6488 ?        Ssl  Jul05   0:01 /lib/systemd/systemd-timesyncd
+root         748  0.0  0.2  47840 10536 ?        Ss   Jul05   0:00 /usr/bin/VGAuthService
+root         749  0.2  0.1 312652  7900 ?        Ssl  Jul05   2:22 /usr/bin/vmtoolsd
+systemd+     792  0.0  0.3  26152 13396 ?        Ss   Jul05   0:04 /lib/systemd/systemd-resolved
+root         881  0.0  0.0   3928  2344 ?        Ss   Jul05   0:00 /usr/sbin/cron -f -P
+message+     883  0.0  0.1   9260  4460 ?        Ss   Jul05   0:02 @dbus-daemon --system --address=systemd: --nofork --nopidfile --systemd-activation --syslog-only
+root         889  0.0  0.0  82112  3224 ?        Ssl  Jul05   0:09 /usr/sbin/irqbalance --foreground
+root         890  0.0  0.4  30040 18452 ?        Ss   Jul05   0:01 /usr/bin/python3 /usr/bin/networkd-dispatcher --run-startup-triggers
+root         891  0.0  0.1 234328  6788 ?        Ssl  Jul05   0:00 /usr/libexec/polkitd --no-debug
+syslog       898  0.0  0.1 222020  4708 ?        Ssl  Jul05   0:01 /usr/sbin/rsyslogd -n -iNONE
+root         902  0.0  0.1  48824  7340 ?        Ss   Jul05   0:01 /lib/systemd/systemd-logind
+root         904  0.0  0.2 393664 11716 ?        Ssl  Jul05   0:00 /usr/libexec/udisks2/udisksd
+root         922  0.0  0.2 320792 11604 ?        Ssl  Jul05   0:00 /usr/sbin/ModemManager
+root         955  0.0  0.0   9672  3704 tty1     Ss   Jul05   0:00 /bin/login -p --
+root         973  0.0  0.4 106940 19932 ?        Ssl  Jul05   0:00 /usr/bin/python3 /usr/share/unattended-upgrades/unattended-upgrade-shutdown --wait-for-signal
+root        1040  0.0  0.2  15148  8324 ?        Ss   Jul05   0:00 sshd: /usr/sbin/sshd -D [listener] 0 of 10-100 startups
+jiayi       1703  0.0  0.2  17232  9056 ?        Ss   Jul05   0:01 /lib/systemd/systemd --user
+jiayi       1704  0.0  0.1 106280  4836 ?        S    Jul05   0:00 (sd-pam)
+jiayi       1712  0.0  0.0   8236  3520 tty1     S+   Jul05   0:00 -bash
+root        2040  0.0  0.4 297608 17988 ?        Ssl  Jul05   0:02 /usr/libexec/packagekitd
+root        7875  0.1  1.2 1861212 48644 ?       Ssl  00:01   1:20 /usr/bin/containerd
+root       11623  0.0  0.0  11084  1896 ?        S<sl 00:39   0:00 /sbin/auditd
+root       20403  0.1  2.0 2409812 81616 ?       Ssl  04:22   1:00 /usr/bin/dockerd -H fd:// --containerd=/run/containerd/containerd.sock
+systemd+   58825  0.0  0.1  16408  7668 ?        Ss   09:24   0:04 /lib/systemd/systemd-networkd
+jiayi      59744  0.0  0.0   2304   752 ?        S    09:26   0:00 sh /home/jiayi/.cursor-server/cli/servers/Stable-5b19bac7a947f54e4caa3eb7e4c5fbf832389850/server/bin/cursor-server --connection-token=remotessh --accept-server-license-terms --start-server --enable-remote-auto-shutdown --socket-path=/tmp/cursor-78416ea6-0fc4-4205-ac03-28912714716a
+jiayi      59748  0.5  2.9 5298800 116808 ?      Sl   09:26   1:15 /home/jiayi/.cursor-server/cli/servers/Stable-5b19bac7a947f54e4caa3eb7e4c5fbf832389850/server/node /home/jiayi/.cursor-server/cli/servers/Stable-5b19bac7a947f54e4caa3eb7e4c5fbf832389850/server/out/server-main.js --connection-token=remotessh --accept-server-license-terms --start-server --enable-remote-auto-shutdown --socket-path=/tmp/cursor-78416ea6-0fc4-4205-ac03-28912714716a
+jiayi      59789  0.6  1.7 5389656 71480 ?       Sl   09:26   1:19 /home/jiayi/.cursor-server/cli/servers/Stable-5b19bac7a947f54e4caa3eb7e4c5fbf832389850/server/node /home/jiayi/.cursor-server/cli/servers/Stable-5b19bac7a947f54e4caa3eb7e4c5fbf832389850/server/out/bootstrap-fork --type=ptyHost --logsPath /home/jiayi/.cursor-server/data/logs/20250706T082730
+jiayi      60595  0.0  0.1   8308  4580 pts/1    Ss+  09:47   0:00 /bin/bash --init-file /home/jiayi/.cursor-server/cli/servers/Stable-5b19bac7a947f54e4caa3eb7e4c5fbf832389850/server/out/vs/workbench/contrib/terminal/common/scripts/shellIntegration-bash.sh
+jiayi      60832  0.0  0.0   8364  3684 pts/2    Ss+  09:59   0:00 /usr/bin/bash -l
+jiayi      61103  0.0  0.1   8364  4604 pts/3    Ss+  10:00   0:00 /usr/bin/bash -l
+root       68217  0.0  0.7 1920820 31352 ?       Ssl  10:41   0:06 /usr/lib/snapd/snapd
+root       71274  0.1  0.0      0     0 ?        I    11:07   0:07 [kworker/1:1-events]
+jiayi      71650  0.0  0.1   8364  5148 pts/4    Ss+  11:10   0:00 /usr/bin/bash -l
+jiayi      76102  0.0  0.1   8364  5196 pts/5    Ss+  11:18   0:00 /usr/bin/bash -l
+root       77817  0.0  0.0      0     0 ?        I    11:22   0:03 [kworker/0:3-events]
+jiayi      78077  0.0  0.1   8308  5140 pts/6    Ss+  11:27   0:00 /bin/bash --init-file /home/jiayi/.cursor-server/cli/servers/Stable-5b19bac7a947f54e4caa3eb7e4c5fbf832389850/server/out/vs/workbench/contrib/terminal/common/scripts/shellIntegration-bash.sh
+root       78207  0.0  0.3 1237876 13684 ?       Sl   11:27   0:04 /usr/bin/containerd-shim-runc-v2 -namespace moby -id 9ffde9c98eb176db7124e6e1b023701253e477e0d3ea15ebb25bba144c08d202 -address /run/containerd/containerd.sock
+root       78215  0.0  0.3 1237876 14004 ?       Sl   11:27   0:05 /usr/bin/containerd-shim-runc-v2 -namespace moby -id d24932fa094a8d8a2fb815885b567a083c2eb503581a4c1607d043b730c8cf31 -address /run/containerd/containerd.sock
+root       78251  0.0  0.0   2232   812 ?        Ss   11:27   0:00 tail -f /data/raw/.keepalive
+root       78259  0.0  0.0   2232   808 ?        Ss   11:27   0:00 tail -f /data/raw/.keepalive
+systemd+   78272  0.0  0.0 221652  3444 ?        Sl   11:27   0:00 rsyslogd -n
+pollina+   78284  0.0  0.0 221652  3460 ?        Sl   11:27   0:00 rsyslogd -n
+systemd+   78285  0.0  0.0      0     0 ?        Z    11:27   0:00 [tcpdump] <defunct>
+systemd+   78332  0.0  0.0      0     0 ?        Z    11:27   0:00 [tcpdump] <defunct>
+jiayi      87642  0.0  1.3 5170888 54536 ?       Sl   12:26   0:01 /home/jiayi/.cursor-server/cli/servers/Stable-5b19bac7a947f54e4caa3eb7e4c5fbf832389850/server/node /home/jiayi/.cursor-server/cli/servers/Stable-5b19bac7a947f54e4caa3eb7e4c5fbf832389850/server/out/bootstrap-fork --type=fileWatcher
+root       87845  0.0  0.0      0     0 ?        I    12:30   0:00 [kworker/u4:3-flush-253:0]
+root       87881  0.0  0.0      0     0 ?        I    12:38   0:00 [kworker/u4:1-flush-253:0]
+root       87967  0.0  0.0      0     0 ?        I    12:44   0:00 [kworker/u4:0-events_unbound]
+root       88668  0.0  0.0      0     0 ?        I    12:45   0:00 [kworker/0:0-events]
+jiayi      90038  0.0  0.1   8364  5224 pts/7    Ss+  12:52   0:00 /usr/bin/bash -l
+root       90083  0.0  0.2  18120  9524 ?        Ss   12:54   0:00 sshd: jiayi [priv]
+jiayi      90182  0.1  0.1  18716  6984 ?        S    12:54   0:00 sshd: jiayi@notty
+jiayi      90183  0.0  0.0   6992  3492 ?        Ss   12:54   0:00 -bash
+jiayi      90188  0.0  0.0   7256  3392 ?        S    12:54   0:00 bash
+jiayi      90207  0.2  0.3  27796 14424 ?        Sl   12:54   0:01 /home/jiayi/.cursor-server/cursor-5b19bac7a947f54e4caa3eb7e4c5fbf832389850 command-shell --cli-data-dir /home/jiayi/.cursor-server/cli --parent-process-id 90188 --on-port --on-host=127.0.0.1
+jiayi      90231  2.8  8.3 31261980 335020 ?     Sl   12:54   0:18 /home/jiayi/.cursor-server/cli/servers/Stable-5b19bac7a947f54e4caa3eb7e4c5fbf832389850/server/node --dns-result-order=ipv4first /home/jiayi/.cursor-server/cli/servers/Stable-5b19bac7a947f54e4caa3eb7e4c5fbf832389850/server/out/bootstrap-fork --type=extensionHost --transformURIs --useHostProxy=false
+jiayi      90242  0.1  1.3 5170896 53180 ?       Sl   12:54   0:00 /home/jiayi/.cursor-server/cli/servers/Stable-5b19bac7a947f54e4caa3eb7e4c5fbf832389850/server/node /home/jiayi/.cursor-server/cli/servers/Stable-5b19bac7a947f54e4caa3eb7e4c5fbf832389850/server/out/bootstrap-fork --type=fileWatcher
+jiayi      90304  0.0  0.0   2304   812 ?        S    12:54   0:00 /bin/sh
+jiayi      90342  0.5  3.4 1125456 138464 ?      Sl   12:54   0:03 /home/jiayi/.cursor-server/cli/servers/Stable-5b19bac7a947f54e4caa3eb7e4c5fbf832389850/server/node --max-old-space-size=3072 /home/jiayi/.cursor-server/extensions/anysphere.cursorpyright-1.0.5/dist/server.js --cancellationReceive=file:35ef25d0189a284e11f469bac50a0471801f962c89 --node-ipc --clientProcessId=90231
+jiayi      90439  0.0  1.2 728336 51080 ?        Sl   12:54   0:00 /home/jiayi/.cursor-server/cli/servers/Stable-5b19bac7a947f54e4caa3eb7e4c5fbf832389850/server/node /home/jiayi/.cursor-server/extensions/ms-azuretools.vscode-containers-2.0.3-universal/dist/dockerfile-language-server-nodejs/lib/server.js --node-ipc --node-ipc --clientProcessId=90231
+jiayi      90440  0.0  1.2 727924 49024 ?        Sl   12:54   0:00 /home/jiayi/.cursor-server/cli/servers/Stable-5b19bac7a947f54e4caa3eb7e4c5fbf832389850/server/node /home/jiayi/.cursor-server/extensions/ms-azuretools.vscode-containers-2.0.3-universal/dist/compose-language-service/lib/server.js --node-ipc --node-ipc --clientProcessId=90231
+root       90460  0.0  0.0      0     0 ?        I    12:56   0:00 [kworker/1:0-events]
+jiayi      90545  0.0  0.1   8364  5220 pts/8    Ss   13:01   0:00 /usr/bin/bash -l
+jiayi      90637  0.0  0.0   7476  3952 pts/8    S+   13:01   0:00 bash benignTest/benign_collect.sh
+jiayi      91179  0.0  0.0   5180   776 ?        S    13:03   0:00 sleep 180
+jiayi      91931  0.0  0.0   9416  1652 pts/8    R+   13:04   0:00 ps aux

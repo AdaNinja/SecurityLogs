@@ -1,0 +1,6 @@
+2025-07-07T08:18:48.018605 - Worker 2 - Technique: X-Forwarded-For: 127.0.0.1 - Status: 7
+2025-07-07T08:18:49.031160 - Worker 2 - Technique: X-Real-IP: 192.168.1.1 - Status: 7
+2025-07-07T08:18:50.044758 - Worker 2 - Technique: X-Originating-IP: 10.0.0.1 - Status: 7
+2025-07-07T08:18:51.056956 - Worker 2 - Technique: CF-Connecting-IP: 172.16.0.1 - Status: 7
+2025-07-07T08:18:52.082701 - Worker 2 - Technique: Googlebot/2.1 (+http://www.google.com/bot.html) - Status: 7
+2025-07-07T08:18:53.106124 - Worker 2 - Technique: Mozilla/5.0 (compatible; Bingbot/2.0; +http://www.bing.com/bingbot.htm) - Status: 7
