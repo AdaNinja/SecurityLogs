@@ -1,0 +1,32 @@
+{
+  "profile_name": "medium_latency",
+  "description": "Medium latency network conditions",
+  "parameters": {
+    "delay": "100ms",
+    "jitter": "20ms",
+    "loss": "0.5%",
+    "duplicate": "0.1%",
+    "corrupt": "0.02%",
+    "reorder": "0.2%"
+  },
+  "targets": {
+    "webapp": {
+      "interface": "eth0",
+      "delay": "80ms",
+      "jitter": "15ms",
+      "loss": "0.3%"
+    },
+    "attacker": {
+      "interface": "eth0",
+      "delay": "60ms", 
+      "jitter": "10ms",
+      "loss": "0.2%"
+    },
+    "database": {
+      "interface": "eth0",
+      "delay": "120ms",
+      "jitter": "25ms",
+      "loss": "0.4%"
+    }
+  }
+} 
