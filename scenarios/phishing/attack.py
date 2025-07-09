@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Phishing attack script - Implement real phishing email attacks
+Phishing attack script - Real phishing email attack execution
 """
 
 import time
@@ -15,6 +15,7 @@ from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from logger_utils import log_attack_event
 from scenarios.phishing.labels import deliver, exploit, credential_theft, email_opened, link_clicked, form_submitted, c2_communication
+from scenarios.phishing.service_installer import install_services
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -70,61 +71,82 @@ def create_phishing_page():
     """
 
 def setup_browser(params):
-    """Setup browser"""
+    """Setup browser for real user interaction"""
     options = Options()
-    if params.get("browser", {}).get("headless", True):
+    
+    # Configure browser based on attack execution settings
+    attack_execution = params.get("attack_execution", {})
+    if not attack_execution.get("real_browser_interaction", True):
         options.add_argument("--headless")
     
     options.add_argument("--no-sandbox")
     options.add_argument("--disable-dev-shm-usage")
     options.add_argument(f"--user-agent={params.get('browser', {}).get('user_agent', 'Mozilla/5.0')}")
     
+    # Set window size for better visibility
+    window_size = params.get("browser", {}).get("window_size", "1920x1080")
+    options.add_argument(f"--window-size={window_size}")
+    
     driver = webdriver.Firefox(options=options)
     driver.set_page_load_timeout(params.get("browser", {}).get("timeout", 30))
     
     return driver
 
-def send_phishing_email(params):
-    """Send phishing email"""
+def send_real_phishing_email(params):
+    """Send real phishing email using MailHog"""
     try:
-        # Use curl to send email to MailHog
+        # Check if real email sending is enabled
+        attack_execution = params.get("attack_execution", {})
+        if not attack_execution.get("real_email_sending", True):
+            logger.info("Real email sending disabled, skipping...")
+            return True
+        
+        # Prepare email data
         email_data = {
             "from": params["phishing_email"]["sender"],
-            "to": ["victim@company.com"],
+            "to": [params["phishing_email"]["target_email"]],
             "subject": params["phishing_email"]["subject"],
             "body": params["phishing_email"]["body"] + f"\n\nClick link: {params['target_link']}"
         }
         
-        # Send email
+        # Send email via MailHog API
+        mail_server = params["mail_server"]
         response = requests.post(
-            f"{params['mail_server']['web_ui']}/api/v1/messages",
+            f"{mail_server['web_ui']}/api/v1/messages",
             json=email_data,
             timeout=10
         )
         
         if response.status_code == 200:
-            logger.info("Phishing email sent successfully")
+            logger.info("Real phishing email sent successfully")
             log_attack_event("phishing_email_sent", {
                 "subject": email_data["subject"],
-                "target": email_data["to"][0]
+                "target": email_data["to"][0],
+                "real_email": True
             })
             return True
         else:
-            logger.error(f"Failed to send email: {response.status_code}")
+            logger.error(f"Failed to send real email: {response.status_code}")
             return False
             
     except Exception as e:
-        logger.error(f"Error sending phishing email: {e}")
+        logger.error(f"Error sending real phishing email: {e}")
         return False
 
-def simulate_email_opening(params):
-    """Simulate email opening and link clicking"""
+def execute_real_email_interaction(params):
+    """Execute real email opening and link clicking"""
     try:
         driver = setup_browser(params)
         
-        # 1. Access MailHog Web UI to view emails
+        # Check if real browser interaction is enabled
+        attack_execution = params.get("attack_execution", {})
+        if not attack_execution.get("real_browser_interaction", True):
+            logger.info("Real browser interaction disabled, skipping...")
+            return driver
+        
+        # 1. Access MailHog Web UI to view real emails
         mail_ui_url = params["mail_server"]["web_ui"]
-        logger.info(f"Accessing email interface: {mail_ui_url}")
+        logger.info(f"Accessing real email interface: {mail_ui_url}")
         driver.get(mail_ui_url)
         
         # Wait for email list to load
@@ -132,8 +154,8 @@ def simulate_email_opening(params):
             EC.presence_of_element_located((By.CSS_SELECTOR, ".messages"))
         )
         
-        # 2. Click the first email (phishing email)
-        logger.info("Clicking phishing email...")
+        # 2. Click the first email (real phishing email)
+        logger.info("Clicking real phishing email...")
         first_email = driver.find_element(By.CSS_SELECTOR, ".messages .message")
         first_email.click()
         
@@ -143,10 +165,10 @@ def simulate_email_opening(params):
         )
         
         email_opened()
-        logger.info("Successfully opened phishing email")
+        logger.info("Successfully opened real phishing email")
         
-        # 3. Find and click phishing link in email
-        logger.info("Looking for phishing link in email...")
+        # 3. Find and click real phishing link in email
+        logger.info("Looking for real phishing link in email...")
         target_link = params["target_link"]
         
         # Find elements containing target link
@@ -160,10 +182,10 @@ def simulate_email_opening(params):
                 break
         
         if phishing_link:
-            logger.info("Found phishing link, preparing to click...")
-            # Record click event
+            logger.info("Found real phishing link, preparing to click...")
+            # Record real click event
             link_clicked()
-            log_attack_event("email_link_clicked", {"url": target_link})
+            log_attack_event("email_link_clicked", {"url": target_link, "real_click": True})
             
             # Click link (will open in new window)
             phishing_link.click()
@@ -181,107 +203,139 @@ def simulate_email_opening(params):
                     EC.presence_of_element_located((By.ID, "loginForm"))
                 )
                 
-                logger.info("Successfully accessed phishing page via email link")
-                return driver  # Return driver for subsequent operations
+                logger.info("Successfully accessed real phishing page via email link")
+                return driver
             else:
                 logger.warning("New window not opened, directly accessing phishing page")
                 driver.get(target_link)
                 return driver
         else:
-            logger.warning("Phishing link not found, directly accessing phishing page")
+            logger.warning("Real phishing link not found, directly accessing phishing page")
             driver.get(target_link)
             return driver
             
     except Exception as e:
-        logger.error(f"Error simulating email opening: {e}")
+        logger.error(f"Error executing real email interaction: {e}")
         if driver:
             driver.quit()
         return None
 
-def run(params):
-    """
-    Execute phishing attack
-    
-    Args:
-        params: Scenario parameters dictionary
-    """
-    logger.info("Starting phishing attack...")
-    deliver()
-    
+def execute_real_credential_theft(params, driver):
+    """Execute real credential theft via form submission"""
     try:
-        # 1. Send phishing email
-        logger.info("Step 1: Send phishing email")
-        if not send_phishing_email(params):
-            logger.error("Failed to send phishing email")
-            return
+        # Check if real form submission is enabled
+        attack_execution = params.get("attack_execution", {})
+        if not attack_execution.get("real_form_submission", True):
+            logger.info("Real form submission disabled, skipping...")
+            return True
         
-        # 2. Simulate email opening and click phishing link
-        logger.info("Step 2: Simulate email opening and click phishing link")
-        driver = simulate_email_opening(params)
-        if not driver:
-            logger.error("Failed to simulate email opening")
-            return
+        # Record real page access event
+        log_attack_event("phishing_page_accessed", {"url": params["target_link"], "real_access": True})
         
-        # 3. Ensure credential collection server is running
-        logger.info("Step 3: Ensure credential collection server is running")
-        exploit()
+        # Wait for page to load
+        WebDriverWait(driver, 10).until(
+            EC.presence_of_element_located((By.ID, "loginForm"))
+        )
         
-        try:
-            # Record page access event
-            log_attack_event("phishing_page_accessed", {"url": params["target_link"]})
-            
-            # Wait for page to load
-            WebDriverWait(driver, 10).until(
-                EC.presence_of_element_located((By.ID, "loginForm"))
-            )
-            
-            # Fill form
-            logger.info("Filling phishing form...")
-            username_field = driver.find_element(By.ID, "username")
-            password_field = driver.find_element(By.ID, "password")
-            
-            # Simulate user input
-            username_field.send_keys("test_user@company.com")
-            time.sleep(1)
-            password_field.send_keys("test_password123")
-            time.sleep(1)
-            
-            # Submit form
-            logger.info("Submitting phishing form...")
-            submit_button = driver.find_element(By.CSS_SELECTOR, "button[type='submit']")
-            submit_button.click()
-            
-            form_submitted()
-            credential_theft()
-            
-            # Wait for submission to complete
-            time.sleep(3)
-            
-            # Verify credentials were collected
-            logger.info("Verifying credential collection...")
+        # Fill form with real-looking credentials
+        logger.info("Filling real phishing form...")
+        username_field = driver.find_element(By.ID, "username")
+        password_field = driver.find_element(By.ID, "password")
+        
+        # Use realistic credentials
+        test_credentials = {
+            "username": "test_user@company.com",
+            "password": "SecurePass123!"
+        }
+        
+        # Real user input simulation
+        username_field.send_keys(test_credentials["username"])
+        time.sleep(1)
+        password_field.send_keys(test_credentials["password"])
+        time.sleep(1)
+        
+        # Submit form
+        logger.info("Submitting real phishing form...")
+        submit_button = driver.find_element(By.CSS_SELECTOR, "button[type='submit']")
+        submit_button.click()
+        
+        form_submitted()
+        credential_theft()
+        
+        # Wait for submission to complete
+        time.sleep(3)
+        
+        # Verify real credentials were collected
+        if attack_execution.get("verification_checks", True):
+            logger.info("Verifying real credential collection...")
             try:
                 response = requests.get(f"{params['capture_endpoint'].replace('/collect', '/credentials')}", timeout=10)
                 if response.status_code == 200:
                     credentials = response.json()
-                    logger.info(f"Successfully collected {credentials.get('count', 0)} credentials")
+                    logger.info(f"Successfully collected {credentials.get('count', 0)} real credentials")
                     c2_communication()
                     log_attack_event("credentials_collected", {
                         "count": credentials.get('count', 0),
-                        "credentials": credentials.get('credentials', [])
+                        "credentials": credentials.get('credentials', []),
+                        "real_theft": True
                     })
                 else:
-                    logger.warning("Unable to verify credential collection status")
+                    logger.warning("Unable to verify real credential collection status")
             except Exception as e:
-                logger.warning(f"Error verifying credential collection: {e}")
-            
+                logger.warning(f"Error verifying real credential collection: {e}")
+        
+        return True
+        
+    except Exception as e:
+        logger.error(f"Error executing real credential theft: {e}")
+        return False
+
+def run(params):
+    """
+    Execute real phishing attack
+    
+    Args:
+        params: Scenario parameters dictionary
+    """
+    logger.info("Starting real phishing attack...")
+    deliver()
+    
+    try:
+        # 0. Install and configure required services
+        logger.info("Step 0: Installing and configuring services...")
+        if not install_services(params):
+            logger.error("Service installation failed")
+            return
+        
+        # 1. Send real phishing email
+        logger.info("Step 1: Send real phishing email")
+        if not send_real_phishing_email(params):
+            logger.error("Failed to send real phishing email")
+            return
+        
+        # 2. Execute real email interaction
+        logger.info("Step 2: Execute real email interaction")
+        driver = execute_real_email_interaction(params)
+        if not driver:
+            logger.error("Failed to execute real email interaction")
+            return
+        
+        # 3. Execute real credential theft
+        logger.info("Step 3: Execute real credential theft")
+        exploit()
+        
+        try:
+            if not execute_real_credential_theft(params, driver):
+                logger.error("Failed to execute real credential theft")
+                return
         finally:
             if driver:
                 driver.quit()
         
-        logger.info("Phishing attack execution completed")
-        log_attack_event("phishing_attack_complete")
+        logger.info("Real phishing attack execution completed")
+        log_attack_event("phishing_attack_complete", {"real_attack": True})
         
     except Exception as e:
-        logger.error(f"Phishing attack execution failed: {e}")
-        log_attack_event("phishing_attack_failed", {"error": str(e)})
+        logger.error(f"Real phishing attack execution failed: {e}")
+        log_attack_event("phishing_attack_failed", {"error": str(e), "real_attack": True})
         raise

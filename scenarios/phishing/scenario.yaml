@@ -1,6 +1,22 @@
 name: phishing
-description: "Phishing email attack scenario - Simulate real phishing email attack chain"
+description: "Phishing email attack scenario - Real phishing email attack chain execution"
 parameters:
+  # Service installation configuration
+  services:
+    mailhog:
+      install: true
+      version: "v1.0.1"
+      download_url: "https://github.com/mailhog/MailHog/releases/download/v1.0.1/MailHog_linux_amd64"
+      ports:
+        smtp: 1025
+        web_ui: 8025
+      auto_start: true
+    
+    credential_collector:
+      install: true
+      port: 9000
+      auto_start: true
+  
   # Benign website list (for Reconnaissance phase)
   benign_sites:
     - "https://www.google.com"
@@ -20,6 +36,7 @@ parameters:
     subject: "Important Notice: Your Account Needs Verification"
     sender: "security@company.com"
     body: "Please click the following link to verify your account information"
+    target_email: "victim@company.com"
   
   # Target link (phishing page)
   target_link: "http://victim2:9000/phish"
@@ -35,6 +52,15 @@ parameters:
   
   # Browser automation configuration
   browser:
-    headless: true
+    headless: false  # Set to false for real user interaction
     timeout: 30
     user_agent: "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36"
+    window_size: "1920x1080"
+  
+  # Real attack execution settings
+  attack_execution:
+    real_email_sending: true
+    real_browser_interaction: true
+    real_form_submission: true
+    real_credential_collection: true
+    verification_checks: true
