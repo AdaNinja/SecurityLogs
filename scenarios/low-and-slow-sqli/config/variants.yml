@@ -1,0 +1,82 @@
+# SecurityLogs Variants Configuration
+# Different attack intensity levels for the low-and-slow-sqli scenario
+# Using official tool grade classifications
+
+variants:
+  stealthy:
+    description: "Very slow and stealthy attack using official SQLMap RISK=1, LEVEL=1"
+    nmap_rate: 0.008
+    sql_delay: 300
+    sqlmap_risk: 1      # SQLMap official RISK level (1-3)
+    sqlmap_level: 1     # SQLMap official LEVEL (1-5)
+    protocol_mix: "HTTP:0.8,DNS:0.15,SMTP:0.05"
+    netem_profile: "low_latency"
+    
+  moderate:
+    description: "Balanced attack using official SQLMap RISK=1, LEVEL=2"
+    nmap_rate: 0.016
+    sql_delay: 120
+    sqlmap_risk: 1      # SQLMap official RISK level
+    sqlmap_level: 2     # SQLMap official LEVEL
+    protocol_mix: "HTTP:0.7,DNS:0.2,SMTP:0.1"
+    netem_profile: "medium_latency"
+    
+  aggressive:
+    description: "Faster attack using official SQLMap RISK=2, LEVEL=3"
+    nmap_rate: 0.05
+    sql_delay: 60
+    sqlmap_risk: 2      # SQLMap official RISK level
+    sqlmap_level: 3     # SQLMap official LEVEL
+    protocol_mix: "HTTP:0.6,DNS:0.25,SMTP:0.15"
+    netem_profile: "high_latency"
+    
+  research:
+    description: "Research-focused variant using official SQLMap RISK=1, LEVEL=4"
+    nmap_rate: 0.025
+    sql_delay: 180
+    sqlmap_risk: 1      # SQLMap official RISK level
+    sqlmap_level: 4     # SQLMap official LEVEL
+    protocol_mix: "HTTP:0.75,DNS:0.2,SMTP:0.05"
+    netem_profile: "research_profile"
+    
+  production:
+    description: "Production-like environment using official SQLMap RISK=1, LEVEL=2"
+    nmap_rate: 0.012
+    sql_delay: 200
+    sqlmap_risk: 1      # SQLMap official RISK level
+    sqlmap_level: 2     # SQLMap official LEVEL
+    protocol_mix: "HTTP:0.8,DNS:0.15,SMTP:0.05"
+    netem_profile: "production_profile"
+
+# Default variant to use if none specified
+default_variant: moderate
+
+# Variant execution order for batch runs
+execution_order:
+  - stealthy
+  - moderate
+  - aggressive
+  - research
+  - production
+
+# Official tool grade mappings
+tool_grades:
+  sqlmap:
+    risk_levels:
+      1: "Low risk - Basic SQL injection techniques"
+      2: "Medium risk - Advanced techniques, may trigger WAF"
+      3: "High risk - Aggressive techniques, likely to be detected"
+    test_levels:
+      1: "Basic - Test GET/POST parameters only"
+      2: "Extended - Test headers and cookies"
+      3: "Deep - Test all parameters with encoding"
+      4: "Comprehensive - Test all positions with variants"
+      5: "Extreme - Test everything possible"
+  nmap:
+    timing_templates:
+      T0: "Paranoid - Very slow, very stealthy"
+      T1: "Sneaky - Slow, stealthy"
+      T2: "Polite - Normal speed, polite"
+      T3: "Normal - Normal speed"
+      T4: "Aggressive - Fast, may be detected"
+      T5: "Insane - Very fast, likely to be detected" 

@@ -1,0 +1,36 @@
+# SSH Configuration for SecurityLogs scenarios
+Port 22
+Protocol 2
+HostKey /etc/ssh/ssh_host_rsa_key
+HostKey /etc/ssh/ssh_host_ecdsa_key
+HostKey /etc/ssh/ssh_host_ed25519_key
+
+# Authentication
+PermitRootLogin no
+PubkeyAuthentication yes
+PasswordAuthentication yes
+PermitEmptyPasswords no
+ChallengeResponseAuthentication no
+UsePAM yes
+
+# Allow specific users
+AllowUsers userA userB
+
+# Logging
+SyslogFacility AUTH
+LogLevel INFO
+
+# Connection settings
+ClientAliveInterval 60
+ClientAliveCountMax 3
+MaxStartups 10:30:60
+
+# Security settings (vulnerable for testing)
+MaxAuthTries 6
+LoginGraceTime 60
+PermitUserEnvironment yes
+
+# Allow port forwarding for tunnels
+AllowTcpForwarding yes
+GatewayPorts yes
+X11Forwarding yes 
