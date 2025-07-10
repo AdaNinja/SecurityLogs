@@ -61,12 +61,12 @@ run_variant() {
     mkdir -p "$variant_dir/output"
     
     # Load variant configuration
-    local nmap_rate=$(yq e ".variants.$variant.nmap_rate" "$SCRIPT_DIR/config/variants.yml")
-    local sql_delay=$(yq e ".variants.$variant.sql_delay" "$SCRIPT_DIR/config/variants.yml")
-    local protocol_mix=$(yq e ".variants.$variant.protocol_mix" "$SCRIPT_DIR/config/variants.yml")
-    local netem_profile=$(yq e ".variants.$variant.netem_profile" "$SCRIPT_DIR/config/variants.yml")
-    local attack_duration=$(yq e ".variants.$variant.attack_duration" "$SCRIPT_DIR/config/variants.yml")
-    local benign_duration=$(yq e ".variants.$variant.benign_duration" "$SCRIPT_DIR/config/variants.yml")
+    local nmap_rate=$(yq e ".variants.$variant.nmap_rate" "../scenarios/low-and-slow-sqli/config/variants.yml")
+    local sql_delay=$(yq e ".variants.$variant.sql_delay" "../scenarios/low-and-slow-sqli/config/variants.yml")
+    local protocol_mix=$(yq e ".variants.$variant.protocol_mix" "../scenarios/low-and-slow-sqli/config/variants.yml")
+    local netem_profile=$(yq e ".variants.$variant.netem_profile" "../scenarios/low-and-slow-sqli/config/variants.yml")
+    local attack_duration=$(yq e ".variants.$variant.attack_duration" "../scenarios/low-and-slow-sqli/config/variants.yml")
+    local benign_duration=$(yq e ".variants.$variant.benign_duration" "../scenarios/low-and-slow-sqli/config/variants.yml")
     
     # Export variant-specific environment variables
     export NMAP_RATE="$nmap_rate"
@@ -85,7 +85,7 @@ run_variant() {
     
     # Start containers
     log_message "Starting containers for variant $variant"
-    cd "$SCRIPT_DIR"
+    cd "../scenarios/low-and-slow-sqli"
     docker-compose up -d
     
     # Wait for containers to be ready
@@ -94,11 +94,11 @@ run_variant() {
     
     # Apply network emulation
     log_message "Applying network emulation profile: $netem_profile"
-    bash ../../control/apply_netem.sh --profile "$netem_profile"
+    bash ../control/apply_netem.sh --profile "$netem_profile"
     
     # Start benign traffic
     log_message "Starting benign traffic for variant $variant"
-    docker exec securitylogs-webapp bash /opt/scripts/run_benign.sh \
+    docker exec securitylogs-webapp bash /opt/scripts/benign_modules/run_benign.sh \
         --protocol-mix "$protocol_mix" \
         --duration "$benign_duration" &
     BENIGN_PID=$!
@@ -125,13 +125,13 @@ run_variant() {
     
     # Copy results to variant directory
     log_message "Copying results for variant $variant"
-    cp -r ../../pcap_data/low-and-slow-sqli/* "$variant_dir/pcap_data/" 2>/dev/null || true
-    cp -r ../../logs/low-and-slow-sqli/* "$variant_dir/logs/" 2>/dev/null || true
-    cp -r ../../output/low-and-slow-sqli/* "$variant_dir/output/" 2>/dev/null || true
+    cp -r ../../data/pcap/low-and-slow-sqli/* "$variant_dir/pcap_data/" 2>/dev/null || true
+    cp -r ../../data/logs/low-and-slow-sqli/* "$variant_dir/logs/" 2>/dev/null || true
+    cp -r ../../data/output/low-and-slow-sqli/* "$variant_dir/output/" 2>/dev/null || true
     
     # Reset network emulation
     log_message "Resetting network emulation"
-    bash ../../control/reset_netem.sh
+    bash ../control/reset_netem.sh
     
     log_message "Variant $variant completed"
 }
@@ -143,7 +143,7 @@ main() {
     log_message "Timeout: $TIMEOUT seconds"
     
     # Get list of variants from configuration
-    local variants=($(yq e '.execution_order[]' "$SCRIPT_DIR/config/variants.yml"))
+    local variants=($(yq e '.execution_order[]' "../scenarios/low-and-slow-sqli/config/variants.yml"))
     
     log_message "Found variants: ${variants[*]}"
     
@@ -179,7 +179,7 @@ main() {
 generate_summary_report() {
     log_message "Generating summary report"
     
-    local report_file="$SCRIPT_DIR/batch_execution_report.txt"
+    local report_file="../scenarios/low-and-slow-sqli/batch_execution_report.txt"
     {
         echo "SecurityLogs Batch Execution Report"
         echo "=================================="
@@ -190,7 +190,7 @@ generate_summary_report() {
         echo "Variant Results:"
         echo "==============="
         
-        for variant in $(yq e '.execution_order[]' "$SCRIPT_DIR/config/variants.yml"); do
+        for variant in $(yq e '.execution_order[]' "../scenarios/low-and-slow-sqli/config/variants.yml"); do
             local variant_dir="$SCRIPT_DIR/variants/$variant"
             if [ -d "$variant_dir" ]; then
                 local pcap_count=$(find "$variant_dir/pcap_data" -name "*.pcap" 2>/dev/null | wc -l)
@@ -211,9 +211,9 @@ generate_summary_report() {
 # Cleanup function
 cleanup() {
     log_message "Cleaning up batch execution..."
-    cd "$SCRIPT_DIR"
+    cd "../scenarios/low-and-slow-sqli"
     docker-compose down --remove-orphans 2>/dev/null || true
-    bash ../../control/reset_netem.sh 2>/dev/null || true
+    bash ../control/reset_netem.sh 2>/dev/null || true
     log_message "Cleanup completed"
 }
 

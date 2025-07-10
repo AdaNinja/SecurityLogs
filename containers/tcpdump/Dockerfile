@@ -1,5 +1,10 @@
 FROM ubuntu:20.04
 
+# Change to Chinese mirrors for better network access
+RUN sed -i 's/ports.ubuntu.com/mirrors.aliyun.com/g' /etc/apt/sources.list && \
+    sed -i 's/archive.ubuntu.com/mirrors.aliyun.com/g' /etc/apt/sources.list && \
+    sed -i 's/security.ubuntu.com/mirrors.aliyun.com/g' /etc/apt/sources.list
+
 # Install tcpdump and network tools
 RUN apt-get update && \
     apt-get install -y \
@@ -17,7 +22,6 @@ RUN mkdir -p /pcaps /logs /data/raw
 
 # Copy capture scripts
 COPY scripts/capture_traffic.sh /usr/local/bin/capture_traffic.sh
-COPY scripts/analyze_pcap.py /usr/local/bin/analyze_pcap.py
 RUN chmod +x /usr/local/bin/capture_traffic.sh
 
 # Set environment variables

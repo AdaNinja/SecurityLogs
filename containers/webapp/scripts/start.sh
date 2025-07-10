@@ -5,21 +5,10 @@ set -e
 
 echo "[$(date)] Starting SecurityLogs Web Application..."
 
-# Start MySQL service
-echo "[$(date)] Starting MySQL..."
-service mysql start
-
-# Wait for MySQL to be ready
-echo "[$(date)] Waiting for MySQL to be ready..."
-while ! mysqladmin ping -h"localhost" --silent; do
-    sleep 1
-done
-echo "[$(date)] MySQL is ready"
-
-# Initialize database if needed
-if [ ! -f /var/lib/mysql/vulnerable_db ]; then
-    echo "[$(date)] Initializing database..."
-    mysql < /tmp/init_db.sql
+# Initialize SQLite database if needed
+if [ ! -f /var/www/html/database.sqlite ]; then
+    echo "[$(date)] Initializing SQLite database..."
+    sqlite3 /var/www/html/database.sqlite < /tmp/init_db.sql
     echo "[$(date)] Database initialized"
 fi
 

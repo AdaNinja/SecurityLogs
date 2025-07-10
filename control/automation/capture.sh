@@ -35,29 +35,29 @@ load_config() {
     local variant=$1
     
     # Load base configuration
-    if [ -f "config/scenario.env" ]; then
+    if [ -f "../scenarios/low-and-slow-sqli/config/scenario.env" ]; then
         echo "Loading base configuration..."
-        export $(cat config/scenario.env | grep -v '^#' | xargs)
+        export $(cat ../scenarios/low-and-slow-sqli/config/scenario.env | grep -v '^#' | xargs)
     fi
     
     # Load variant-specific configuration
-    if [ -f "config/variants/${variant}.env" ]; then
+    if [ -f "../scenarios/low-and-slow-sqli/config/variants/${variant}.env" ]; then
         echo "Loading variant configuration: ${variant}"
-        export $(cat config/variants/${variant}.env | grep -v '^#' | xargs)
+        export $(cat ../scenarios/low-and-slow-sqli/config/variants/${variant}.env | grep -v '^#' | xargs)
     else
-        echo "Warning: Variant configuration not found: config/variants/${variant}.env"
+        echo "Warning: Variant configuration not found: ../scenarios/low-and-slow-sqli/config/variants/${variant}.env"
     fi
     
     # Load project-wide configuration
-    if [ -f "../../.env" ]; then
+    if [ -f "../.env" ]; then
         echo "Loading project configuration..."
-        export $(cat ../../.env | grep -v '^#' | xargs)
+        export $(cat ../.env | grep -v '^#' | xargs)
     fi
 }
 
 # Initialize logging
 init_logging() {
-    mkdir -p ../logs
+    mkdir -p ../data/logs
     exec 1> >(tee -a "$LOG_FILE")
     exec 2> >(tee -a "$LOG_FILE" >&2)
     
@@ -71,6 +71,7 @@ init_logging() {
 # Start containers
 start_containers() {
     echo "Starting containers..."
+    cd ../scenarios/low-and-slow-sqli
     docker-compose up -d
     
     # Wait for containers to be ready
@@ -90,7 +91,7 @@ apply_network_conditions() {
         echo "  Packet loss: ${PACKET_LOSS}%"
         echo "  Jitter: ${JITTER}ms"
         
-        bash ../../control/apply_netem.sh \
+        bash ../control/apply_netem.sh \
             --delay "$NETWORK_DELAY" \
             --loss "$PACKET_LOSS" \
             --jitter "$JITTER"
@@ -115,7 +116,7 @@ run_benign_traffic() {
     echo "Starting benign traffic simulation..."
     
     # Run benign traffic in background
-    docker exec securitylogs-webapp bash /opt/scripts/run_benign.sh &
+    docker exec securitylogs-webapp bash /opt/scripts/benign_modules/run_benign.sh &
     BENIGN_PID=$!
     
     echo "Benign traffic started (PID: $BENIGN_PID)"
@@ -168,12 +169,12 @@ collect_data() {
     echo "Collecting and organizing data..."
     
     # Create output directory
-    OUTPUT_DIR="../pcap_data/${SCENARIO_NAME}/${TIMESTAMP}_${VARIANT}"
+    OUTPUT_DIR="../data/pcap/${SCENARIO_NAME}/${TIMESTAMP}_${VARIANT}"
     mkdir -p "$OUTPUT_DIR"
     
     # Copy pcap file
-    if [ -f "../pcap_data/${SCENARIO_NAME}/${TIMESTAMP}_${VARIANT}.pcap" ]; then
-        mv "../pcap_data/${SCENARIO_NAME}/${TIMESTAMP}_${VARIANT}.pcap" "$OUTPUT_DIR/"
+    if [ -f "../data/pcap/${SCENARIO_NAME}/${TIMESTAMP}_${VARIANT}.pcap" ]; then
+        mv "../data/pcap/${SCENARIO_NAME}/${TIMESTAMP}_${VARIANT}.pcap" "$OUTPUT_DIR/"
         echo "PCAP file saved: $OUTPUT_DIR/${TIMESTAMP}_${VARIANT}.pcap"
     fi
     
@@ -196,10 +197,11 @@ cleanup() {
     echo "Cleaning up..."
     
     # Stop containers
+    cd ../scenarios/low-and-slow-sqli
     docker-compose down
     
     # Reset network conditions
-    bash ../../control/reset_netem.sh
+    bash ../control/reset_netem.sh
     
     echo "Cleanup completed"
 }
@@ -231,7 +233,7 @@ main() {
     cleanup
     
     echo "=== SQL Injection Capture Completed ==="
-    echo "Results saved to: ../pcap_data/${SCENARIO_NAME}/${TIMESTAMP}_${VARIANT}/"
+    echo "Results saved to: ../data/pcap/${SCENARIO_NAME}/${TIMESTAMP}_${VARIANT}/"
 }
 
 # Handle script interruption

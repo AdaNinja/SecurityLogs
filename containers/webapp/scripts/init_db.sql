@@ -1,10 +1,7 @@
--- Initialize vulnerable database
-CREATE DATABASE IF NOT EXISTS vulnerable_db;
-USE vulnerable_db;
-
+-- Initialize vulnerable database for SQLite
 -- Create users table with vulnerable data
 CREATE TABLE IF NOT EXISTS users (
-    id INT AUTO_INCREMENT PRIMARY KEY,
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
     username VARCHAR(50) NOT NULL UNIQUE,
     password VARCHAR(255) NOT NULL,
     email VARCHAR(100),
@@ -14,12 +11,12 @@ CREATE TABLE IF NOT EXISTS users (
 
 -- Create products table
 CREATE TABLE IF NOT EXISTS products (
-    id INT AUTO_INCREMENT PRIMARY KEY,
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
     name VARCHAR(100) NOT NULL,
     description TEXT,
     price DECIMAL(10,2) NOT NULL,
     category VARCHAR(50),
-    stock INT DEFAULT 0,
+    stock INTEGER DEFAULT 0,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
@@ -49,10 +46,10 @@ INSERT INTO products (name, description, price, category, stock) VALUES
 
 -- Create additional tables for more attack vectors
 CREATE TABLE IF NOT EXISTS orders (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    user_id INT,
-    product_id INT,
-    quantity INT,
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    user_id INTEGER,
+    product_id INTEGER,
+    quantity INTEGER,
     total_price DECIMAL(10,2),
     order_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (user_id) REFERENCES users(id),
@@ -60,11 +57,11 @@ CREATE TABLE IF NOT EXISTS orders (
 );
 
 CREATE TABLE IF NOT EXISTS comments (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    user_id INT,
-    product_id INT,
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    user_id INTEGER,
+    product_id INTEGER,
     comment TEXT,
-    rating INT,
+    rating INTEGER,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (user_id) REFERENCES users(id),
     FOREIGN KEY (product_id) REFERENCES products(id)
@@ -80,7 +77,3 @@ INSERT INTO comments (user_id, product_id, comment, rating) VALUES
 (1, 1, 'Great laptop, very fast!', 5),
 (2, 3, 'Excellent sound quality', 4),
 (3, 5, 'Good value for money', 4);
-
--- Grant permissions to webapp user
-GRANT ALL PRIVILEGES ON vulnerable_db.* TO 'webapp'@'localhost';
-FLUSH PRIVILEGES; 

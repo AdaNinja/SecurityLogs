@@ -3,257 +3,50 @@
 # Using official tool grade classifications
 
 variants:
-  # Stealthy variant - Very slow and covert
-  # Uses official SQLMap RISK=1, LEVEL=1 (lowest risk, basic testing)
   stealthy:
     description: "Very slow and stealthy attack using official SQLMap RISK=1, LEVEL=1"
+    nmap_rate: 0.008
+    sql_delay: 300
+    sqlmap_risk: 1      # SQLMap official RISK level (1-3)
+    sqlmap_level: 1     # SQLMap official LEVEL (1-5)
+    protocol_mix: "HTTP:0.8,DNS:0.15,SMTP:0.05"
+    netem_profile: "low_latency"
     
-    # Reconnaissance Configuration (Nmap official timing)
-    nmap_rate: 0.008                    # Very slow scan rate
-    nmap_stealth_level: 2               # Nmap stealth level (0-2)
-    nmap_timing: "T0"                   # Nmap timing template (T0=slowest, T5=fastest)
-    http_enum_scripts: false            # Disable HTTP enumeration scripts
-    port_scan_timeout: 600              # Port scan timeout in seconds
-    
-    # SQL Injection Configuration (SQLMap official grades)
-    sql_delay: 300                      # Delay between requests (seconds)
-    sqlmap_threads: 1                   # Number of concurrent threads
-    sqlmap_risk: 1                      # SQLMap RISK level (1-3, 1=lowest)
-    sqlmap_level: 1                     # SQLMap LEVEL (1-5, 1=basic testing)
-    sqlmap_batch: true                  # Batch mode (no user interaction)
-    injection_points: ["user"]          # Target injection points
-    dump_tables: ["users"]              # Tables to dump
-    dump_columns: ["email"]             # Columns to extract
-    extract_batch_size: 1               # Batch size for data extraction
-    
-    # Background Traffic Configuration
-    user_count: 8                       # Number of simulated users
-    page_interval_min: 45               # Minimum page access interval
-    page_interval_max: 180              # Maximum page access interval
-    protocol_mix: "HTTP:0.8,DNS:0.15,SMTP:0.05"  # Traffic mix ratios
-    
-    # Network Configuration (NetEm official parameters)
-    network_delay: 200                  # Network delay in milliseconds
-    packet_loss: 2                      # Packet loss percentage
-    jitter: 50                          # Jitter in milliseconds
-    bandwidth: 5                        # Bandwidth limit in Mbps
-    netem_profile: "low_latency"        # NetEm profile name
-    
-    # Attack Timing
-    attack_delay: 120                   # Delay before attack starts
-    recon_duration: 600                 # Reconnaissance duration
-    injection_duration: 1200            # SQL injection duration
-    attack_duration: 2400               # Total attack duration
-    benign_duration: 3000               # Benign traffic duration
-    
-    # Logging Configuration
-    log_level: "DEBUG"                  # Log level (DEBUG, INFO, WARNING, ERROR)
-    capture_pcap: true                  # Enable PCAP capture
-    save_logs: true                     # Save detailed logs
-    enable_debug: true                  # Enable debug mode
-    enable_checksums: true              # Enable checksums for reproducibility
-    
-  # Moderate variant - Balanced approach
-  # Uses official SQLMap RISK=1, LEVEL=2 (low risk, extended testing)
   moderate:
     description: "Balanced attack using official SQLMap RISK=1, LEVEL=2"
-    
-    # Reconnaissance Configuration
-    nmap_rate: 0.016                    # Moderate scan rate
-    nmap_stealth_level: 1               # Nmap stealth level
-    nmap_timing: "T1"                   # Nmap timing template
-    http_enum_scripts: true             # Enable HTTP enumeration
-    port_scan_timeout: 240              # Port scan timeout
-    
-    # SQL Injection Configuration
-    sql_delay: 120                      # Moderate delay
-    sqlmap_threads: 1                   # Single thread for stealth
-    sqlmap_risk: 1                      # SQLMap RISK=1 (low risk)
-    sqlmap_level: 2                     # SQLMap LEVEL=2 (extended testing)
-    sqlmap_batch: true                  # Batch mode
-    injection_points: ["user", "pass"]  # Multiple injection points
-    dump_tables: ["users", "admin"]     # Multiple tables
-    dump_columns: ["email", "password", "username"]  # More columns
-    extract_batch_size: 3               # Larger batch size
-    
-    # Background Traffic Configuration
-    user_count: 5                       # Moderate user count
-    page_interval_min: 30               # Shorter intervals
-    page_interval_max: 90
+    nmap_rate: 0.016
+    sql_delay: 120
+    sqlmap_risk: 1      # SQLMap official RISK level
+    sqlmap_level: 2     # SQLMap official LEVEL
     protocol_mix: "HTTP:0.7,DNS:0.2,SMTP:0.1"
-    
-    # Network Configuration
-    network_delay: 100                  # Moderate delay
-    packet_loss: 1                      # Lower packet loss
-    jitter: 20                          # Lower jitter
-    bandwidth: 10                       # Higher bandwidth
     netem_profile: "medium_latency"
     
-    # Attack Timing
-    attack_delay: 60                    # Shorter delay
-    recon_duration: 300                 # Shorter recon
-    injection_duration: 600             # Moderate injection time
-    attack_duration: 1800               # Total duration
-    benign_duration: 2400               # Benign traffic duration
-    
-    # Logging Configuration
-    log_level: "INFO"
-    capture_pcap: true
-    save_logs: true
-    enable_debug: false
-    enable_checksums: true
-    
-  # Aggressive variant - Faster but still slow
-  # Uses official SQLMap RISK=2, LEVEL=3 (medium risk, deep testing)
   aggressive:
     description: "Faster attack using official SQLMap RISK=2, LEVEL=3"
-    
-    # Reconnaissance Configuration
-    nmap_rate: 0.05                     # Faster scan rate
-    nmap_stealth_level: 1               # Nmap stealth level
-    nmap_timing: "T2"                   # Nmap timing template
-    http_enum_scripts: true             # Enable all enumeration
-    port_scan_timeout: 120              # Shorter timeout
-    
-    # SQL Injection Configuration
-    sql_delay: 60                       # Shorter delay
-    sqlmap_threads: 2                   # Multiple threads
-    sqlmap_risk: 2                      # SQLMap RISK=2 (medium risk)
-    sqlmap_level: 3                     # SQLMap LEVEL=3 (deep testing)
-    sqlmap_batch: true                  # Batch mode
-    injection_points: ["user", "pass", "id"]  # All injection points
-    dump_tables: ["users", "admin", "config", "settings"]  # All tables
-    dump_columns: ["email", "password", "username", "api_key", "secret"]  # All columns
-    extract_batch_size: 5               # Large batch size
-    
-    # Background Traffic Configuration
-    user_count: 3                       # Fewer users (more aggressive)
-    page_interval_min: 15               # Very short intervals
-    page_interval_max: 60
+    nmap_rate: 0.05
+    sql_delay: 60
+    sqlmap_risk: 2      # SQLMap official RISK level
+    sqlmap_level: 3     # SQLMap official LEVEL
     protocol_mix: "HTTP:0.6,DNS:0.25,SMTP:0.15"
-    
-    # Network Configuration
-    network_delay: 50                   # Low delay
-    packet_loss: 0.5                    # Very low packet loss
-    jitter: 10                          # Low jitter
-    bandwidth: 20                       # High bandwidth
     netem_profile: "high_latency"
     
-    # Attack Timing
-    attack_delay: 30                    # Very short delay
-    recon_duration: 180                 # Short recon
-    injection_duration: 300             # Short injection time
-    attack_duration: 1200               # Total duration
-    benign_duration: 1800               # Benign traffic duration
-    
-    # Logging Configuration
-    log_level: "INFO"
-    capture_pcap: true
-    save_logs: true
-    enable_debug: false
-    enable_checksums: true
-    
-  # Research variant - For academic research
-  # Uses official SQLMap RISK=1, LEVEL=4 (low risk, comprehensive testing)
   research:
     description: "Research-focused variant using official SQLMap RISK=1, LEVEL=4"
-    
-    # Reconnaissance Configuration
-    nmap_rate: 0.025                    # Research scan rate
-    nmap_stealth_level: 2               # High stealth
-    nmap_timing: "T0"                   # Slowest timing
-    http_enum_scripts: true             # Full enumeration
-    port_scan_timeout: 600              # Long timeout
-    
-    # SQL Injection Configuration
-    sql_delay: 180                      # Research delay
-    sqlmap_threads: 1                   # Single thread for research
-    sqlmap_risk: 1                      # SQLMap RISK=1 (low risk)
-    sqlmap_level: 4                     # SQLMap LEVEL=4 (comprehensive testing)
-    sqlmap_batch: true                  # Batch mode
-    injection_points: ["user", "pass", "id", "search"]  # All points
-    dump_tables: ["users", "admin", "config", "settings", "logs"]  # All tables
-    dump_columns: ["*"]                 # All columns
-    extract_batch_size: 10              # Large batch for research
-    
-    # Background Traffic Configuration
-    user_count: 6                       # Research user count
-    page_interval_min: 60               # Longer intervals for research
-    page_interval_max: 240
+    nmap_rate: 0.025
+    sql_delay: 180
+    sqlmap_risk: 1      # SQLMap official RISK level
+    sqlmap_level: 4     # SQLMap official LEVEL
     protocol_mix: "HTTP:0.75,DNS:0.2,SMTP:0.05"
-    
-    # Network Configuration
-    network_delay: 150                  # Research delay
-    packet_loss: 1.5                    # Moderate packet loss
-    jitter: 30                          # Moderate jitter
-    bandwidth: 8                        # Moderate bandwidth
     netem_profile: "research_profile"
     
-    # Attack Timing
-    attack_delay: 90                    # Research delay
-    recon_duration: 900                 # Long recon for research
-    injection_duration: 1800            # Long injection for research
-    attack_duration: 3600               # Long total duration
-    benign_duration: 4200               # Long benign traffic
-    
-    # Logging Configuration
-    log_level: "DEBUG"                  # Debug level for research
-    capture_pcap: true
-    save_logs: true
-    enable_debug: true                  # Enable debug for research
-    enable_checksums: true              # Enable checksums for research
-    enable_monitoring: true             # Enable monitoring for research
-    
-  # Production variant - For production testing
-  # Uses official SQLMap RISK=1, LEVEL=2 (low risk, extended testing)
   production:
     description: "Production-like environment using official SQLMap RISK=1, LEVEL=2"
-    
-    # Reconnaissance Configuration
-    nmap_rate: 0.012                    # Production scan rate
-    nmap_stealth_level: 1               # Standard stealth
-    nmap_timing: "T1"                   # Standard timing
-    http_enum_scripts: true             # Standard enumeration
-    port_scan_timeout: 300              # Production timeout
-    
-    # SQL Injection Configuration
-    sql_delay: 200                      # Production delay
-    sqlmap_threads: 1                   # Single thread for production
-    sqlmap_risk: 1                      # SQLMap RISK=1 (low risk)
-    sqlmap_level: 2                     # SQLMap LEVEL=2 (extended testing)
-    sqlmap_batch: true                  # Batch mode
-    injection_points: ["user", "pass"]  # Standard injection points
-    dump_tables: ["users", "admin"]     # Standard tables
-    dump_columns: ["email", "password", "username"]  # Standard columns
-    extract_batch_size: 2               # Standard batch size
-    
-    # Background Traffic Configuration
-    user_count: 4                       # Production user count
-    page_interval_min: 40               # Production intervals
-    page_interval_max: 120
+    nmap_rate: 0.012
+    sql_delay: 200
+    sqlmap_risk: 1      # SQLMap official RISK level
+    sqlmap_level: 2     # SQLMap official LEVEL
     protocol_mix: "HTTP:0.8,DNS:0.15,SMTP:0.05"
-    
-    # Network Configuration
-    network_delay: 80                   # Production delay
-    packet_loss: 0.8                    # Production packet loss
-    jitter: 15                          # Production jitter
-    bandwidth: 15                       # Production bandwidth
     netem_profile: "production_profile"
-    
-    # Attack Timing
-    attack_delay: 45                    # Production delay
-    recon_duration: 240                 # Production recon
-    injection_duration: 480             # Production injection time
-    attack_duration: 1500               # Production duration
-    benign_duration: 2100               # Production benign traffic
-    
-    # Logging Configuration
-    log_level: "INFO"
-    capture_pcap: true
-    save_logs: true
-    enable_debug: false
-    enable_checksums: true
-    enable_monitoring: true             # Enable monitoring for production
 
 # Default variant to use if none specified
 default_variant: moderate

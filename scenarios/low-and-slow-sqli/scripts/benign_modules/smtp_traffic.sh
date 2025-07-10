@@ -13,7 +13,7 @@ SMTP_SERVER=${SMTP_SERVER:-"smtp.gmail.com"}
 SMTP_PORT=${SMTP_PORT:-587}
 REQUEST_INTERVAL=${REQUEST_INTERVAL:-10}
 TOTAL_DURATION=${BENIGN_TOTAL_DURATION:-2400}
-LOG_FILE="/var/log/benign_smtp.log"
+LOG_FILE="/tmp/benign_smtp.log"
 
 # Common email domains
 EMAIL_DOMAINS=(

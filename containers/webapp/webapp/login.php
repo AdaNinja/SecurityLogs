@@ -2,14 +2,11 @@
 // Real vulnerable login page with SQL injection
 session_start();
 
-// Database connection (vulnerable)
-$host = 'localhost';
-$dbname = 'vulnerable_db';
-$username = 'webapp';
-$password = 'webapp_password';
+// Database connection (vulnerable) - SQLite
+$db_path = '/var/www/html/database.sqlite';
 
 try {
-    $pdo = new PDO("mysql:host=$host;dbname=$dbname", $username, $password);
+    $pdo = new PDO("sqlite:$db_path");
     $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
 } catch(PDOException $e) {
     die("Connection failed: " . $e->getMessage());

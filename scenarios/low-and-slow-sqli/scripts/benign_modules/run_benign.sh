@@ -9,15 +9,15 @@ set -e
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
 # Load YAML configuration if available
-if [ -f "$SCRIPT_DIR/scripts/config_loader.py" ]; then
+if [ -f "$SCRIPT_DIR/../config_loader.py" ]; then
     # Use Python config loader to get protocol mix
-    PROTOCOL_MIX=$(python3 "$SCRIPT_DIR/scripts/config_loader.py" --variant "${VARIANT:-moderate}" 2>/dev/null | grep -o 'PROTOCOL_MIX=[^[:space:]]*' | cut -d'=' -f2)
+    PROTOCOL_MIX=$(python3 "$SCRIPT_DIR/../config_loader.py" --variant "${VARIANT:-moderate}" 2>/dev/null | grep -o 'PROTOCOL_MIX=[^[:space:]]*' | cut -d'=' -f2)
 fi
 
 # Default values (fallback)
 PROTOCOL_MIX=${PROTOCOL_MIX:-"HTTP:0.7,DNS:0.2,SMTP:0.1"}
 TOTAL_DURATION=${BENIGN_TOTAL_DURATION:-2400}
-LOG_FILE="/var/log/benign_traffic.log"
+LOG_FILE="/tmp/benign_traffic.log"
 
 # Parse command line arguments
 while [[ $# -gt 0 ]]; do
@@ -73,15 +73,15 @@ start_protocol_traffic() {
     
     case $protocol in
         "HTTP")
-            bash "$SCRIPT_DIR/scripts/benign_modules/http_traffic.sh" &
+                bash "$SCRIPT_DIR/http_traffic.sh" &
             HTTP_PID=$!
             ;;
         "DNS")
-            bash "$SCRIPT_DIR/scripts/benign_modules/dns_traffic.sh" &
+                bash "$SCRIPT_DIR/dns_traffic.sh" &
             DNS_PID=$!
             ;;
         "SMTP")
-            bash "$SCRIPT_DIR/scripts/benign_modules/smtp_traffic.sh" &
+                bash "$SCRIPT_DIR/smtp_traffic.sh" &
             SMTP_PID=$!
             ;;
         *)

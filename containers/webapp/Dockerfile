@@ -1,65 +1,57 @@
 FROM ubuntu:20.04
 
-# Avoid interactive prompts
+# 避免交互式提示
 ARG DEBIAN_FRONTEND=noninteractive
 
-# Install system packages
+# 使用国内镜像源
+RUN sed -i 's/ports.ubuntu.com/mirrors.aliyun.com/g' /etc/apt/sources.list && \
+    sed -i 's/archive.ubuntu.com/mirrors.aliyun.com/g' /etc/apt/sources.list && \
+    sed -i 's/security.ubuntu.com/mirrors.aliyun.com/g' /etc/apt/sources.list
+
+# 安装基础包
 RUN apt-get update && \
     DEBIAN_FRONTEND=noninteractive apt-get install -y \
       nginx \
       php7.4-fpm \
-      php7.4-mysql \
+      php7.4-sqlite3 \
       php7.4-curl \
       php7.4-json \
-      mysql-server \
+      sqlite3 \
       curl \
       wget \
-      supervisor \
       rsyslog \
       tcpdump \
       python3 \
       python3-pip \
-      python3-selenium \
-      firefox \
-      xvfb \
-      geckodriver \
       openssh-server \
       cron \
-      rsync \
-      nfs-common \
       net-tools \
       procps \
       vim \
       nano \
     && rm -rf /var/lib/apt/lists/*
 
-# Install Python dependencies for user simulation
-RUN pip3 install selenium requests beautifulsoup4 lxml
+# 安装Python依赖
+RUN pip3 install requests beautifulsoup4
 
-# Create necessary directories
+# 创建必要目录
 RUN mkdir -p /var/www/html /var/log /data/raw /opt/scripts /opt/output /home/userA /home/userB /backup
 
-# Copy web application files
+# 复制web应用文件
 COPY webapp/ /var/www/html/
 COPY config/nginx.conf /etc/nginx/sites-available/default
-COPY config/php.ini /etc/php/7.4/fpm/php.ini
-COPY config/supervisord.conf /etc/supervisor/conf.d/supervisord.conf
 COPY config/sshd_config /etc/ssh/sshd_config
 
-# Copy startup and simulation scripts
+# 复制启动脚本
 COPY scripts/start.sh /usr/local/bin/start.sh
-COPY scripts/run_benign.sh /opt/scripts/run_benign.sh
-COPY scripts/simulate_user.py /opt/scripts/simulate_user.py
 COPY scripts/backup_script.sh /opt/scripts/backup_script.sh
-RUN chmod +x /usr/local/bin/start.sh /opt/scripts/run_benign.sh /opt/scripts/backup_script.sh
+RUN chmod +x /usr/local/bin/start.sh /opt/scripts/backup_script.sh
 
-# Initialize MySQL database with vulnerable data
+# 初始化SQLite数据库
 COPY scripts/init_db.sql /tmp/init_db.sql
-RUN service mysql start && \
-    mysql < /tmp/init_db.sql && \
-    service mysql stop
+RUN sqlite3 /var/www/html/database.sqlite < /tmp/init_db.sql
 
-# Set up SSH users and keys
+# 设置SSH用户
 RUN useradd -m -s /bin/bash userA && \
     useradd -m -s /bin/bash userB && \
     echo "userA:password123" | chpasswd && \
@@ -68,20 +60,19 @@ RUN useradd -m -s /bin/bash userA && \
     chown -R userA:userA /home/userA && \
     chown -R userB:userB /home/userB
 
-# Set up cron jobs for backup simulation
+# 设置cron任务
 RUN echo "0 2 * * * /opt/scripts/backup_script.sh" | crontab -
 
-# Set proper permissions
+# 设置权限
 RUN chown -R www-data:www-data /var/www/html && \
     chmod -R 755 /var/www/html
 
-# Expose ports
+# 暴露端口
 EXPOSE 80 22
 
-# Set environment variables
+# 设置环境变量
 ENV SERVICE_NAME=securitylogs-webapp
-ENV DISPLAY=:99
 ENV SCENARIO_TYPE=webapp
 
-# Start services
+# 启动服务
 CMD ["/usr/local/bin/start.sh"]

@@ -12,7 +12,7 @@ source /opt/config/scenario.env 2>/dev/null || true
 DNS_SERVER=${DNS_SERVER:-"8.8.8.8"}
 REQUEST_INTERVAL=${REQUEST_INTERVAL:-5}
 TOTAL_DURATION=${BENIGN_TOTAL_DURATION:-2400}
-LOG_FILE="/var/log/benign_dns.log"
+LOG_FILE="/tmp/benign_dns.log"
 
 # Common domains for realistic DNS queries
 DOMAINS=(

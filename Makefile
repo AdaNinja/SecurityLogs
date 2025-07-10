@@ -17,28 +17,35 @@ help:
 	@echo "  down           - Stop and remove containers"
 	@echo "  benign         - Run benign traffic simulation"
 	@echo "  attack         - Run attack scenario"
+	@echo "  attack-stealthy - Run stealthy attack variant"
+	@echo "  attack-moderate - Run moderate attack variant"
+	@echo "  attack-aggressive - Run aggressive attack variant"
+	@echo "  interleaved    - Run interleaved attack with benign traffic"
 	@echo "  apply-netem    - Apply network conditions"
 	@echo "  reset-netem    - Reset network conditions"
 	@echo "  label          - Label captured traffic"
+	@echo "  collect-logs   - Collect all logs and PCAP files"
+	@echo "  analyze        - Analyze collected data"
+	@echo "  report         - Generate analysis report"
+	@echo "  all            - Complete attack workflow"
 	@echo ""
 	@echo "Available scenarios:"
 	@echo "  SCENARIO=low-and-slow-sqli    - SQL injection attack scenario"
-	@echo "  SCENARIO=ssh-tunnel-lateral   - SSH tunnel lateral movement"
-	@echo "  SCENARIO=https-c2-backdoor    - HTTPS C2 backdoor scenario"
 	@echo ""
 	@echo "Scenario-specific targets:"
 	@echo "  sqli-up        - Start SQL injection scenario"
 	@echo "  sqli-attack    - Run SQL injection attack"
 	@echo "  sqli-benign    - Run SQL injection benign traffic"
-	@echo "  ssh-up         - Start SSH tunnel scenario"
-	@echo "  ssh-attack     - Run SSH tunnel attack"
-	@echo "  https-up       - Start HTTPS C2 scenario"
-	@echo "  https-attack   - Run HTTPS C2 attack"
 	@echo ""
 	@echo "Usage examples:"
-	@echo "  make build && make sqli-up && make apply-netem && make sqli-benign && make sqli-attack"
-	@echo "  make build && make ssh-up && make ssh-attack"
-	@echo "  make build && make https-up && make https-attack"
+	@echo "  make build && make up && make apply-netem && make benign && make attack"
+	@echo "  make all                    # Complete workflow"
+	@echo "  make interleaved           # Interleaved attack with benign traffic"
+	@echo "  make interleaved ARGS='--attack-variants stealthy,aggressive'"
+	@echo "  make interleaved ARGS='--benign-mix HTTP:0.8,DNS:0.2 --attack-delay 10-20'"
+	@echo "  make attack-stealthy       # Stealthy attack variant"
+	@echo "  make attack-moderate       # Moderate attack variant"
+	@echo "  make attack-aggressive     # Aggressive attack variant"
 
 # Build all Docker images
 build:
@@ -46,16 +53,13 @@ build:
 	docker build -t securitylogs-webapp containers/webapp
 	docker build -t securitylogs-attacker containers/attacker
 	docker build -t securitylogs-tcpdump containers/tcpdump
-	docker build -t securitylogs-victim containers/victim
-	docker build -t securitylogs-c2-server containers/c2-server
-	docker build -t securitylogs-backend-api containers/backend-api
 	@echo "Build completed!"
 
 # Clean up containers and images
 clean:
 	@echo "Cleaning up containers and images..."
 	docker-compose -f scenarios/*/docker-compose.yml down --remove-orphans
-	docker rmi securitylogs-webapp securitylogs-attacker securitylogs-tcpdump securitylogs-victim securitylogs-c2-server securitylogs-backend-api 2>/dev/null || true
+	docker rmi securitylogs-webapp securitylogs-attacker securitylogs-tcpdump 2>/dev/null || true
 	@echo "Cleanup completed!"
 
 # Generic container management
@@ -78,11 +82,11 @@ down:
 # Network condition management
 apply-netem:
 	@echo "Applying network conditions..."
-	bash control/apply_netem.sh
+	bash control/network/apply_netem.sh
 
 reset-netem:
 	@echo "Resetting network conditions..."
-	bash control/reset_netem.sh
+	bash control/network/reset_netem.sh
 
 # SQL Injection scenario targets
 sqli-up:
@@ -105,63 +109,60 @@ sqli-capture:
 	@echo "Running complete SQL injection capture..."
 	cd scenarios/low-and-slow-sqli && bash capture.sh
 
-# Generic attack and benign targets
+# Attack variants
 attack:
-	@echo "Running attack scenario..."
-	@if [ -f "scenarios/low-and-slow-sqli/run_attack.sh" ]; then \
-		docker exec securitylogs-attacker bash /opt/scripts/run_attack.sh; \
-	else \
-		echo "No attack script found"; \
-	fi
+	@echo "Running basic SQL injection attack..."
+	cd scenarios/low-and-slow-sqli && docker exec securitylogs-attacker python3 /opt/scripts/container_attack.py
 
+attack-stealthy:
+	@echo "Running stealthy attack variant (RISK=1, LEVEL=1)..."
+	cd scenarios/low-and-slow-sqli && docker exec securitylogs-attacker python3 /opt/scripts/container_attack.py --risk 1 --level 1
+
+attack-moderate:
+	@echo "Running moderate attack variant (RISK=1, LEVEL=2)..."
+	cd scenarios/low-and-slow-sqli && docker exec securitylogs-attacker python3 /opt/scripts/container_attack.py --risk 1 --level 2
+
+attack-aggressive:
+	@echo "Running aggressive attack variant (RISK=2, LEVEL=3)..."
+	cd scenarios/low-and-slow-sqli && docker exec securitylogs-attacker python3 /opt/scripts/container_attack.py --risk 2 --level 3
+
+# Interleaved attack with benign traffic
+interleaved:
+	@echo "Running interleaved attack with benign traffic..."
+	cd scenarios/low-and-slow-sqli && bash ../../control/automation/run_all_variants.sh $(ARGS)
+
+# Benign traffic simulation
 benign:
 	@echo "Running benign traffic simulation..."
-	@if [ -f "scenarios/low-and-slow-sqli/run_benign.sh" ]; then \
-		docker exec securitylogs-webapp bash /opt/scripts/run_benign.sh; \
-	else \
-		echo "No benign script found"; \
-	fi
+	cd scenarios/low-and-slow-sqli && docker exec securitylogs-webapp bash /opt/scripts/run_benign.sh
 
 # Traffic labeling
 label:
 	@echo "Labeling captured traffic..."
-	python3 utils/label_pcap.py pcap_data/low-and-slow-sqli logs/labels.csv
+	cd scenarios/low-and-slow-sqli && python3 ../../control/automation/multi_source_logger.py
+
+# Data collection and analysis
+collect-logs:
+	@echo "Collecting all logs and PCAP files..."
+	cd scenarios/low-and-slow-sqli && make collect-logs
+
+analyze:
+	@echo "Analyzing collected data..."
+	cd scenarios/low-and-slow-sqli && make analyze
+
+report:
+	@echo "Generating analysis report..."
+	cd scenarios/low-and-slow-sqli && make report
+
+# Complete attack workflow
+all: build up apply-netem interleaved collect-logs analyze report
+	@echo "Complete attack workflow finished!"
 
 # Quick start for SQL injection scenario
 sqli-quick: build sqli-up apply-netem sqli-benign sqli-attack label
 	@echo "SQL injection scenario completed!"
 
-# SSH Tunnel scenario targets
-ssh-up:
-	@echo "Starting SSH tunnel scenario..."
-	cd scenarios/ssh-tunnel-lateral && docker-compose up -d
 
-ssh-down:
-	@echo "Stopping SSH tunnel scenario..."
-	cd scenarios/ssh-tunnel-lateral && docker-compose down
-
-ssh-attack:
-	@echo "Running SSH tunnel attack..."
-	docker exec securitylogs-ssh-attacker bash /opt/scripts/run_ssh_attack.sh
-
-ssh-quick: build ssh-up apply-netem ssh-attack
-	@echo "SSH tunnel scenario completed!"
-
-# HTTPS C2 scenario targets
-https-up:
-	@echo "Starting HTTPS C2 scenario..."
-	cd scenarios/https-c2-backdoor && docker-compose up -d
-
-https-down:
-	@echo "Stopping HTTPS C2 scenario..."
-	cd scenarios/https-c2-backdoor && docker-compose down
-
-https-attack:
-	@echo "Running HTTPS C2 attack..."
-	docker exec securitylogs-backend-api node /app/src/malicious_module.js
-
-https-quick: build https-up apply-netem https-attack
-	@echo "HTTPS C2 scenario completed!"
 
 # Show logs
 logs:
