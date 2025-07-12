@@ -103,7 +103,7 @@ sqli-attack:
 
 sqli-benign:
 	@echo "Running SQL injection benign traffic..."
-	docker exec securitylogs-webapp bash /opt/scripts/run_benign.sh
+	docker exec securitylogs-webapp bash /opt/scripts/benign_modules/run_benign.sh
 
 sqli-capture:
 	@echo "Running complete SQL injection capture..."
@@ -134,7 +134,7 @@ interleaved:
 # Benign traffic simulation
 benign:
 	@echo "Running benign traffic simulation..."
-	cd scenarios/low-and-slow-sqli && docker exec securitylogs-webapp bash /opt/scripts/run_benign.sh
+	cd scenarios/low-and-slow-sqli && docker exec securitylogs-webapp bash /opt/scripts/benign_modules/run_benign.sh
 
 # Traffic labeling
 label:

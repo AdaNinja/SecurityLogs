@@ -3,7 +3,14 @@ version: '3.8'
 services:
   # Web Application Container (Target)
   webapp:
-    image: low-and-slow-sqli-webapp:fixed
+    build:
+      context: ../../containers/webapp
+      dockerfile: Dockerfile
+      args:
+        - DEBIAN_FRONTEND=noninteractive
+    dns:
+      - 8.8.8.8
+      - 8.8.4.4
     container_name: securitylogs-webapp
     hostname: victim-web
     networks:
@@ -52,18 +59,27 @@ services:
       - SERVICE_NAME=securitylogs-tcpdump
       - CAPTURE_INTERFACE=eth0
       - CAPTURE_FILTER=host victim-web
+      # Dynamic PCAP filename configuration
+      - SCENARIO_NAME=${SCENARIO_NAME:-low-and-slow-sqli}
+      - VARIANT_NAME=${VARIANT_NAME:-moderate}
+      - TIMESTAMP=${TIMESTAMP:-$(date +%Y%m%d_%H%M%S)}
     cap_add:
       - NET_ADMIN
       - NET_RAW
       - SYS_ADMIN
     privileged: true
     restart: unless-stopped
-    # Enhanced tcpdump command with better capture
-    command: ["tcpdump", "-i", "any", "-w", "/pcaps/traffic.pcap", "-s", "65535", "-v", "host", "victim-web"]
+    # Enhanced tcpdump command with dynamic filename
+    command: ["/bin/bash", "-c", "tcpdump -i any -w \"/pcaps/${SCENARIO_NAME:-low-and-slow-sqli}_${VARIANT_NAME:-moderate}_${TIMESTAMP:-$(date +%Y%m%d_%H%M%S)}.pcap\" -s 65535 -v"]
 
   # Lightweight Attacker Container
   attacker:
-    image: python:3.9-slim
+    build:
+      context: ../../containers/attacker
+      dockerfile: Dockerfile
+    dns:
+      - 8.8.8.8
+      - 8.8.4.4
     container_name: securitylogs-attacker
     hostname: attacker
     networks:

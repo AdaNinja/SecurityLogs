@@ -26,6 +26,32 @@ BENIGN_DURATION=300
 ATTACK_DELAY_MIN=5
 ATTACK_DELAY_MAX=15
 BENIGN_WARMUP_TIME=15
+EXPERIMENT_TYPE="interleaved"  # New: experiment type for directory naming
+ATTACK_INTENSITY="medium"       # New: attack intensity level
+DATASET_NAME=""                 # New: dataset name for subdirectory
+MULTI_DATASET_MODE=false        # New: enable multi-dataset collection mode
+
+# Function to configure attack variants based on intensity
+configure_attack_intensity() {
+    case "$ATTACK_INTENSITY" in
+        "low")
+            ATTACK_VARIANTS=("stealthy")
+            log "Configured for low intensity: stealthy attacks only"
+            ;;
+        "medium")
+            ATTACK_VARIANTS=("stealthy" "moderate")
+            log "Configured for medium intensity: stealthy and moderate attacks"
+            ;;
+        "high")
+            ATTACK_VARIANTS=("stealthy" "moderate" "aggressive")
+            log "Configured for high intensity: all attack variants"
+            ;;
+        *)
+            warn "Unknown attack intensity: $ATTACK_INTENSITY, using default (medium)"
+            ATTACK_VARIANTS=("stealthy" "moderate")
+            ;;
+    esac
+}
 
 # Function to log messages
 log() {
@@ -50,6 +76,10 @@ show_usage() {
     echo "  --benign-duration SEC    Benign traffic duration in seconds (default: 300)"
     echo "  --attack-delay MIN-MAX   Attack delay range in seconds (default: 5-15)"
     echo "  --warmup-time SEC        Benign traffic warmup time (default: 15)"
+    echo "  --experiment-type TYPE   Experiment type for directory naming (default: interleaved)"
+    echo "  --attack-intensity LEVEL Attack intensity: low, medium, high (default: medium)"
+    echo "  --dataset-name NAME      Dataset name for subdirectory (default: auto-generated)"
+    echo "  --multi-dataset          Enable multi-dataset collection mode"
     echo "  --help                   Show this help message"
     echo ""
     echo "Attack Variants:"
@@ -57,10 +87,21 @@ show_usage() {
     echo "  moderate    - RISK=1, LEVEL=2 (balanced)"
     echo "  aggressive  - RISK=2, LEVEL=3 (high intensity)"
     echo ""
+    echo "Experiment Types:"
+    echo "  interleaved - Attack and benign traffic mixed"
+    echo "  sequential  - Attack variants run sequentially"
+    echo "  burst       - High-intensity burst attacks"
+    echo ""
+    echo "Attack Intensity Levels:"
+    echo "  low         - Stealthy attacks only"
+    echo "  medium      - Balanced attack mix"
+    echo "  high        - All attack variants"
+    echo ""
     echo "Examples:"
     echo "  $0 --attack-variants stealthy,aggressive"
     echo "  $0 --benign-mix HTTP:0.8,DNS:0.2 --attack-delay 10-20"
     echo "  $0 --attack-variants stealthy --benign-duration 600"
+    echo "  $0 --experiment-type burst --attack-intensity high"
 }
 
 # Function to parse command line arguments
@@ -86,6 +127,22 @@ parse_args() {
             --warmup-time)
                 BENIGN_WARMUP_TIME="$2"
                 shift 2
+                ;;
+            --experiment-type)
+                EXPERIMENT_TYPE="$2"
+                shift 2
+                ;;
+            --attack-intensity)
+                ATTACK_INTENSITY="$2"
+                shift 2
+                ;;
+            --dataset-name)
+                DATASET_NAME="$2"
+                shift 2
+                ;;
+            --multi-dataset)
+                MULTI_DATASET_MODE=true
+                shift
                 ;;
             --help)
                 show_usage
@@ -184,10 +241,11 @@ stop_benign_traffic() {
     log "✓ All benign traffic stopped"
 }
 
-# Function to run attack variant
+# Function to run attack variant with separate PCAP capture
 run_attack_variant() {
     local variant="$1"
     local risk level
+    local timestamp=$(date +%Y%m%d_%H%M%S)
     
     case "$variant" in
         "stealthy")
@@ -210,13 +268,36 @@ run_attack_variant() {
     
     log "Running $variant attack variant (RISK=$risk, LEVEL=$level)..."
     
+    # Start separate tcpdump for this variant
+    log "Starting PCAP capture for $variant variant..."
+    if ./scripts/variant_experiment.sh "$variant" -t "$timestamp"; then
+        log "✓ PCAP capture started for $variant variant"
+    else
+        error "Failed to start PCAP capture for $variant variant"
+        return 1
+    fi
+    
     # Run the attack with specific parameters
     if docker exec securitylogs-attacker python3 /opt/scripts/container_attack.py \
         --risk "$risk" --level "$level" --variant "$variant"; then
         log "✓ $variant attack completed successfully"
+        
+        # Stop tcpdump for this variant
+        log "Stopping PCAP capture for $variant variant..."
+        if ./scripts/variant_experiment.sh --stop "$variant" "$timestamp"; then
+            log "✓ PCAP capture stopped for $variant variant"
+        else
+            warn "Failed to stop PCAP capture for $variant variant"
+        fi
+        
         return 0
     else
         error "$variant attack failed"
+        
+        # Stop tcpdump even if attack failed
+        log "Stopping PCAP capture for $variant variant (attack failed)..."
+        ./scripts/variant_experiment.sh --stop "$variant" "$timestamp" || true
+        
         return 1
     fi
 }
@@ -230,9 +311,11 @@ run_interleaved_attack() {
     
     # Create timestamp for this run
     local timestamp=$(date +"%Y%m%d_%H%M%S")
-    local run_dir="$OUTPUT_DIR/interleaved_run_$timestamp"
+    local run_dir="$OUTPUT_DIR/$EXPERIMENT_TYPE/$timestamp"
     
-    mkdir -p "$run_dir"
+    # Create directory with proper permissions
+    sudo mkdir -p "$run_dir"
+    sudo chown -R $USER:$USER "$run_dir"
     
     # Start benign traffic first
     start_benign_traffic
@@ -283,22 +366,140 @@ collect_data() {
         docker logs "$container" > "$run_dir/${container}_logs.txt" 2>&1 || true
     done
     
-    # Collect PCAP files
-    if [ -f "$PCAP_DIR/traffic.pcap" ]; then
+    # Collect PCAP files with better error handling
+    log "Collecting PCAP files..."
+    
+    # Check for traffic.pcap (legacy)
+    if [ -f "$PCAP_DIR/traffic.pcap" ] && [ -s "$PCAP_DIR/traffic.pcap" ]; then
         cp "$PCAP_DIR/traffic.pcap" "$run_dir/"
-        log "✓ Copied traffic.pcap"
+        log "✓ Copied traffic.pcap ($(du -h "$PCAP_DIR/traffic.pcap" | cut -f1))"
+    else
+        log "⚠️ traffic.pcap not found or empty"
     fi
     
-    if [ -f "$PCAP_DIR/webapp_traffic.pcap" ]; then
+    # Check for webapp_traffic.pcap
+    if [ -f "$PCAP_DIR/webapp_traffic.pcap" ] && [ -s "$PCAP_DIR/webapp_traffic.pcap" ]; then
         cp "$PCAP_DIR/webapp_traffic.pcap" "$run_dir/"
-        log "✓ Copied webapp_traffic.pcap"
+        log "✓ Copied webapp_traffic.pcap ($(du -h "$PCAP_DIR/webapp_traffic.pcap" | cut -f1))"
     fi
     
-    # Collect attack results
-    if [ -d "$OUTPUT_DIR/variants" ]; then
-        cp -r "$OUTPUT_DIR/variants" "$run_dir/"
-        log "✓ Copied attack results"
+    # Collect variant-specific PCAP files
+    log "Collecting variant-specific PCAP files..."
+    local pcap_count=0
+    
+    for variant in "${ATTACK_VARIANTS[@]}"; do
+        # Look for PCAP files matching the pattern: low-and-slow-sqli_${variant}_*.pcap
+        for pcap_file in "$PCAP_DIR"/low-and-slow-sqli_"$variant"_*.pcap; do
+            if [ -f "$pcap_file" ] && [ -s "$pcap_file" ]; then
+                local filename=$(basename "$pcap_file")
+                cp "$pcap_file" "$run_dir/"
+                log "✓ Copied $filename ($(du -h "$pcap_file" | cut -f1))"
+                pcap_count=$((pcap_count + 1))
+            fi
+        done
+    done
+    
+    if [ $pcap_count -eq 0 ]; then
+        log "⚠️ No variant-specific PCAP files found"
+    else
+        log "✓ Collected $pcap_count variant-specific PCAP files"
     fi
+    
+    # Force tcpdump to flush and restart if needed (legacy)
+    if [ ! -f "$PCAP_DIR/traffic.pcap" ] || [ ! -s "$PCAP_DIR/traffic.pcap" ]; then
+        log "Restarting tcpdump capture..."
+        docker exec securitylogs-tcpdump pkill tcpdump || true
+        sleep 2
+        docker exec securitylogs-tcpdump tcpdump -i any -w /pcaps/traffic.pcap -s 65535 -v &
+    fi
+}
+
+# Function to run multi-dataset collection
+run_multi_dataset_collection() {
+    log "Starting multi-dataset collection mode..."
+    
+    # Define dataset configurations
+    declare -A datasets=(
+        ["stealthy_only"]="--attack-variants stealthy --attack-intensity low"
+        ["moderate_only"]="--attack-variants moderate --attack-intensity medium"
+        ["aggressive_only"]="--attack-variants aggressive --attack-intensity high"
+        ["mixed_low"]="--attack-variants stealthy,moderate --attack-intensity medium"
+        ["mixed_high"]="--attack-variants moderate,aggressive --attack-intensity high"
+        ["all_variants"]="--attack-variants stealthy,moderate,aggressive --attack-intensity high"
+    )
+    
+    # Create dataset directory
+    local dataset_dir="$OUTPUT_DIR/multi_dataset_$(date +%Y%m%d_%H%M%S)"
+    sudo mkdir -p "$dataset_dir"
+    sudo chown -R $USER:$USER "$dataset_dir"
+    
+    log "Multi-dataset collection directory: $dataset_dir"
+    
+    # Run each dataset configuration
+    for dataset_name in "${!datasets[@]}"; do
+        local config="${datasets[$dataset_name]}"
+        log "Running dataset: $dataset_name"
+        log "Configuration: $config"
+        
+        # Create subdirectory for this dataset
+        local subdir="$dataset_dir/$dataset_name"
+        sudo mkdir -p "$subdir"
+        sudo chown -R $USER:$USER "$subdir"
+        
+        # Run the experiment with this configuration
+        run_interleaved_experiment "$subdir" "$config"
+        
+        # Wait between datasets
+        log "Waiting 30 seconds before next dataset..."
+        sleep 30
+    done
+    
+    log "Multi-dataset collection completed!"
+    log "All datasets saved in: $dataset_dir"
+}
+    
+# Function to run a single interleaved experiment
+run_interleaved_experiment() {
+    local run_dir="$1"
+    local config="$2"
+    
+    log "Running interleaved experiment in: $run_dir"
+    log "Configuration: $config"
+    
+    # Start benign traffic
+    start_benign_traffic
+    
+    # Wait for benign traffic to establish
+    log "Waiting for benign traffic to establish ($BENIGN_WARMUP_TIME seconds)..."
+    sleep "$BENIGN_WARMUP_TIME"
+    
+    # Run attack variants
+    local successful_variants=0
+    local total_variants=${#ATTACK_VARIANTS[@]}
+    
+    for variant in "${ATTACK_VARIANTS[@]}"; do
+        log "Running $variant attack variant (interleaved with benign traffic)..."
+        
+        # Run the attack
+        if run_attack_variant "$variant"; then
+            successful_variants=$((successful_variants + 1))
+        fi
+        
+        # Random delay between attacks
+        if [ $successful_variants -lt $total_variants ]; then
+            local delay=$((ATTACK_DELAY_MIN + RANDOM % (ATTACK_DELAY_MAX - ATTACK_DELAY_MIN + 1)))
+            log "Waiting $delay seconds before next variant..."
+            sleep $delay
+        fi
+    done
+    
+    log "Attack variants completed: $successful_variants/$total_variants variants successful"
+    
+    # Stop benign traffic
+    stop_benign_traffic
+    
+    # Collect data
+    collect_data "$run_dir"
     
     # Generate summary report
     log "Generating interleaved experiment summary..."
@@ -370,6 +571,16 @@ EOF
         echo "- webapp_traffic.pcap" >> "$run_dir/interleaved_summary.md"
     fi
     
+    # Add variant-specific PCAP files to report
+    for variant in "${ATTACK_VARIANTS[@]}"; do
+        for pcap_file in "$run_dir"/low-and-slow-sqli_"$variant"_*.pcap; do
+            if [ -f "$pcap_file" ]; then
+                local filename=$(basename "$pcap_file")
+                echo "- $filename (${variant} variant)" >> "$run_dir/interleaved_summary.md"
+            fi
+        done
+    done
+    
     cat >> "$run_dir/interleaved_summary.md" << EOF
 
 ### Attack Results
@@ -380,6 +591,16 @@ EOF
 \`\`\`bash
 # Analyze PCAP files for interleaved traffic
 tcpdump -r $run_dir/traffic.pcap -c 50
+
+# Analyze variant-specific PCAP files
+for variant in stealthy moderate aggressive; do
+    for pcap in $run_dir/low-and-slow-sqli_\${variant}_*.pcap; do
+        if [ -f "\$pcap" ]; then
+            echo "=== Analyzing \$variant variant ==="
+            tcpdump -r "\$pcap" -c 50
+        fi
+    done
+done
 
 # View container logs
 less $run_dir/securitylogs-webapp_logs.txt
@@ -417,6 +638,9 @@ main() {
     # Parse command line arguments
     parse_args "$@"
     
+    # Configure attack intensity
+    configure_attack_intensity
+    
     # Check if we're in the right directory
     if [ ! -f "docker-compose.yml" ]; then
         error "docker-compose.yml not found. Please run this script from the scenario directory."
@@ -441,9 +665,20 @@ main() {
         exit 1
     fi
     
-    # Run interleaved attack
-    if ! run_interleaved_attack; then
-        warn "Some attack variants failed, but continuing with data collection"
+    # Check if multi-dataset mode is enabled
+    if [ "$MULTI_DATASET_MODE" = true ]; then
+        run_multi_dataset_collection
+    else
+        # Create timestamp for this run
+        local timestamp=$(date +"%Y%m%d_%H%M%S")
+        local run_dir="$OUTPUT_DIR/$EXPERIMENT_TYPE/$timestamp"
+        
+        # Create directory with proper permissions
+        sudo mkdir -p "$run_dir"
+        sudo chown -R $USER:$USER "$run_dir"
+        
+        # Run single experiment
+        run_interleaved_experiment "$run_dir" ""
     fi
     
     # Final summary
