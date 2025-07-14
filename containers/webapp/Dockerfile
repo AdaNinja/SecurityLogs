@@ -1,16 +1,16 @@
-FROM ubuntu:20.04
+FROM debian:bullseye-slim
 
 # 避免交互式提示
 ARG DEBIAN_FRONTEND=noninteractive
 
-# 使用国内镜像源
-RUN sed -i 's/ports.ubuntu.com/mirrors.aliyun.com/g' /etc/apt/sources.list && \
-    sed -i 's/archive.ubuntu.com/mirrors.aliyun.com/g' /etc/apt/sources.list && \
-    sed -i 's/security.ubuntu.com/mirrors.aliyun.com/g' /etc/apt/sources.list
+# 使用默认镜像源，避免网络问题
+# RUN sed -i 's/ports.ubuntu.com/mirrors.aliyun.com/g' /etc/apt/sources.list && \
+#     sed -i 's/archive.ubuntu.com/mirrors.aliyun.com/g' /etc/apt/sources.list && \
+#     sed -i 's/security.ubuntu.com/mirrors.aliyun.com/g' /etc/apt/sources.list
 
 # 安装基础包
 RUN apt-get update && \
-    DEBIAN_FRONTEND=noninteractive apt-get install -y \
+    apt-get install -y --no-install-recommends \
       nginx \
       php7.4-fpm \
       php7.4-sqlite3 \
@@ -29,18 +29,20 @@ RUN apt-get update && \
       procps \
       vim \
       nano \
+      bc \
     && rm -rf /var/lib/apt/lists/*
 
 # 安装Python依赖
 RUN pip3 install requests beautifulsoup4
 
 # 创建必要目录
-RUN mkdir -p /var/www/html /var/log /data/raw /opt/scripts /opt/output /home/userA /home/userB /backup
+RUN mkdir -p /var/www/html /var/log /data/raw /opt/scripts /opt/output /home/userA /home/userB /backup /var/log/nginx
 
 # 复制web应用文件
 COPY webapp/ /var/www/html/
-COPY config/nginx.conf /etc/nginx/sites-available/default
+COPY config/nginx.conf /etc/nginx/nginx.conf
 COPY config/sshd_config /etc/ssh/sshd_config
+COPY config/pool.d/www.conf /etc/php/7.4/fpm/pool.d/www.conf
 
 # 复制启动脚本
 COPY scripts/start.sh /usr/local/bin/start.sh

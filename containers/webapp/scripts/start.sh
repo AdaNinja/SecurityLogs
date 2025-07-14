@@ -12,9 +12,40 @@ if [ ! -f /var/www/html/database.sqlite ]; then
     echo "[$(date)] Database initialized"
 fi
 
+# Create PHP-FPM socket directory and set permissions
+echo "[$(date)] Setting up PHP-FPM socket directory..."
+mkdir -p /run/php
+chown www-data:www-data /run/php
+chmod 755 /run/php
+
 # Start PHP-FPM
 echo "[$(date)] Starting PHP-FPM..."
 service php7.4-fpm start
+
+# Wait for PHP-FPM socket to be created
+echo "[$(date)] Waiting for PHP-FPM socket..."
+for i in {1..30}; do
+    if [ -S /run/php/php7.4-fpm.sock ]; then
+        echo "[$(date)] PHP-FPM socket created successfully"
+        break
+    fi
+    sleep 1
+done
+
+# Set socket permissions
+if [ -S /run/php/php7.4-fpm.sock ]; then
+    chmod 666 /run/php/php7.4-fpm.sock
+    echo "[$(date)] PHP-FPM socket permissions set"
+else
+    echo "[$(date)] ERROR: PHP-FPM socket not created"
+    exit 1
+fi
+
+# Ensure nginx log directory and files exist
+mkdir -p /var/log/nginx
+[ -f /var/log/nginx/access.log ] || touch /var/log/nginx/access.log
+[ -f /var/log/nginx/error.log ] || touch /var/log/nginx/error.log
+chown -R www-data:www-data /var/log/nginx
 
 # Start Nginx
 echo "[$(date)] Starting Nginx..."

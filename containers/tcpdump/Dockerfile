@@ -1,31 +1,23 @@
-FROM ubuntu:20.04
+FROM debian:bullseye-slim
 
-# Change to Chinese mirrors for better network access
-RUN sed -i 's/ports.ubuntu.com/mirrors.aliyun.com/g' /etc/apt/sources.list && \
-    sed -i 's/archive.ubuntu.com/mirrors.aliyun.com/g' /etc/apt/sources.list && \
-    sed -i 's/security.ubuntu.com/mirrors.aliyun.com/g' /etc/apt/sources.list
-
-# Install tcpdump and network tools
+# 安装 tcpdump 及常用工具
 RUN apt-get update && \
-    apt-get install -y \
+    apt-get install -y --no-install-recommends \
       tcpdump \
-      wireshark \
-      tshark \
-      netcat \
+      iproute2 \
+      iputils-ping \
+      procps \
+      bash \
+      ca-certificates \
       curl \
-      wget \
-      rsyslog \
     && rm -rf /var/lib/apt/lists/*
 
-# Create directories for pcap storage
+# ─── 目录和脚本 ─────────────────────────────────────────────────────────────────
 RUN mkdir -p /pcaps /logs /data/raw
 
-# Copy capture scripts
 COPY scripts/capture_traffic.sh /usr/local/bin/capture_traffic.sh
 RUN chmod +x /usr/local/bin/capture_traffic.sh
 
-# Set environment variables
 ENV SERVICE_NAME=securitylogs-tcpdump
 
-# Default command
 CMD ["/usr/local/bin/capture_traffic.sh"]

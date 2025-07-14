@@ -1,22 +1,24 @@
 # Lightweight Attacker Container
-FROM alpine:latest
+FROM debian:bullseye-slim
 
-# Use Chinese mirrors for better network access
-RUN sed -i 's/dl-cdn.alpinelinux.org/mirrors.aliyun.com/g' /etc/apk/repositories
+# 避免交互式提示
+ARG DEBIAN_FRONTEND=noninteractive
 
-# Update package index and install basic packages
-RUN apk update && apk add --no-cache \
-    python3 \
-    py3-pip \
+# 安装基础包
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends \
+      python3 \
+      python3-pip \
       curl \
       wget \
-    bash \
-    && rm -rf /var/cache/apk/*
+      bash \
+      ca-certificates \
+    && rm -rf /var/lib/apt/lists/*
 
-# Use Chinese PyPI mirror
+# 使用中国 PyPI 镜像
 RUN pip3 config set global.index-url https://pypi.tuna.tsinghua.edu.cn/simple/
 
-# Install Python dependencies
+# 安装 Python 依赖
 RUN pip3 install --no-cache-dir \
     requests \
     colorama

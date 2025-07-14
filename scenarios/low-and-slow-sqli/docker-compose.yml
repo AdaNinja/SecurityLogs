@@ -3,11 +3,7 @@ version: '3.8'
 services:
   # Web Application Container (Target)
   webapp:
-    build:
-      context: ../../containers/webapp
-      dockerfile: Dockerfile
-      args:
-        - DEBIAN_FRONTEND=noninteractive
+    image: securitylogs-webapp:latest
     dns:
       - 8.8.8.8
       - 8.8.4.4
@@ -42,9 +38,7 @@ services:
 
   # Network Traffic Capture Container (Enhanced)
   tcpdump:
-    build:
-      context: ../../containers/tcpdump
-      dockerfile: Dockerfile
+    image: securitylogs-tcpdump:minimal
     container_name: securitylogs-tcpdump
     hostname: tcpdump-sidecar
     networks:
@@ -74,9 +68,7 @@ services:
 
   # Lightweight Attacker Container
   attacker:
-    build:
-      context: ../../containers/attacker
-      dockerfile: Dockerfile
+    image: securitylogs-attacker:latest
     dns:
       - 8.8.8.8
       - 8.8.4.4
@@ -87,7 +79,7 @@ services:
     volumes:
       - ../../data/output:/opt/output
       - ../../data/logs:/opt/logs
-      - ./scripts/attack_modules:/opt/scripts
+      - ./scripts/attack_modules:/opt/scripts/attack_modules
     environment:
       - SERVICE_NAME=securitylogs-attacker
       - TARGET_HOST=victim-web
