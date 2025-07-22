@@ -1,0 +1,23 @@
+{
+  "nmap": {
+    "command": "nmap -sS -p- victim-web",
+    "stdout": "Starting Nmap 7.80 ( https://nmap.org ) at 2025-07-22 11:11 UTC\nNmap scan report for victim-web (172.19.0.4)\nHost is up (0.0000050s latency).\nrDNS record for 172.19.0.4: securitylogs-webapp.lowscan_aggressive_net\nNot shown: 65534 closed ports\nPORT   STATE SERVICE\n80/tcp open  http\nMAC Address: 02:42:AC:13:00:04 (Unknown)\n\nNmap done: 1 IP address (1 host up) scanned in 0.69 seconds\n",
+    "stderr": "",
+    "returncode": 0,
+    "timestamp": "2025-07-22T11:11:58.824223"
+  },
+  "dirb": {
+    "command": "dirb http://victim-web:80 /usr/share/dirb/wordlists/common.txt -S -r",
+    "stdout": "\n-----------------\nDIRB v2.22    \nBy The Dark Raver\n-----------------\n\nSTART_TIME: Tue Jul 22 11:12:03 2025\nURL_BASE: http://victim-web:80/\nWORDLIST_FILES: /usr/share/dirb/wordlists/common.txt\nOPTION: Not Recursive\nOPTION: Silent Mode\n\n-----------------\n\nGENERATED WORDS: 4612\n\n---- Scanning URL: http://victim-web:80/ ----\n\n-----------------\nEND_TIME: Tue Jul 22 11:12:04 2025\nDOWNLOADED: 4612 - FOUND: 0\n",
+    "stderr": "",
+    "returncode": 0,
+    "timestamp": "2025-07-22T11:12:04.955751"
+  },
+  "nikto": {
+    "command": "nikto -h http://victim-web:80 -Format txt -o /opt/output/nikto_results.txt",
+    "stdout": "- Nikto v2.5.0\n---------------------------------------------------------------------------\n+ Target IP:          172.19.0.4\n+ Target Hostname:    victim-web\n+ Target Port:        80\n+ Start Time:         2025-07-22 11:12:05 (GMT0)\n---------------------------------------------------------------------------\n+ Server: nginx/1.18.0\n+ /: The X-Content-Type-Options header is not set. This could allow the user agent to render the content of the site in a different fashion to the MIME type. See: https://www.netsparker.com/web-vulnerability-scanner/vulnerabilities/missing-content-type-header/\n+ No CGI Directories found (use '-C all' to force check all possible dirs)\n+ /: Suggested security header missing: x-content-type-options. See: https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/X-Content-Type-Options\n+ /: Suggested security header missing: strict-transport-security. See: https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Strict-Transport-Security\n+ /: Suggested security header missing: content-security-policy. See: https://developer.mozilla.org/en-US/docs/Web/HTTP/CSP\n+ /: Suggested security header missing: referrer-policy. See: https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Referrer-Policy\n+ /: Suggested security header missing: permissions-policy. See: https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Permissions-Policy\n+ /login.php: Cookie PHPSESSID created without the httponly flag. See: https://developer.mozilla.org/en-US/docs/Web/HTTP/Cookies\n+ /sips/sipssys/users/a/admin/user: SIPS v0.2.2 allows user account info (including password) to be retrieved remotely. See: https://vulners.com/exploitdb/EDB-ID:22381\n+ /login.php: Admin login page/section found.\n+ 7865 requests: 0 error(s) and 9 item(s) reported on remote host\n+ End Time:           2025-07-22 11:12:12 (GMT0) (7 seconds)\n---------------------------------------------------------------------------\n+ 1 host(s) tested\n",
+    "stderr": "",
+    "returncode": 0,
+    "timestamp": "2025-07-22T11:12:12.648269"
+  }
+}

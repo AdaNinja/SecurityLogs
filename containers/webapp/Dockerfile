@@ -4,11 +4,10 @@ FROM debian:bullseye-slim
 ARG DEBIAN_FRONTEND=noninteractive
 
 # 使用默认镜像源，避免网络问题
-# RUN sed -i 's/ports.ubuntu.com/mirrors.aliyun.com/g' /etc/apt/sources.list && \
-#     sed -i 's/archive.ubuntu.com/mirrors.aliyun.com/g' /etc/apt/sources.list && \
-#     sed -i 's/security.ubuntu.com/mirrors.aliyun.com/g' /etc/apt/sources.list
+# RUN sed -i 's/deb.debian.org/mirrors.aliyun.com/g' /etc/apt/sources.list && \
+#     sed -i 's/security.debian.org/mirrors.aliyun.com/g' /etc/apt/sources.list
 
-# 安装基础包
+# 安装基础包（增加重试机制）
 RUN apt-get update && \
     apt-get install -y --no-install-recommends \
       nginx \
@@ -32,8 +31,8 @@ RUN apt-get update && \
       bc \
     && rm -rf /var/lib/apt/lists/*
 
-# 安装Python依赖
-RUN pip3 install requests beautifulsoup4
+# 安装Python依赖（使用国内镜像源）
+RUN pip3 install requests beautifulsoup4 scapy>=2.4.5
 
 # 创建必要目录
 RUN mkdir -p /var/www/html /var/log /data/raw /opt/scripts /opt/output /home/userA /home/userB /backup /var/log/nginx
@@ -48,6 +47,8 @@ COPY config/pool.d/www.conf /etc/php/7.4/fpm/pool.d/www.conf
 COPY scripts/start.sh /usr/local/bin/start.sh
 COPY scripts/backup_script.sh /opt/scripts/backup_script.sh
 RUN chmod +x /usr/local/bin/start.sh /opt/scripts/backup_script.sh
+
+
 
 # 初始化SQLite数据库
 COPY scripts/init_db.sql /tmp/init_db.sql

@@ -17,6 +17,9 @@ tabulate>=0.8.0
 # Network scanning
 python-nmap>=0.7.1
 
+# PCAP analysis
+scapy>=2.4.5
+
 # Data processing
 numpy>=1.21.0
 

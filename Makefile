@@ -1,7 +1,7 @@
 # SecurityLogs Project Makefile
-# Unified management for all attack scenarios
+# Simplified management for attack scenarios
 
-.PHONY: help build clean up down benign attack netem apply reset label
+.PHONY: help build clean up down run-variant run-all-variants run-variants logs status
 
 # Default scenario
 SCENARIO ?= low-and-slow-sqli
@@ -10,49 +10,46 @@ SCENARIO ?= low-and-slow-sqli
 help:
 	@echo "SecurityLogs - Attack Scenario Management"
 	@echo ""
-	@echo "Available targets:"
-	@echo "  build          - Build all Docker images"
+	@echo "Quick Start:"
+	@echo "  make build              # Build Docker images"
+	@echo "  make run-all-variants   # Run all variants (with interleaved traffic)"
+	@echo "  make run-variant VARIANT=stealthy  # Run single variant"
+	@echo ""
+	@echo "Core Commands:"
+	@echo "  build          - Build all Docker images (with host network)"
+	@echo "  build-clean    - Clean cache and rebuild (fixes network issues)"
 	@echo "  clean          - Clean up containers and images"
-	@echo "  up             - Start containers for current scenario"
-	@echo "  down           - Stop and remove containers"
-	@echo "  benign         - Run benign traffic simulation"
-	@echo "  attack         - Run attack scenario"
-	@echo "  attack-stealthy - Run stealthy attack variant"
-	@echo "  attack-moderate - Run moderate attack variant"
-	@echo "  attack-aggressive - Run aggressive attack variant"
-	@echo "  interleaved    - Run interleaved attack with benign traffic"
-	@echo "  apply-netem    - Apply network conditions"
-	@echo "  reset-netem    - Reset network conditions"
-	@echo "  label          - Label captured traffic"
-	@echo "  collect-logs   - Collect all logs and PCAP files"
-	@echo "  analyze        - Analyze collected data"
-	@echo "  report         - Generate analysis report"
-	@echo "  all            - Complete attack workflow"
+	@echo "  up/down        - Start/stop containers"
+	@echo "  run-variant    - Run single variant (with interleaved traffic & network conditions)"
+	@echo "  run-all-variants - Run all variants (with interleaved traffic & network conditions)"
+	@echo "  run-variants   - Run specific variants (VARIANTS='stealthy moderate')"
 	@echo ""
-	@echo "Available scenarios:"
-	@echo "  SCENARIO=low-and-slow-sqli    - SQL injection attack scenario"
+	@echo "Monitoring:"
+	@echo "  logs           - Show container logs"
+	@echo "  status         - Show container status"
 	@echo ""
-	@echo "Scenario-specific targets:"
-	@echo "  sqli-up        - Start SQL injection scenario"
-	@echo "  sqli-attack    - Run SQL injection attack"
-	@echo "  sqli-benign    - Run SQL injection benign traffic"
-	@echo ""
-	@echo "Usage examples:"
-	@echo "  make build && make up && make apply-netem && make benign && make attack"
-	@echo "  make all                    # Complete workflow"
-	@echo "  make interleaved           # Interleaved attack with benign traffic"
-	@echo "  make interleaved ARGS='--attack-variants stealthy,aggressive'"
-	@echo "  make interleaved ARGS='--benign-mix HTTP:0.8,DNS:0.2 --attack-delay 10-20'"
-	@echo "  make attack-stealthy       # Stealthy attack variant"
-	@echo "  make attack-moderate       # Moderate attack variant"
-	@echo "  make attack-aggressive     # Aggressive attack variant"
+	@echo "Examples:"
+	@echo "  make build && make run-all-variants"
+	@echo "  make run-variant VARIANT=stealthy"
+	@echo "  make build-clean  # If network issues occur"
 
 # Build all Docker images
 build:
-	@echo "Building Docker images..."
-	docker build -t securitylogs-webapp containers/webapp
-	docker build -t securitylogs-attacker containers/attacker
-	docker build -t securitylogs-tcpdump containers/tcpdump
+	@echo "Building Docker images with host network..."
+	docker build --network=host -t securitylogs-webapp containers/webapp
+	docker build --network=host -t securitylogs-attacker containers/attacker
+	docker build --network=host -t securitylogs-tcpdump containers/tcpdump
+	@echo "Build completed!"
+
+# Clean cache and build all Docker images
+build-clean:
+	@echo "Cleaning Docker cache and building images..."
+	docker system prune -a -f
+	docker builder prune -a -f
+	@echo "Cache cleaned, building images with host network..."
+	docker build --network=host -t securitylogs-webapp containers/webapp
+	docker build --network=host -t securitylogs-attacker containers/attacker
+	docker build --network=host -t securitylogs-tcpdump containers/tcpdump
 	@echo "Build completed!"
 
 # Clean up containers and images
@@ -79,61 +76,76 @@ down:
 		echo "No docker-compose.yml found in current scenario"; \
 	fi
 
-# Network condition management
+# Network condition management (automatically applied)
 apply-netem:
 	@echo "Applying network conditions..."
-	bash control/network/apply_netem.sh
+	bash scripts/network/apply_netem.sh
 
 reset-netem:
 	@echo "Resetting network conditions..."
-	bash control/network/reset_netem.sh
+	bash scripts/network/reset_netem.sh
 
-# SQL Injection scenario targets
-sqli-up:
-	@echo "Starting SQL injection scenario..."
-	cd scenarios/low-and-slow-sqli && docker-compose up -d
+# Automated variant runners (with interleaved traffic and network conditions by default)
+run-variant:
+	@echo "Running variant with interleaved traffic and network conditions..."
+	@if [ -z "$(VARIANT)" ]; then \
+		echo "Error: VARIANT not specified. Use: make run-variant VARIANT=stealthy"; \
+		exit 1; \
+	fi
+	@echo "Applying network conditions..."
+	@sudo bash scripts/network/apply_netem.sh
+	@echo "Running variant with interleaved traffic..."
+	python3 scripts/run_variant.py $(VARIANT) --interleaved $(if $(BENIGN_MIX),--benign-mix $(BENIGN_MIX)) $(if $(BENIGN_DURATION),--benign-duration $(BENIGN_DURATION))
+	@echo "Resetting network conditions..."
+	@sudo bash scripts/network/reset_netem.sh
 
-sqli-down:
-	@echo "Stopping SQL injection scenario..."
-	cd scenarios/low-and-slow-sqli && docker-compose down
+run-all-variants:
+	@echo "Running all variants with interleaved traffic and network conditions..."
+	@echo "Applying network conditions..."
+	@sudo bash scripts/network/apply_netem.sh
+	@echo "Running all variants with interleaved traffic..."
+	python3 scripts/run_all_variants.py --interleaved $(if $(BENIGN_MIX),--benign-mix $(BENIGN_MIX)) $(if $(BENIGN_DURATION),--benign-duration $(BENIGN_DURATION))
+	@echo "Resetting network conditions..."
+	@sudo bash scripts/network/reset_netem.sh
 
-sqli-attack:
-	@echo "Running SQL injection attack..."
-	docker exec securitylogs-attacker bash /opt/scripts/run_attack.sh
+run-variants:
+	@echo "Running specific variants with interleaved traffic and network conditions..."
+	@if [ -z "$(VARIANTS)" ]; then \
+		echo "Error: VARIANTS not specified. Use: make run-variants VARIANTS='stealthy moderate'"; \
+		exit 1; \
+	fi
+	@echo "Applying network conditions..."
+	@sudo bash scripts/network/apply_netem.sh
+	@echo "Running variants with interleaved traffic..."
+	python3 scripts/run_all_variants.py --variants $(VARIANTS) --interleaved $(if $(BENIGN_MIX),--benign-mix $(BENIGN_MIX)) $(if $(BENIGN_DURATION),--benign-duration $(BENIGN_DURATION))
+	@echo "Resetting network conditions..."
+	@sudo bash scripts/network/reset_netem.sh
 
-sqli-benign:
-	@echo "Running SQL injection benign traffic..."
-	docker exec securitylogs-webapp bash /opt/scripts/benign_modules/run_benign.sh
-
-sqli-capture:
-	@echo "Running complete SQL injection capture..."
-	cd scenarios/low-and-slow-sqli && bash capture.sh
-
-# Attack variants
+# Legacy commands (for backward compatibility)
 attack:
-	@echo "Running basic SQL injection attack..."
-	cd scenarios/low-and-slow-sqli && docker exec securitylogs-attacker python3 /opt/scripts/container_attack.py
+	@echo "Running basic SQL injection attack (legacy)..."
+	cd scenarios/low-and-slow-sqli && docker exec securitylogs-attacker python3 /opt/scripts/attack_modules/container_attack.py
 
 attack-stealthy:
-	@echo "Running stealthy attack variant (RISK=1, LEVEL=1)..."
-	cd scenarios/low-and-slow-sqli && docker exec securitylogs-attacker python3 /opt/scripts/container_attack.py --risk 1 --level 1
+	@echo "Running stealthy attack variant (legacy)..."
+	cd scenarios/low-and-slow-sqli && docker exec securitylogs-attacker python3 /opt/scripts/attack_modules/container_attack.py --risk 1 --level 1
 
 attack-moderate:
-	@echo "Running moderate attack variant (RISK=1, LEVEL=2)..."
-	cd scenarios/low-and-slow-sqli && docker exec securitylogs-attacker python3 /opt/scripts/container_attack.py --risk 1 --level 2
+	@echo "Running moderate attack variant (legacy)..."
+	cd scenarios/low-and-slow-sqli && docker exec securitylogs-attacker python3 /opt/scripts/attack_modules/container_attack.py --risk 1 --level 2
 
 attack-aggressive:
-	@echo "Running aggressive attack variant (RISK=2, LEVEL=3)..."
-	cd scenarios/low-and-slow-sqli && docker exec securitylogs-attacker python3 /opt/scripts/container_attack.py --risk 2 --level 3
+	@echo "Running aggressive attack variant (legacy)..."
+	cd scenarios/low-and-slow-sqli && docker exec securitylogs-attacker python3 /opt/scripts/attack_modules/container_attack.py --risk 2 --level 3
 
-# Interleaved attack with benign traffic
+# Legacy interleaved command (for backward compatibility)
 interleaved:
-	@echo "Running interleaved attack with benign traffic..."
-	cd scenarios/low-and-slow-sqli && bash ../../control/automation/run_all_variants.sh $(ARGS)
+	@echo "Running interleaved attack (legacy)..."
+	bash scripts/attack/interleaved_attack.sh $(ARGS)
 
-# Benign traffic simulation
+# Benign traffic simulation (legacy)
 benign:
-	@echo "Running benign traffic simulation..."
+	@echo "Running benign traffic simulation (legacy)..."
 	cd scenarios/low-and-slow-sqli && docker exec securitylogs-webapp bash /opt/scripts/benign_modules/run_benign.sh
 
 # Traffic labeling
@@ -154,15 +166,13 @@ report:
 	@echo "Generating analysis report..."
 	cd scenarios/low-and-slow-sqli && make report
 
-# Complete attack workflow
-all: build up apply-netem interleaved collect-logs analyze report
+# Complete attack workflow (simplified)
+all: build up run-all-variants collect-logs analyze report
 	@echo "Complete attack workflow finished!"
 
 # Quick start for SQL injection scenario
-sqli-quick: build sqli-up apply-netem sqli-benign sqli-attack label
+sqli-quick: build up run-variant VARIANT=stealthy label
 	@echo "SQL injection scenario completed!"
-
-
 
 # Show logs
 logs:

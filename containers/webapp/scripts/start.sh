@@ -18,6 +18,37 @@ mkdir -p /run/php
 chown www-data:www-data /run/php
 chmod 755 /run/php
 
+# Create logs directory structure
+echo "[$(date)] Creating logs directory structure..."
+mkdir -p /var/log/logs
+mkdir -p /var/log/nginx
+
+# Configure rsyslog to output to logs subdirectory
+echo "[$(date)] Configuring rsyslog..."
+cat > /etc/rsyslog.d/securitylogs.conf << EOF
+# SecurityLogs rsyslog configuration
+# Output system logs to logs subdirectory
+*.info;mail.none;authpriv.none;cron.none /var/log/logs/messages
+auth,authpriv.* /var/log/logs/auth.log
+*.emerg /var/log/logs/emergency.log
+kern.* /var/log/logs/kern.log
+mail.* /var/log/logs/mail.log
+cron.* /var/log/logs/cron.log
+*.=debug /var/log/logs/debug.log
+*.=info /var/log/logs/info.log
+*.=notice /var/log/logs/notice.log
+*.=warn /var/log/logs/warn.log
+*.=err /var/log/logs/error.log
+*.=crit /var/log/logs/crit.log
+*.=alert /var/log/logs/alert.log
+*.=emerg /var/log/logs/emerg.log
+EOF
+
+# Configure PHP-FPM to log to logs subdirectory
+echo "[$(date)] Configuring PHP-FPM logging..."
+sed -i 's|^error_log = .*|error_log = /var/log/logs/php7.4-fpm.log|' /etc/php/7.4/fpm/php-fpm.conf
+sed -i 's|^access.log = .*|access.log = /var/log/logs/php7.4-fpm-access.log|' /etc/php/7.4/fpm/pool.d/www.conf
+
 # Start PHP-FPM
 echo "[$(date)] Starting PHP-FPM..."
 service php7.4-fpm start
@@ -62,15 +93,19 @@ service rsyslog start
 
 # Start tcpdump for network capture
 echo "[$(date)] Starting tcpdump..."
-tcpdump -i any -w /data/raw/webapp_traffic.pcap -s 65535 > /dev/null 2>&1 &
+tcpdump -i any -w /data/raw/webapp_traffic.pcap -s 262144 -v > /dev/null 2>&1 &
 
-# Create log files
-touch /var/log/login_attempts.log
-touch /var/log/search_attempts.log
-touch /var/log/access.log
-touch /var/log/error.log
+# Create application-specific log files
+echo "[$(date)] Creating application log files..."
+touch /var/log/logs/login_attempts.log
+touch /var/log/logs/search_attempts.log
 
-# Set proper permissions
+# Set proper permissions for logs directory and files
+chown -R www-data:www-data /var/log/logs
+chmod -R 755 /var/log/logs
+chmod 666 /var/log/logs/*.log
+
+# Set proper permissions for web application
 chown -R www-data:www-data /var/www/html
 chmod -R 755 /var/www/html
 

@@ -1,0 +1,19 @@
+Unified Dataset Summary for lowscan_aggressive
+==================================================
+Generated: 2025-07-22T11:57:50.225304
+Total records: 7897
+Total fields: 72
+
+Data Source Breakdown:
+------------------------------
+container_logs: 1599 records
+host_logs: 5 records
+application_logs: 4699 records
+webapp_logs: 85 records
+attack_logs: 1 records
+dns_logs: 1111 records
+pcap_logs: 397 records
+
+Output files:
+- CSV dataset: data/processed/lowscan_aggressive/unified/unified_dataset.csv
+- Summary: data/processed/lowscan_aggressive/unified/dataset_summary.txt

@@ -29,24 +29,6 @@ variants:
     sqlmap_level: 3     # SQLMap official LEVEL
     protocol_mix: "HTTP:0.6,DNS:0.25,SMTP:0.15"
     netem_profile: "high_latency"
-    
-  research:
-    description: "Research-focused variant using official SQLMap RISK=1, LEVEL=4"
-    nmap_rate: 0.025
-    sql_delay: 180
-    sqlmap_risk: 1      # SQLMap official RISK level
-    sqlmap_level: 4     # SQLMap official LEVEL
-    protocol_mix: "HTTP:0.75,DNS:0.2,SMTP:0.05"
-    netem_profile: "research_profile"
-    
-  production:
-    description: "Production-like environment using official SQLMap RISK=1, LEVEL=2"
-    nmap_rate: 0.012
-    sql_delay: 200
-    sqlmap_risk: 1      # SQLMap official RISK level
-    sqlmap_level: 2     # SQLMap official LEVEL
-    protocol_mix: "HTTP:0.8,DNS:0.15,SMTP:0.05"
-    netem_profile: "production_profile"
 
 # Default variant to use if none specified
 default_variant: moderate
@@ -56,8 +38,6 @@ execution_order:
   - stealthy
   - moderate
   - aggressive
-  - research
-  - production
 
 # Official tool grade mappings
 tool_grades:

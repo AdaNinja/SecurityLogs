@@ -31,7 +31,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET' && isset($_GET['q'])) {
 
 // Log search attempts
 $log_entry = date('Y-m-d H:i:s') . " - Search: " . $search_term . " from " . $_SERVER['REMOTE_ADDR'] . "\n";
-file_put_contents('/var/log/search_attempts.log', $log_entry, FILE_APPEND);
+file_put_contents('/var/log/logs/search_attempts.log', $log_entry, FILE_APPEND);
 ?>
 
 <!DOCTYPE html>

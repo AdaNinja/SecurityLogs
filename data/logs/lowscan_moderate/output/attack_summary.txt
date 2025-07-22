@@ -1,0 +1,32 @@
+SecurityLogs Enhanced Attack Summary
+===============================
+Timestamp: 2025-07-21T10:48:05.352221
+Target: victim-web
+Target URL: http://victim-web:80
+Container ID: attacker
+
+Attack Phases Completed:
+1. Network Reconnaissance (Nmap)
+2. Web Application Enumeration (Dirb + Nikto)
+3. Custom SQL Injection Attacks
+4. SQLMap Automated Testing
+5. Data Extraction
+
+Files Generated:
+- /opt/output/container_attack_log.json
+- /opt/output/scan_results.json
+- /opt/output/sql_injection_results.json
+- /opt/output/attack_summary.txt
+- /opt/output/extracted_data.html
+
+Scan Results Summary:
+- Nmap: Completed
+- Dirb: Completed
+- Nikto: Completed
+
+SQL Injection Results Summary:
+- Custom Tests: 6 login + 5 search
+- SQLMap Tests: 3 tests
+- Data Extraction: Completed
+
+Attack completed at: 2025-07-21T10:48:05.352241

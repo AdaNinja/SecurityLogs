@@ -11,14 +11,9 @@ services:
     hostname: victim-web
     networks:
       - attacknet
-    ports:
-      - "8080:80"
+    # ports:  # Ports will be set by variant-specific override files
     volumes:
-      # Enhanced data collection structure
-      - ../../data/logs:/var/log
-      - ../../data/pcap:/data/raw
-      - ../../data/output:/opt/output
-      # Script mounts
+      # Script mounts (volume mounts will be overridden by variant-specific configs)
       - ../../containers/webapp/scripts:/opt/scripts
       - ./scripts:/opt/scripts
     environment:
@@ -44,10 +39,7 @@ services:
     networks:
       - attacknet
     volumes:
-      # PCAP storage
-      - ../../data/pcap:/pcaps
-      - ../../data/logs:/logs
-      # Script mounts
+      # Script mounts (volume mounts will be overridden by variant-specific configs)
       - ../../containers/tcpdump/scripts:/usr/local/bin
     environment:
       - SERVICE_NAME=securitylogs-tcpdump
@@ -55,7 +47,7 @@ services:
       - CAPTURE_FILTER=host victim-web
       # Dynamic PCAP filename configuration
       - SCENARIO_NAME=${SCENARIO_NAME:-low-and-slow-sqli}
-      - VARIANT_NAME=${VARIANT_NAME:-moderate}
+      - VARIANT_ID=${VARIANT_ID:-moderate}
       - TIMESTAMP=${TIMESTAMP:-$(date +%Y%m%d_%H%M%S)}
     cap_add:
       - NET_ADMIN
@@ -64,7 +56,7 @@ services:
     privileged: true
     restart: unless-stopped
     # Enhanced tcpdump command with dynamic filename
-    command: ["/bin/bash", "-c", "tcpdump -i any -w \"/pcaps/${SCENARIO_NAME:-low-and-slow-sqli}_${VARIANT_NAME:-moderate}_${TIMESTAMP:-$(date +%Y%m%d_%H%M%S)}.pcap\" -s 65535 -v"]
+    command: ["/bin/bash", "-c", "tcpdump -i any -w \"/pcaps/$${SCENARIO_NAME:-low-and-slow-sqli}_$${VARIANT_ID:-moderate}_$${TIMESTAMP:-$$(date +%Y%m%d_%H%M%S)}.pcap\" -s 262144 -v"]
 
   # Lightweight Attacker Container
   attacker:
@@ -77,9 +69,8 @@ services:
     networks:
       - attacknet
     volumes:
-      - ../../data/output:/opt/output
-      - ../../data/logs:/opt/logs
-      - ./scripts/attack_modules:/opt/scripts/attack_modules
+      # Script mounts (volume mounts will be overridden by variant-specific configs)
+      - ../../scripts/attack:/opt/scripts/attack_modules
     environment:
       - SERVICE_NAME=securitylogs-attacker
       - TARGET_HOST=victim-web
@@ -99,8 +90,7 @@ services:
     networks:
       - attacknet
     volumes:
-      - ../../data/logs:/logs
-      - ../../data/output:/output
+      # Script mounts (volume mounts will be overridden by variant-specific configs)
       - ../../control:/opt/control
     environment:
       - SERVICE_NAME=securitylogs-log-aggregator

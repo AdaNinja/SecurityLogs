@@ -1,0 +1,23 @@
+{
+  "nmap": {
+    "command": "nmap -sS -p- victim-web",
+    "stdout": "Starting Nmap 7.80 ( https://nmap.org ) at 2025-07-21 10:47 UTC\nNmap scan report for victim-web (172.19.0.4)\nHost is up (0.0000040s latency).\nrDNS record for 172.19.0.4: securitylogs-webapp.lowscan_moderate_net\nNot shown: 65534 closed ports\nPORT   STATE SERVICE\n80/tcp open  http\nMAC Address: 02:42:AC:13:00:04 (Unknown)\n\nNmap done: 1 IP address (1 host up) scanned in 0.80 seconds\n",
+    "stderr": "",
+    "returncode": 0,
+    "timestamp": "2025-07-21T10:47:16.462004"
+  },
+  "dirb": {
+    "command": "dirb http://victim-web:80 /usr/share/dirb/wordlists/common.txt -S -r",
+    "stdout": "\n-----------------\nDIRB v2.22    \nBy The Dark Raver\n-----------------\n\nSTART_TIME: Mon Jul 21 10:47:21 2025\nURL_BASE: http://victim-web:80/\nWORDLIST_FILES: /usr/share/dirb/wordlists/common.txt\nOPTION: Not Recursive\nOPTION: Silent Mode\n\n-----------------\n\nGENERATED WORDS: 4612\n\n---- Scanning URL: http://victim-web:80/ ----\n\n-----------------\nEND_TIME: Mon Jul 21 10:47:22 2025\nDOWNLOADED: 4612 - FOUND: 0\n",
+    "stderr": "",
+    "returncode": 0,
+    "timestamp": "2025-07-21T10:47:22.940158"
+  },
+  "nikto": {
+    "command": "nikto -h http://victim-web:80 -Format txt",
+    "stdout": "",
+    "stderr": "+ ERROR: Output file format specified without a name\n",
+    "returncode": 1,
+    "timestamp": "2025-07-21T10:47:23.022590"
+  }
+}

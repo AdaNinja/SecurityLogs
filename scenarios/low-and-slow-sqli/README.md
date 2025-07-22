@@ -170,7 +170,7 @@ bash ../../control/network/apply_netem.sh --profile low_latency
 docker exec securitylogs-webapp bash /opt/scripts/run_benign.sh
 
 # Run attack
-docker exec securitylogs-attacker bash /opt/scripts/run_attack.sh
+docker exec securitylogs-attacker python3 /opt/scripts/attack_modules/container_attack.py
 
 # View results
 ls -la ../../data/pcap/low-and-slow-sqli/

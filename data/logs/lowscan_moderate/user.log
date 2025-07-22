@@ -1,0 +1,1 @@
+Jul 21 10:46:31 victim-web rsyslogd: imklog: cannot open kernel log (/proc/kmsg): Operation not permitted.

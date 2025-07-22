@@ -1,0 +1,74 @@
+variants:
+  lowscan_stealthy:
+    description: "Low and Slow SQL Injection - Stealthy Variant"
+    attack_params:
+      nmap_rate: 0.008
+      sql_delay: 300
+      sqlmap_risk: 1
+      sqlmap_level: 1
+      threads: 1
+    network_params:
+      latency: 5
+      packet_loss: 0
+      jitter: 2
+    benign_traffic:
+      protocol_mix: "HTTP:0.8,DNS:0.15,SMTP:0.05"
+      duration: 2400
+    environment:
+      ports:
+        webapp: 8081
+        attacker: 8082
+      network: "lowscan_stealthy_net"
+      variant_id: "lowscan_stealthy"
+
+  lowscan_moderate:
+    description: "Low and Slow SQL Injection - Moderate Variant"
+    attack_params:
+      nmap_rate: 0.016
+      sql_delay: 120
+      sqlmap_risk: 1
+      sqlmap_level: 2
+      threads: 2
+    network_params:
+      latency: 50
+      packet_loss: 1
+      jitter: 10
+    benign_traffic:
+      protocol_mix: "HTTP:0.7,DNS:0.2,SMTP:0.1"
+      duration: 1800
+    environment:
+      ports:
+        webapp: 8083
+        attacker: 8084
+      network: "lowscan_moderate_net"
+      variant_id: "lowscan_moderate"
+
+  lowscan_aggressive:
+    description: "Low and Slow SQL Injection - Aggressive Variant"
+    attack_params:
+      nmap_rate: 0.032
+      sql_delay: 60
+      sqlmap_risk: 2
+      sqlmap_level: 3
+      threads: 3
+    network_params:
+      latency: 200
+      packet_loss: 5
+      jitter: 50
+    benign_traffic:
+      protocol_mix: "HTTP:0.6,DNS:0.25,SMTP:0.15"
+      duration: 1200
+    environment:
+      ports:
+        webapp: 8085
+        attacker: 8086
+      network: "lowscan_aggressive_net"
+      variant_id: "lowscan_aggressive"
+
+# Global experiment settings
+experiment:
+  timeout: 3600  # 1 hour per variant
+  cleanup: true
+  parallel: false  # Set to true for parallel execution
+  health_check_timeout: 60
+  log_collection_delay: 30 
