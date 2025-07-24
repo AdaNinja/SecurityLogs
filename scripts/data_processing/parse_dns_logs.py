@@ -33,12 +33,12 @@ class DNSLogParser:
         
         if self.variant_id:
             # Create variant-specific directory in processed
-            output_dir = f"data/processed/{self.variant_id}/dns_logs"
+            output_dir = f"data/processed/{self.variant_id}/dns_data"
             os.makedirs(output_dir, exist_ok=True)
             return f"{output_dir}/{base_name}_{timestamp}.jsonl"
         else:
             # Fallback to original location
-            return f"data/processed/dns_logs/{base_name}_{timestamp}.jsonl"
+            return f"data/processed/dns_data/{base_name}_{timestamp}.jsonl"
     
     def _parse_timestamp(self, timestamp_str: str) -> str:
         """Parse dnsmasq timestamp to ISO format"""
@@ -53,16 +53,51 @@ class DNSLogParser:
         """Determine if DNS query is part of an attack"""
         suspicious_domains = [
             'malware', 'virus', 'exploit', 'hack', 'attack', 'backdoor',
-            'trojan', 'worm', 'spyware', 'keylogger', 'rootkit'
+            'trojan', 'worm', 'spyware', 'keylogger', 'rootkit',
+            'attacker', 'tunnel', 'exfil', 'cc', 'command', 'control'
         ]
+        
+        # Check for DNS tunneling patterns
+        tunneling_patterns = [
+            r'[A-Za-z0-9+/]{20,}',  # Long base64-like strings
+            r'cmd\.',               # Command patterns
+            r'tunnel\.',            # Tunnel patterns
+            r'exfil\.',             # Exfiltration patterns
+        ]
+        
         domain_lower = domain.lower()
-        return any(susp in domain_lower for susp in suspicious_domains)
+        
+        # Check suspicious keywords
+        if any(susp in domain_lower for susp in suspicious_domains):
+            return True
+        
+        # Check tunneling patterns
+        for pattern in tunneling_patterns:
+            if re.search(pattern, domain):
+                return True
+        
+        return False
     
-    def _determine_attack_stage(self, domain: str) -> str:
-        """Determine attack stage based on domain"""
+    def _determine_attack_stage(self, domain: str, record_type: str = None) -> str:
+        """Determine attack stage based on domain and record type"""
         if self._is_attack_query(domain):
+            # Determine specific attack stage based on patterns
+            if 'cmd.' in domain or 'command.' in domain:
+                return "command_control"
+            elif 'tunnel.' in domain or 'exfil.' in domain:
+                return "data_exfiltration"
+            elif any(pattern in domain for pattern in ['admin', 'api', 'db', 'internal']):
+                return "reconnaissance"
+            else:
+                return "reconnaissance"
+        
+        # For normal DNS queries, determine stage based on record type
+        if record_type in ['A', 'AAAA']:
             return "reconnaissance"
-        return "normal"
+        elif record_type in ['MX', 'NS']:
+            return "reconnaissance"
+        else:
+            return "normal"
     
     def _parse_query_log(self, line: str) -> Optional[Dict[str, Any]]:
         """Parse DNS query log entry"""
@@ -105,7 +140,7 @@ class DNSLogParser:
                 "process": "dnsmasq",
                 "user": None,
                 "is_attack": self._is_attack_query(match.group(3)),
-                "attack_stage": self._determine_attack_stage(match.group(3)),
+                "attack_stage": self._determine_attack_stage(match.group(3), match.group(4)),
                 "details": {
                     "raw": line.strip(),
                     "query_id": match.group(1),
@@ -134,7 +169,7 @@ class DNSLogParser:
                 "process": "dnsmasq",
                 "user": None,
                 "is_attack": self._is_attack_query(match.group(3)),
-                "attack_stage": self._determine_attack_stage(match.group(3)),
+                "attack_stage": self._determine_attack_stage(match.group(3), match.group(4)),
                 "details": {
                     "raw": line.strip(),
                     "query_id": match.group(1),
@@ -235,7 +270,7 @@ class DNSLogParser:
             "process": "dnsmasq",
             "user": None,
             "is_attack": None,
-            "attack_stage": "reconnaissance",
+            "attack_stage": "normal",  # Changed from "reconnaissance" to "normal"
             "details": {
                 "raw": line,
                 "action": "unknown"
@@ -276,20 +311,48 @@ class DNSLogParser:
         
         return parsed_entries
 
-def parse_dns_logs(log_file_path, variant_id=None):
+def parse_dns_logs(variant_id=None):
     """Parse DNS logs and convert to JSON Lines format"""
+    print(f"🚀 Processing DNS logs for variant: {variant_id}")
+    
     # Create variant-specific output directory
-    if variant_id:
-        output_dir = f"data/processed/{variant_id}/dns_logs"
-    else:
-        output_dir = "data/processed/dns_logs"
+    output_dir = f"data/processed/{variant_id}/dns_data"
     os.makedirs(output_dir, exist_ok=True)
     
-    if not os.path.exists(log_file_path):
-        print(f"❌ DNS log file not found: {log_file_path}")
+    # Look for DNS log files in the variant's logs directory
+    possible_paths = [
+        f"data/logs/{variant_id}/system/user.log",  # System logs now in system/
+        f"data/logs/{variant_id}/system/dns.log",
+        f"data/logs/{variant_id}/system/dnsmasq.log",
+        f"data/logs/{variant_id}/system/dns_server.log",
+        f"data/logs/{variant_id}/system/*dns*.log",
+        f"data/logs/{variant_id}/system/*.log"
+    ]
+    
+    dns_log_file = None
+    for path in possible_paths:
+        if '*' in path:
+            # Handle glob patterns
+            import glob
+            files = glob.glob(path)
+            if files:
+                dns_log_file = files[0]
+                print(f"Found DNS log file: {dns_log_file}")
+                break
+        elif os.path.exists(path):
+            dns_log_file = path
+            print(f"Found DNS log file: {dns_log_file}")
+            break
+    
+    if not dns_log_file:
+        print(f"❌ DNS log file not found for variant: {variant_id}")
         return False
     
-    print(f"Parsing DNS log file: {log_file_path}")
+    if not os.path.exists(dns_log_file):
+        print(f"❌ DNS log file not found: {dns_log_file}")
+        return False
+    
+    print(f"Parsing DNS log file: {dns_log_file}")
     if variant_id:
         print(f"Using variant_id: {variant_id}")
     
@@ -298,7 +361,7 @@ def parse_dns_logs(log_file_path, variant_id=None):
     output_file = os.path.join(output_dir, f"dnsmasq_{timestamp}.jsonl")
     
     # Use DNSLogParser class
-    parser = DNSLogParser(log_file_path, variant_id)
+    parser = DNSLogParser(dns_log_file, variant_id)
     parser.output_file = output_file  # Override output file path
     
     try:
@@ -310,22 +373,54 @@ def parse_dns_logs(log_file_path, variant_id=None):
         return False
 
 def main():
-    if len(sys.argv) < 2:
-        print("Usage: python3 parse_dns_logs.py <dns_log_file> [variant_id]")
-        sys.exit(1)
+    import argparse
     
-    log_file = sys.argv[1]
-    variant_id = sys.argv[2] if len(sys.argv) > 2 else None
+    parser = argparse.ArgumentParser(description="Parse DNS logs and convert to JSON Lines format")
+    parser.add_argument("--variant-id", help="Variant ID for the experiment")
+    parser.add_argument("--dns-log-file", help="DNS log file to parse")
     
-    if not os.path.exists(log_file):
-        print(f"Error: Log file not found: {log_file}")
-        sys.exit(1)
+    args = parser.parse_args()
     
-    print(f"Parsing DNS log file: {log_file}")
-    if variant_id:
-        print(f"Using variant_id: {variant_id}")
+    # If no dns_log_file specified, try to find one for the variant
+    dns_log_file = args.dns_log_file
+    if not dns_log_file and args.variant_id:
+        # Look for DNS log files in the variant's logs directory
+        possible_paths = [
+            f"data/logs/{args.variant_id}/system/user.log",
+            f"data/logs/{args.variant_id}/system/dns.log",
+            f"data/logs/{args.variant_id}/system/dnsmasq.log",
+            f"data/logs/{args.variant_id}/system/dns_server.log",
+            f"data/logs/{args.variant_id}/system/*dns*.log",
+            f"data/logs/{args.variant_id}/system/*.log"
+        ]
+        
+        for path in possible_paths:
+            if '*' in path:
+                # Handle glob patterns
+                import glob
+                files = glob.glob(path)
+                if files:
+                    dns_log_file = files[0]
+                    print(f"Found DNS log file: {dns_log_file}")
+                    break
+            elif os.path.exists(path):
+                dns_log_file = path
+                print(f"Found DNS log file: {dns_log_file}")
+                break
     
-    parser = DNSLogParser(log_file, variant_id)
+    if not dns_log_file:
+        print("Warning: No DNS log file found, skipping DNS log parsing")
+        return
+    
+    if not os.path.exists(dns_log_file):
+        print(f"Error: DNS log file not found: {dns_log_file}")
+        return
+    
+    print(f"Parsing DNS log file: {dns_log_file}")
+    if args.variant_id:
+        print(f"Using variant_id: {args.variant_id}")
+    
+    parser = DNSLogParser(dns_log_file, args.variant_id)
     parser.parse_log_file()
 
 if __name__ == "__main__":

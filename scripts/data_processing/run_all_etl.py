@@ -1,220 +1,134 @@
 #!/usr/bin/env python3
 """
-Unified ETL Script
-Run all ETL scripts with consistent variant_id support
+Main ETL Runner
+Run all ETL scripts in the correct order
 """
 
 import os
 import sys
-import subprocess
 import argparse
-from datetime import datetime
-import glob
+import subprocess
+from typing import List, Dict, Any
+# Fix relative import issue
+import os
+import sys
+sys.path.append(os.path.dirname(os.path.abspath(__file__)))
+from config import get_config
 
-def run_etl_script(script_name, variant_id=None, *args):
-    """Run an ETL script with variant_id parameter"""
-    script_path = f"scripts/data_processing/{script_name}"
-    
-    if not os.path.exists(script_path):
-        print(f"Warning: ETL script not found: {script_path}")
-        return False
-    
-    cmd = ["python3", script_path]
-    
-    # Add variant_id if provided
-    if variant_id:
-        if script_name == "parse_dns_logs.py":
-            # DNS parser needs log file and variant_id, and sudo for access
-            cmd = ["sudo"] + cmd
-            cmd.extend(["/var/log/dnsmasq.log", variant_id])
-        else:
-            # Other scripts use --variant-id flag
-            cmd.extend(["--variant-id", variant_id])
-    
-    # Add additional arguments
-    cmd.extend(args)
-    
-    print(f"Running: {' '.join(cmd)}")
+def run_etl_script(script_name: str, variant_id: str) -> Dict[str, Any]:
+    """Run a single ETL script"""
+    print(f"Running {script_name} for variant {variant_id}...")
     
     try:
-        result = subprocess.run(cmd, capture_output=True, text=True, timeout=300)
-        if result.returncode == 0:
-            print(f"✅ {script_name} completed successfully")
-            if result.stdout:
-                print(result.stdout)
-            return True
+        # Import and run the ETL function
+        if script_name == "etl_attack_logs.py":
+            from etl_attack_logs import etl_attack_logs
+            result = etl_attack_logs(variant_id)
+        elif script_name == "etl_application_logs.py":
+            from etl_application_logs import etl_application_logs
+            result = etl_application_logs(variant_id)
+        elif script_name == "etl_container_logs.py":
+            from etl_container_logs import etl_container_logs
+            result = etl_container_logs(variant_id)
+        elif script_name == "etl_host_logs.py":
+            from etl_host_logs import etl_host_logs
+            result = etl_host_logs(variant_id)
+        elif script_name == "parse_dns_logs.py":
+            print(f"⚠️  Skipping {script_name} - DNS processing handled by etl_dns_proxy_logs.py")
+            return {"success": True, "script": script_name, "skipped": True}
+        elif script_name == "enhanced_pcap_analyzer.py":
+            from enhanced_pcap_analyzer import enhanced_pcap_analyzer
+            result = enhanced_pcap_analyzer(variant_id)
+        elif script_name == "etl_dns_proxy_logs.py":
+            from etl_dns_proxy_logs import etl_dns_proxy_logs
+            result = etl_dns_proxy_logs(variant_id)
+        elif script_name == "etl_http_proxy_logs.py":
+            from etl_http_proxy_logs import etl_http_proxy_logs
+            result = etl_http_proxy_logs(variant_id)
+        elif script_name == "etl_flow_correlation.py":
+            from etl_flow_correlation import etl_flow_correlation
+            result = etl_flow_correlation(variant_id)
+        elif script_name == "create_unified_dataset.py":
+            from create_unified_dataset import create_unified_dataset
+            result = create_unified_dataset(variant_id)
+        elif script_name == "create_simplified_view.py":
+            from create_simplified_view import create_simplified_view
+            result = create_simplified_view(variant_id)
         else:
-            print(f"❌ {script_name} failed with return code {result.returncode}")
-            if result.stderr:
-                print(result.stderr)
-            return False
-    except subprocess.TimeoutExpired:
-        print(f"❌ {script_name} timed out")
-        return False
+            print(f"❌ Unknown script: {script_name}")
+            return {"success": False, "error": f"Unknown script: {script_name}"}
+        
+        if result:
+            print(f"✅ {script_name} completed successfully")
+            return {"success": True, "script": script_name}
+        else:
+            print(f"❌ {script_name} failed")
+            return {"success": False, "script": script_name, "error": "Script returned False"}
+            
     except Exception as e:
-        print(f"❌ Error running {script_name}: {e}")
-        return False
+        print(f"❌ {script_name} failed with error: {e}")
+        return {"success": False, "script": script_name, "error": str(e)}
 
-def run_pcap_analysis(variant_id):
-    """Run PCAP analysis for the variant"""
-    print(f"\n📊 PCAP Analysis ETL")
-    print("-" * 40)
-    
-    # Find PCAP files for this variant
-    pcap_pattern = f"data/logs/{variant_id}/pcap/*.pcap"
-    pcap_files = glob.glob(pcap_pattern)
-    
-    if not pcap_files:
-        print(f"⚠️  No PCAP files found for variant: {variant_id}")
-        return True
-    
-    success_count = 0
-    total_count = len(pcap_files)
-    
-    for pcap_file in pcap_files:
-        print(f"Processing PCAP file: {os.path.basename(pcap_file)}")
-        
-        cmd = ["python3", "scripts/data_processing/enhanced_pcap_analyzer.py", pcap_file, "--variant-id", variant_id]
-        
-        try:
-            result = subprocess.run(cmd, capture_output=True, text=True, timeout=600)
-            if result.returncode == 0:
-                print(f"✅ PCAP analysis completed for {os.path.basename(pcap_file)}")
-                if result.stdout:
-                    print(result.stdout)
-                success_count += 1
-            else:
-                print(f"❌ PCAP analysis failed for {os.path.basename(pcap_file)}")
-                if result.stderr:
-                    print(result.stderr)
-        except subprocess.TimeoutExpired:
-            print(f"❌ PCAP analysis timed out for {os.path.basename(pcap_file)}")
-        except Exception as e:
-            print(f"❌ Error analyzing PCAP file {os.path.basename(pcap_file)}: {e}")
-    
-    print(f"PCAP Analysis Summary: {success_count}/{total_count} files processed")
-    return success_count == total_count
-
-def run_all_etl(variant_id=None):
-    """Run all ETL scripts in the correct order"""
-    print(f"🚀 Starting unified ETL process")
-    if variant_id:
-        print(f"📋 Using variant_id: {variant_id}")
+def run_all_etl(variant_id: str) -> bool:
+    """Run all ETL scripts in order"""
+    print(f"🚀 Starting ETL processing for variant: {variant_id}")
     print("=" * 60)
     
-    # Define ETL scripts in execution order
+    # Get configuration and create directories
+    config = get_config(variant_id)
+    config.create_directories()
+    print("📁 All directories created successfully")
+    
+    # Define ETL script execution order
     etl_scripts = [
-        ("etl_host_logs.py", "Host logs ETL"),
-        ("etl_container_logs.py", "Container logs ETL"),
-        ("etl_application_logs.py", "Application logs ETL"),
-        ("etl_webapp_logs.py", "Webapp logs ETL"),
-        ("etl_attack_logs.py", "Attack logs ETL"),
-        ("parse_dns_logs.py", "DNS logs ETL"),
+        "etl_attack_logs.py",
+        "etl_application_logs.py", 
+        "etl_container_logs.py",
+        "etl_host_logs.py",
+        "enhanced_pcap_analyzer.py",
+        "etl_dns_proxy_logs.py",
+        "etl_http_proxy_logs.py",
+        "etl_flow_correlation.py",
+        "create_unified_dataset.py",
+        "create_simplified_view.py"
     ]
     
-    success_count = 0
-    total_count = len(etl_scripts)
+    results = []
+    successful = 0
+    failed = 0
     
-    for script_name, description in etl_scripts:
-        print(f"\n📊 {description}")
-        print("-" * 40)
+    for script in etl_scripts:
+        result = run_etl_script(script, variant_id)
+        results.append(result)
         
-        if run_etl_script(script_name, variant_id):
-            success_count += 1
+        if result["success"]:
+            successful += 1
         else:
-            print(f"⚠️  {description} failed, continuing with other scripts...")
+            failed += 1
     
-    # Run PCAP analysis if variant_id is provided
-    if variant_id:
-        if run_pcap_analysis(variant_id):
-            success_count += 1
-        total_count += 1
+    # Print summary
+    print("=" * 60)
+    print(f"📊 ETL Processing Summary:")
+    print(f"   Total scripts: {len(etl_scripts)}")
+    print(f"   Successful: {successful}")
+    print(f"   Failed: {failed}")
+    print(f"   Success rate: {(successful/len(etl_scripts)*100):.1f}%")
     
-    # Run data analysis if variant_id is provided
-    if variant_id:
-        print(f"\n📊 Data Analysis")
-        print("-" * 40)
-        
-        analysis_cmd = ["python3", "scripts/show_extracted_data.py", variant_id]
-        print(f"Running: {' '.join(analysis_cmd)}")
-        
-        try:
-            result = subprocess.run(analysis_cmd, capture_output=True, text=True, timeout=300)
-            if result.returncode == 0:
-                print(f"✅ Data analysis completed successfully")
-                if result.stdout:
-                    print(result.stdout)
-                success_count += 1
-            else:
-                print(f"❌ Data analysis failed with return code {result.returncode}")
-                if result.stderr:
-                    print(result.stderr)
-        except subprocess.TimeoutExpired:
-            print(f"❌ Data analysis timed out")
-        except Exception as e:
-            print(f"❌ Error running data analysis: {e}")
-        
-        total_count += 1
-    
-    # Create unified dataset if variant_id is provided
-    if variant_id:
-        print(f"\n📊 Unified Dataset Creation")
-        print("-" * 40)
-        
-        unified_cmd = ["python3", "scripts/data_processing/create_unified_dataset.py", variant_id]
-        print(f"Running: {' '.join(unified_cmd)}")
-        
-        try:
-            result = subprocess.run(unified_cmd, capture_output=True, text=True, timeout=600)
-            if result.returncode == 0:
-                print(f"✅ Unified dataset creation completed successfully")
-                if result.stdout:
-                    print(result.stdout)
-                success_count += 1
-            else:
-                print(f"❌ Unified dataset creation failed with return code {result.returncode}")
-                if result.stderr:
-                    print(result.stderr)
-        except subprocess.TimeoutExpired:
-            print(f"❌ Unified dataset creation timed out")
-        except Exception as e:
-            print(f"❌ Error creating unified dataset: {e}")
-        
-        total_count += 1
-    
-    print("\n" + "=" * 60)
-    print(f"📈 ETL Summary:")
-    print(f"   Successful: {success_count}/{total_count}")
-    print(f"   Failed: {total_count - success_count}/{total_count}")
-    
-    if success_count == total_count:
-        print("✅ All ETL scripts completed successfully!")
+    if failed == 0:
+        print("✅ All ETL processing completed successfully!")
         return True
     else:
         print("⚠️  Some ETL scripts failed. Check the output above.")
         return False
 
 def main():
-    parser = argparse.ArgumentParser(description="Run all ETL scripts with unified format")
-    parser.add_argument("--variant-id", help="Variant ID to add to all records")
-    parser.add_argument("--timestamp", help="Timestamp for the ETL run (default: current time)")
+    parser = argparse.ArgumentParser(description="Run all ETL scripts")
+    parser.add_argument("--variant-id", required=True, help="Variant ID")
     
     args = parser.parse_args()
     
-    # Use provided timestamp or current time
-    timestamp = args.timestamp or datetime.now().isoformat()
-    print(f"🕒 ETL run timestamp: {timestamp}")
-    
-    # Run all ETL scripts
     success = run_all_etl(args.variant_id)
-    
-    if success:
-        print("\n🎉 ETL process completed successfully!")
-        print("📁 Check data/processed/ directory for processed files")
-        sys.exit(0)
-    else:
-        print("\n💥 ETL process completed with errors!")
-        sys.exit(1)
+    sys.exit(0 if success else 1)
 
 if __name__ == "__main__":
     main() 

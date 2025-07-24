@@ -4,41 +4,32 @@ services:
     ports:
       - "8081:80"
     environment:
-      - VARIANT_ID=lowscan_aggressive
-      - EXPERIMENT_TIMESTAMP=20250722_110326
+      - VARIANT_ID=lowscan_stealthy
+      - EXPERIMENT_TIMESTAMP=20250724_023128
     volumes:
-      # Variant-specific data collection structure
-      - ../../data/logs/lowscan_aggressive:/var/log
-      - ../../data/logs/lowscan_aggressive/pcap:/data/raw
-      - ../../data/logs/lowscan_aggressive/output:/opt/output
+      # Variant-specific data collection structure (simplified)
+      - ../../data/logs/lowscan_stealthy/web:/var/log/nginx
+      - ../../data/logs/lowscan_stealthy/system:/var/log/system
+      - ../../data/logs/lowscan_stealthy/attacks:/opt/output
 
   attacker:
     environment:
-      - VARIANT_ID=lowscan_aggressive
-      - EXPERIMENT_TIMESTAMP=20250722_110326
+      - VARIANT_ID=lowscan_stealthy
+      - EXPERIMENT_TIMESTAMP=20250724_023128
     volumes:
-      # Variant-specific output and logs
-      - ../../data/logs/lowscan_aggressive/output:/opt/output
-      - ../../data/logs/lowscan_aggressive/logs:/opt/logs
+      # Variant-specific output and logs (simplified)
+      - ../../data/logs/lowscan_stealthy/attacks:/opt/output
+      - ../../data/logs/lowscan_stealthy/system:/opt/logs
 
   tcpdump:
     environment:
-      - VARIANT_ID=lowscan_aggressive
-      - EXPERIMENT_TIMESTAMP=20250722_110326
+      - VARIANT_ID=lowscan_stealthy
+      - EXPERIMENT_TIMESTAMP=20250724_023128
     volumes:
-      # Variant-specific PCAP and logs
-      - ../../data/logs/lowscan_aggressive/pcap:/pcaps
-      - ../../data/logs/lowscan_aggressive/logs:/logs
-
-  log-aggregator:
-    environment:
-      - VARIANT_ID=lowscan_aggressive
-      - EXPERIMENT_TIMESTAMP=20250722_110326
-    volumes:
-      # Variant-specific logs and output
-      - ../../data/logs/lowscan_aggressive:/logs
-      - ../../data/logs/lowscan_aggressive/output:/output
+      # Variant-specific PCAP and logs (simplified)
+      - ../../data/logs/lowscan_stealthy/pcap:/pcaps
+      - ../../data/logs/lowscan_stealthy/system:/logs
 
 networks:
   attacknet:
-    name: "lowscan_aggressive_net"
+    name: "lowscan_stealthy_net"

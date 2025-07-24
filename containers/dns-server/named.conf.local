@@ -1,0 +1,8 @@
+// DNS zones configuration for attacker.local domain
+
+zone "attacker.local" {
+    type master;
+    file "/etc/bind/zones/attacker.local.zone";
+    allow-transfer { any; };
+    allow-query { any; };
+}; 

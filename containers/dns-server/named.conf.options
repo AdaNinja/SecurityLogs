@@ -1,0 +1,25 @@
+options {
+    directory "/var/cache/bind";
+    
+    // Listen on all interfaces
+    listen-on { any; };
+    listen-on-v6 { any; };
+    
+    // Allow queries from any source
+    allow-query { any; };
+    allow-recursion { any; };
+    
+    // Forward queries to upstream DNS servers
+    forwarders {
+        8.8.8.8;
+        8.8.4.4;
+    };
+    
+    // Security settings
+    dnssec-validation auto;
+    auth-nxdomain no;
+    
+    // Performance settings
+    max-cache-size 100m;
+    max-cache-ttl 3600;
+}; 
