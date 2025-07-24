@@ -1,59 +1,59 @@
 # SecurityLogs Multi-Variant Dataset
 
-## 概述
+## Dataset Overview
 
-本数据集包含"低扫描+慢速SQL注入"攻击场景的多个变体实验，每个变体都在隔离的容器环境中运行，确保数据独立性和可重现性。
+This dataset contains multiple variant experiments of "low-and-slow SQL injection" attack scenarios, with each variant running in isolated container environments to ensure data independence and reproducibility.
 
 ## 实验设计
 
-### 攻击变体
+### Attack Variants
 
-1. **lowscan_stealthy** - 隐秘型攻击
+1. **lowscan_stealthy** - Stealthy Attack
    - Nmap扫描速率: 0.008 packets/sec
    - SQL注入延迟: 300秒
    - SQLMap参数: RISK=1, LEVEL=1
    - 网络延迟: 5ms
 
-2. **lowscan_moderate** - 中等强度攻击
+2. **lowscan_moderate** - Moderate Intensity Attack
    - Nmap扫描速率: 0.016 packets/sec
    - SQL注入延迟: 120秒
    - SQLMap参数: RISK=1, LEVEL=2
    - 网络延迟: 50ms
 
-3. **lowscan_aggressive** - 激进型攻击
+3. **lowscan_aggressive** - Aggressive Attack
    - Nmap扫描速率: 0.032 packets/sec
    - SQL注入延迟: 60秒
    - SQLMap参数: RISK=2, LEVEL=3
    - 网络延迟: 200ms
 
-### 数据源
+### Data Sources
 
-每个变体包含以下数据源：
-- **主机日志**: syslog, auth.log, kern.log
-- **容器日志**: webapp, attacker, tcpdump, log-aggregator
-- **应用日志**: nginx access/error, php-fpm
-- **攻击日志**: SQLMap, Nmap, 自定义攻击脚本
+Each variant contains the following data sources:
+- **Host Logs**: syslog, auth.log, kern.log
+- **Container Logs**: webapp, attacker, tcpdump, log-aggregator
+- **Application Logs**: nginx access/error, php-fpm
+- **Attack Logs**: SQLMap, Nmap, custom attack scripts
 - **网络流量**: PCAP文件
 
-## 数据格式
+## Data Format
 
 ### 统一Schema
 
-所有日志都转换为统一的JSON Lines格式，字段如下：
+All logs are converted to unified JSON Lines format with the following fields:
 
-| 字段名 | 类型 | 说明 | 示例 |
-|--------|------|------|------|
+| Field Name | Type | Description | Example |
+|--------|------|-------------|---------|
 | timestamp | string | ISO8601 UTC时间 | "2025-07-14T09:10:00Z" |
-| variant_id | string | 变体标识 | "lowscan_stealthy" |
+| variant_id | string | Variant identifier | "lowscan_stealthy" |
 | host | string | 主机名 | "linux1" |
-| source_type | string | 日志来源类型 | "webapp", "attacker", "network" |
+| source_type | string | Log source type | "webapp", "attacker", "network" |
 | event_type | string | 事件类型 | "sql_injection", "network_scan" |
-| severity | string | 日志级别 | "info", "warn", "error" |
+| severity | string | Log level | "info", "warn", "error" |
 | process | string | 进程名 | "nginx", "sqlmap" |
 | user | string | 用户名 | "attacker", "www-data" |
-| is_attack | string | 攻击标识 | "Exploit", "Recon", null |
-| attack_stage | string | 攻击阶段 | "reconnaissance", "exploit", "exfiltration" |
-| details | object | 详细信息 | 原始日志或结构化数据 |
+| is_attack | string | Attack indicator | "Exploit", "Recon", null |
+| attack_stage | string | Attack stage | "reconnaissance", "exploit", "exfiltration" |
+| details | object | Additional details | Original logs or structured data |
 
 ### 示例记录
 
@@ -81,16 +81,16 @@
 
 ```
 data/
-├── logs/                    # 原始日志文件
-│   ├── lowscan_stealthy/   # 隐秘型变体日志
-│   ├── lowscan_moderate/   # 中等强度变体日志
-│   └── lowscan_aggressive/ # 激进型变体日志
-├── datasets/               # 统一格式数据集
+├── logs/                    # Raw log files
+│   ├── lowscan_stealthy/   # Stealthy variant logs
+│   ├── lowscan_moderate/   # Moderate intensity variant logs
+│   └── lowscan_aggressive/ # Aggressive variant logs
+├── datasets/               # Unified format datasets
 │   ├── lowscan_stealthy_dataset.jsonl
 │   ├── lowscan_moderate_dataset.jsonl
 │   ├── lowscan_aggressive_dataset.jsonl
 │   └── *_stats.json       # 统计信息
-└── host_logs/             # 主机系统日志
+└── host_logs/             # Host system logs
     ├── syslog.jsonl
     ├── auth.log.jsonl
     └── kern.log.jsonl
@@ -101,22 +101,22 @@ data/
 ### 运行实验
 
 ```bash
-# 运行单个变体
+# Run single variant
 ./experiments/run_variant.sh lowscan_stealthy
 
-# 运行所有变体
+# Run all variants
 ./experiments/run_all_variants.sh
 ```
 
-### 数据分析
+### Data Analysis
 
 ```bash
-# 查看数据集统计
+# View dataset statistics
 python3 data/merge_variant_logs.py --variant-id lowscan_stealthy \
   --input-dir data/logs/lowscan_stealthy \
   --output-file data/datasets/lowscan_stealthy_dataset.jsonl
 
-# 分析攻击事件
+# Analyze attack events
 python3 -c "
 import json
 with open('data/datasets/lowscan_stealthy_dataset.jsonl') as f:
@@ -131,7 +131,7 @@ print(f'Found {len(attacks)} attack events')
 import json
 import pandas as pd
 
-# 加载数据集
+# Load dataset
 def load_variant_dataset(variant_id):
     records = []
     with open(f'data/datasets/{variant_id}_dataset.jsonl') as f:
@@ -145,7 +145,7 @@ def extract_features(df):
     df['timestamp'] = pd.to_datetime(df['timestamp'])
     df['hour'] = df['timestamp'].dt.hour
     
-    # 攻击特征
+    # Attack features
     df['is_attack_bool'] = df['is_attack'].notna()
     df['attack_stage_encoded'] = df['attack_stage'].astype('category').cat.codes
     
@@ -160,12 +160,12 @@ print(f"Attack events: {df['is_attack_bool'].sum()}")
 
 ## 质量控制
 
-### 数据完整性检查
+### Data Integrity Check
 
-- 每个变体包含完整的攻击链日志
+- Each variant contains complete attack chain logs
 - 时间戳统一为UTC格式
-- 攻击事件自动标注
-- 容器隔离确保数据独立性
+- Attack events are automatically labeled
+- Container isolation ensures data independence
 
 ### 可重现性
 
@@ -176,12 +176,12 @@ print(f"Attack events: {df['is_attack_bool'].sum()}")
 
 ## 扩展指南
 
-### 添加新变体
+### Adding New Variants
 
-1. 在 `experiments/variants.yml` 中添加新变体配置
-2. 运行 `./experiments/run_all_variants.sh` 自动包含新变体
+1. Add new variant configuration in `experiments/variants.yml`
+2. Run `./experiments/run_all_variants.sh` to automatically include new variants
 
-### 添加新数据源
+### Adding New Data Sources
 
 1. 修改 `data/merge_variant_logs.py` 添加新的解析逻辑
 2. 更新统一Schema文档
@@ -190,14 +190,14 @@ print(f"Attack events: {df['is_attack_bool'].sum()}")
 ### 自定义分析
 
 1. 基于统一Schema开发分析脚本
-2. 利用 `variant_id` 字段进行变体比较
-3. 使用 `is_attack` 和 `attack_stage` 进行攻击分析
+2. Use `variant_id` field for variant comparison
+3. Use `is_attack` and `attack_stage` for attack analysis
 
 ## 注意事项
 
 - 实验环境仅用于研究和教育目的
-- 请勿在生产环境中运行攻击脚本
-- 数据集包含敏感信息，请妥善保管
+- Do not run attack scripts in production environments
+- The dataset contains sensitive information, please handle with care
 - 建议在隔离的测试环境中使用
 
 ## 联系信息

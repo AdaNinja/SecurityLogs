@@ -47,7 +47,7 @@ RUN apt-get update && \
 
 # 使用中国 PyPI 镜像并优化Python安装
 RUN pip3 config set global.index-url https://pypi.tuna.tsinghua.edu.cn/simple/ \
-    && pip3 install --no-cache-dir --no-deps \
+    && pip3 install --no-cache-dir --timeout 60 --retries 3 \
         requests \
         colorama \
         urllib3 \
@@ -55,6 +55,7 @@ RUN pip3 config set global.index-url https://pypi.tuna.tsinghua.edu.cn/simple/ \
         chardet \
         charset-normalizer \
         certifi \
+        dnspython \
     && rm -rf ~/.cache/pip
 
 # 安装 SQLMap 和 Nikto (最小化安装)

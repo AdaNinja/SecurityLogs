@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
-Application Logs ETL Script
-Convert Nginx, PHP, and other application logs to unified JSON Lines format
+ETL Application Logs
+Process application logs to JSON Lines format
 """
 
 import os
@@ -10,6 +10,12 @@ import re
 import argparse
 import glob
 from datetime import datetime
+from typing import Dict, Any, List
+# Fix relative import issue
+import os
+import sys
+sys.path.append(os.path.dirname(os.path.abspath(__file__)))
+from config import get_config
 
 HOSTNAME = os.uname().nodename
 
@@ -81,7 +87,7 @@ def parse_nginx_access_log(line):
         "severity": severity,
         "process": "nginx",
         "user": None,
-        "is_attack": bool(is_attack),  # 转换为布尔值
+        "is_attack": bool(is_attack),  # Convert to boolean
         "attack_stage": "exploit" if is_attack else None,
         "network_quintuple": network_quintuple,
         "details": {
@@ -210,13 +216,14 @@ def parse_php_log(line):
     }
     return record
 
-def etl_application_logs(variant_id=None):
+def etl_application_logs(variant_id: str = None) -> bool:
     """ETL application logs to JSON Lines format"""
-    # Create variant-specific output directory
-    if variant_id:
-        output_dir = f"data/processed/{variant_id}/application_logs"
-    else:
-        output_dir = "data/processed/application_logs"
+    print(f"🚀 Processing application logs for variant: {variant_id}")
+    
+    config = get_config(variant_id)
+    # Use absolute paths
+    base_dir = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+    output_dir = os.path.join(base_dir, config.system_logs_data_dir)
     os.makedirs(output_dir, exist_ok=True)
     
     # Check if logs have already been processed for this variant
@@ -229,15 +236,22 @@ def etl_application_logs(variant_id=None):
     # Process Nginx access logs
     if "nginx_access.jsonl" not in processed_files:
         nginx_access_patterns = [
+            f"data/logs/{variant_id}/web/access.log" if variant_id else None,
             f"data/logs/{variant_id}/nginx/access.log" if variant_id else None,
+            "data/logs/*/web/access.log",
             "data/logs/*/nginx/access.log",
+            "*/web/access.log",
             "*/nginx/access.log",
+            "web/access.log",
             "nginx/access.log"
         ]
         
         for pattern in nginx_access_patterns:
             if pattern:
-                files = glob.glob(pattern)
+                # Use absolute path for glob
+                abs_pattern = os.path.join(base_dir, pattern)
+                files = glob.glob(abs_pattern)
+                print(f"Pattern '{abs_pattern}' found {len(files)} files: {files}")
                 for file_path in files:
                     if os.path.exists(file_path):
                         print(f"Processing Nginx access log: {file_path}")
@@ -260,9 +274,13 @@ def etl_application_logs(variant_id=None):
     # Process Nginx error logs
     if "nginx_error.jsonl" not in processed_files:
         nginx_error_patterns = [
+            f"data/logs/{variant_id}/web/error.log" if variant_id else None,
             f"data/logs/{variant_id}/nginx/error.log" if variant_id else None,
+            "data/logs/*/web/error.log",
             "data/logs/*/nginx/error.log",
+            "*/web/error.log",
             "*/nginx/error.log",
+            "web/error.log",
             "nginx/error.log"
         ]
         

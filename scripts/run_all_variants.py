@@ -16,16 +16,16 @@ from pathlib import Path
 def run_single_variant(variant_name, scenario_dir="scenarios/low-and-slow-sqli", skip_etl=False, max_retries=2,
                       interleaved=False, benign_mix="HTTP:0.6,DNS:0.3,SMTP:0.1", benign_duration=300):
     """Run a single variant with retry mechanism"""
-    print(f"\n🎯 Running variant: {variant_name}")
+    print(f"\nRunning variant: {variant_name}")
     if interleaved:
-        print("🔄 Mode: Interleaved (attack + benign traffic)")
+        print("Mode: Interleaved (attack + benign traffic)")
     else:
-        print("🎯 Mode: Attack only")
+        print("Mode: Attack only")
     print("=" * 60)
     
     for attempt in range(max_retries + 1):
         if attempt > 0:
-            print(f"🔄 Retry attempt {attempt}/{max_retries} for {variant_name}")
+            print(f"Retry attempt {attempt}/{max_retries} for {variant_name}")
             time.sleep(10)  # Wait before retry
         
         cmd = [
@@ -45,18 +45,18 @@ def run_single_variant(variant_name, scenario_dir="scenarios/low-and-slow-sqli",
         result = subprocess.run(cmd, capture_output=True, text=True)
         
         if result.returncode == 0:
-            print(f"✅ {variant_name} completed successfully!")
+            print(f"[SUCCESS] {variant_name} completed successfully!")
             return True
         else:
-            print(f"❌ {variant_name} failed (attempt {attempt + 1}):")
+            print(f"[FAILED] {variant_name} failed (attempt {attempt + 1}):")
             print(result.stderr)
     
-    print(f"💥 {variant_name} failed after {max_retries + 1} attempts")
+    print(f"[ERROR] {variant_name} failed after {max_retries + 1} attempts")
     return False
 
 def cleanup_between_variants():
     """Clean up between variant runs"""
-    print("🧹 Cleaning up between variants...")
+    print("Cleaning up between variants...")
     
     # Stop all containers
     subprocess.run("docker-compose -f scenarios/low-and-slow-sqli/docker-compose.yml down", shell=True)
@@ -88,11 +88,11 @@ def generate_experiment_summary(results, start_time):
     with open(summary_file, 'w') as f:
         json.dump(summary, f, indent=2)
     
-    print(f"\n📊 Experiment Summary saved to: {summary_file}")
+    print(f"\nExperiment Summary saved to: {summary_file}")
     
     # Print summary
     print("\n" + "=" * 60)
-    print("📈 EXPERIMENT SUMMARY")
+    print("EXPERIMENT SUMMARY")
     print("=" * 60)
     print(f"Start Time: {start_time}")
     print(f"End Time: {end_time}")
@@ -101,7 +101,7 @@ def generate_experiment_summary(results, start_time):
     print("\nVariant Results:")
     
     for variant, success in results.items():
-        status = "✅ SUCCESS" if success else "❌ FAILED"
+        status = "[SUCCESS]" if success else "[FAILED]"
         print(f"  {variant}: {status}")
     
     return summary
@@ -127,17 +127,17 @@ def main():
     
     args = parser.parse_args()
     
-    print("🚀 Starting batch variant experiments")
-    print(f"📋 Variants to run: {', '.join(args.variants)}")
-    print(f"📁 Scenario directory: {args.scenario_dir}")
-    print(f"🔄 Max retries per variant: {args.max_retries}")
-    print(f"📊 Skip ETL: {args.skip_etl}")
+    print("Starting batch variant experiments")
+    print(f"Variants to run: {', '.join(args.variants)}")
+    print(f"Scenario directory: {args.scenario_dir}")
+    print(f"Max retries per variant: {args.max_retries}")
+    print(f"Skip ETL: {args.skip_etl}")
     if args.interleaved:
-        print(f"🔄 Interleaved mode: Enabled")
-        print(f"🌐 Benign traffic mix: {args.benign_mix}")
-        print(f"⏱️ Benign traffic duration: {args.benign_duration} seconds")
+        print(f"Interleaved mode: Enabled")
+        print(f"Benign traffic mix: {args.benign_mix}")
+        print(f"Benign traffic duration: {args.benign_duration} seconds")
     else:
-        print(f"🎯 Interleaved mode: Disabled (attack only)")
+        print(f"Interleaved mode: Disabled (attack only)")
     print("=" * 60)
     
     start_time = datetime.now()
@@ -145,7 +145,7 @@ def main():
     
     try:
         for i, variant in enumerate(args.variants, 1):
-            print(f"\n📊 Progress: {i}/{len(args.variants)}")
+            print(f"\nProgress: {i}/{len(args.variants)}")
             
             # Clean up between variants (except for the first one)
             if i > 1:
@@ -166,15 +166,15 @@ def main():
             
             # Add delay between variants
             if i < len(args.variants):
-                print("⏳ Waiting 30 seconds before next variant...")
+                print("Waiting 30 seconds before next variant...")
                 time.sleep(30)
     
     except KeyboardInterrupt:
-        print("\n⏹️  Experiment interrupted by user")
+        print("\nExperiment interrupted by user")
         results[variant] = False  # Mark current variant as failed
     
     except Exception as e:
-        print(f"\n💥 Unexpected error: {e}")
+        print(f"\nUnexpected error: {e}")
         if variant:
             results[variant] = False
     
@@ -183,10 +183,10 @@ def main():
     
     # Exit with appropriate code
     if summary['success_count'] == summary['total_count']:
-        print("\n🎉 All variants completed successfully!")
+        print("\nAll variants completed successfully!")
         sys.exit(0)
     else:
-        print(f"\n⚠️  {summary['total_count'] - summary['success_count']} variants failed")
+        print(f"\n{summary['total_count'] - summary['success_count']} variants failed")
         sys.exit(1)
 
 if __name__ == "__main__":

@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
 Attack Execution Check Script
-验证攻击的每一步是否正确执行
+Verify that each step of the attack is executed correctly
 """
 
 import os
@@ -11,7 +11,7 @@ from datetime import datetime
 from typing import Dict, List, Any
 
 def check_attack_phases(variant_id: str) -> Dict[str, Any]:
-    """检查攻击的各个阶段"""
+    """Check each phase of the attack"""
     results = {
         "variant_id": variant_id,
         "timestamp": datetime.now().isoformat(),
@@ -19,43 +19,43 @@ def check_attack_phases(variant_id: str) -> Dict[str, Any]:
         "summary": {}
     }
     
-    # 检查攻击日志文件
+    # Check attack log files
     attack_log_path = f"data/logs/{variant_id}/output/attack.log"
     if os.path.exists(attack_log_path):
         results["phases"]["attack_log"] = check_attack_log(attack_log_path)
     
-    # 检查攻击结果
+    # Check attack results
     attack_results_path = f"data/processed/{variant_id}/attack_logs/attack_results.jsonl"
     if os.path.exists(attack_results_path):
         results["phases"]["attack_results"] = check_attack_results(attack_results_path)
     
-    # 检查网络扫描
+    # Check network scan
     scan_results_path = f"data/logs/{variant_id}/output/scan_results.json"
     if os.path.exists(scan_results_path):
         results["phases"]["network_scan"] = check_network_scan(scan_results_path)
     
-    # 检查Web应用日志
+    # Check web application logs
     nginx_access_path = f"data/logs/{variant_id}/nginx/access.log"
     if os.path.exists(nginx_access_path):
         results["phases"]["web_logs"] = check_web_logs(nginx_access_path)
     
-    # 检查数据提取
+    # Check data extraction
     extracted_data_path = f"data/logs/{variant_id}/output/extracted_data.html"
     if os.path.exists(extracted_data_path):
         results["phases"]["data_extraction"] = check_data_extraction(extracted_data_path)
     
-    # 检查PCAP文件
+    # Check PCAP files
     pcap_dir = f"data/logs/{variant_id}/pcap/"
     if os.path.exists(pcap_dir):
         results["phases"]["network_capture"] = check_network_capture(pcap_dir)
     
-    # 生成总结
+    # Generate summary
     results["summary"] = generate_summary(results["phases"])
     
     return results
 
 def check_attack_log(log_path: str) -> Dict[str, Any]:
-    """检查攻击日志"""
+    """Check attack logs"""
     result = {
         "status": "success",
         "phases": [],
@@ -66,13 +66,12 @@ def check_attack_log(log_path: str) -> Dict[str, Any]:
         with open(log_path, 'r') as f:
             lines = f.readlines()
         
-        # 检查关键阶段
+        # Check key phases
         phases = {
             "connectivity": "Container Connectivity",
             "reconnaissance": "Network Reconnaissance",
             "enumeration": "Web Application Enumeration", 
             "sql_injection": "Custom SQL Injection",
-        
             "data_extraction": "Data Extraction"
         }
         
@@ -93,7 +92,7 @@ def check_attack_log(log_path: str) -> Dict[str, Any]:
                     "details": 0
                 })
         
-        # 检查错误
+        # Check errors
         error_lines = [line for line in lines if "ERROR" in line or "FAILED" in line]
         result["errors"] = len(error_lines)
         
@@ -104,44 +103,35 @@ def check_attack_log(log_path: str) -> Dict[str, Any]:
     return result
 
 def check_attack_results(results_path: str) -> Dict[str, Any]:
-    """检查攻击结果"""
+    """Check attack results"""
     result = {
         "status": "success",
-        "tests": {},
-        "success_rate": 0
+        "total_attacks": 0,
+        "successful_attacks": 0,
+        "failed_attacks": 0,
+        "attack_types": {}
     }
     
     try:
         with open(results_path, 'r') as f:
-            data = json.loads(f.readline())
-        
-        # 检查自定义测试
-        if "custom_tests" in data:
-            custom_tests = data["custom_tests"]
-            total_tests = 0
-            successful_tests = 0
-            
-            for test_type, tests in custom_tests.items():
-                if isinstance(tests, list):
-                    total_tests += len(tests)
-                    successful_tests += sum(1 for test in tests if test.get("success", False))
-                    result["tests"][test_type] = {
-                        "total": len(tests),
-                        "successful": sum(1 for test in tests if test.get("success", False)),
-                        "success_rate": sum(1 for test in tests if test.get("success", False)) / len(tests) * 100
-                    }
-            
-            if total_tests > 0:
-                result["success_rate"] = successful_tests / total_tests * 100
-        
-        # 检查数据提取
-        if "data_extraction" in data:
-            result["data_extraction"] = {
-                "status": "success" if data["data_extraction"].get("file_saved", False) else "failed",
-                "payload": data["data_extraction"].get("payload", ""),
-                "status_code": data["data_extraction"].get("status_code", 0)
-            }
-        
+            for line in f:
+                try:
+                    data = json.loads(line.strip())
+                    result["total_attacks"] += 1
+                    
+                    # Check attack success
+                    if data.get("success", False):
+                        result["successful_attacks"] += 1
+                    else:
+                        result["failed_attacks"] += 1
+                    
+                    # Count attack types
+                    attack_type = data.get("attack_type", "unknown")
+                    result["attack_types"][attack_type] = result["attack_types"].get(attack_type, 0) + 1
+                    
+                except json.JSONDecodeError:
+                    continue
+                    
     except Exception as e:
         result["status"] = "error"
         result["error"] = str(e)
@@ -149,24 +139,23 @@ def check_attack_results(results_path: str) -> Dict[str, Any]:
     return result
 
 def check_network_scan(scan_path: str) -> Dict[str, Any]:
-    """检查网络扫描结果"""
+    """Check network scan results"""
     result = {
         "status": "success",
-        "tools": {}
+        "ports_scanned": 0,
+        "open_ports": 0,
+        "services_found": []
     }
     
     try:
         with open(scan_path, 'r') as f:
-            data = json.load(f)
-        
-        for tool, info in data.items():
-            result["tools"][tool] = {
-                "status": "success" if info.get("returncode", 1) == 0 else "failed",
-                "returncode": info.get("returncode", 1),
-                "timestamp": info.get("timestamp", ""),
-                "has_output": bool(info.get("stdout", ""))
-            }
-        
+            scan_data = json.load(f)
+            
+        if "ports" in scan_data:
+            result["ports_scanned"] = len(scan_data["ports"])
+            result["open_ports"] = len([p for p in scan_data["ports"] if p.get("state") == "open"])
+            result["services_found"] = [p.get("service", "unknown") for p in scan_data["ports"] if p.get("state") == "open"]
+            
     except Exception as e:
         result["status"] = "error"
         result["error"] = str(e)
@@ -174,27 +163,35 @@ def check_network_scan(scan_path: str) -> Dict[str, Any]:
     return result
 
 def check_web_logs(access_log_path: str) -> Dict[str, Any]:
-    """检查Web应用日志"""
+    """Check web application logs"""
     result = {
         "status": "success",
+        "total_requests": 0,
         "attack_requests": 0,
-        "sql_injection_requests": 0,
-        "admin_requests": 0
+        "status_codes": {},
+        "endpoints": {}
     }
     
     try:
         with open(access_log_path, 'r') as f:
-            lines = f.readlines()
-        
-        # 统计攻击相关请求
-        for line in lines:
-            if "admin" in line.lower():
-                result["admin_requests"] += 1
-            if "sql" in line.lower() or "injection" in line.lower():
-                result["sql_injection_requests"] += 1
-            if "login.php" in line or "search.php" in line:
-                result["attack_requests"] += 1
-        
+            for line in f:
+                result["total_requests"] += 1
+                
+                # Check for attack patterns
+                if any(pattern in line.lower() for pattern in ["union", "select", "or 1=1", "admin'", "'--"]):
+                    result["attack_requests"] += 1
+                
+                # Parse status code
+                parts = line.split()
+                if len(parts) >= 9:
+                    status_code = parts[8]
+                    result["status_codes"][status_code] = result["status_codes"].get(status_code, 0) + 1
+                    
+                    # Parse endpoint
+                    if len(parts) >= 7:
+                        endpoint = parts[6].split('?')[0]
+                        result["endpoints"][endpoint] = result["endpoints"].get(endpoint, 0) + 1
+                        
     except Exception as e:
         result["status"] = "error"
         result["error"] = str(e)
@@ -202,48 +199,48 @@ def check_web_logs(access_log_path: str) -> Dict[str, Any]:
     return result
 
 def check_data_extraction(extracted_data_path: str) -> Dict[str, Any]:
-    """检查数据提取结果"""
+    """Check data extraction results"""
     result = {
         "status": "success",
-        "file_exists": True,
         "file_size": 0,
-        "has_data": False
+        "content_length": 0,
+        "extracted_tables": 0
     }
     
     try:
-        result["file_size"] = os.path.getsize(extracted_data_path)
-        
-        with open(extracted_data_path, 'r') as f:
-            content = f.read()
-            result["has_data"] = len(content) > 100  # 简单检查是否有实际数据
-        
+        if os.path.exists(extracted_data_path):
+            result["file_size"] = os.path.getsize(extracted_data_path)
+            
+            with open(extracted_data_path, 'r') as f:
+                content = f.read()
+                result["content_length"] = len(content)
+                result["extracted_tables"] = content.count("<table")
+                
     except Exception as e:
         result["status"] = "error"
         result["error"] = str(e)
-        result["file_exists"] = False
     
     return result
 
 def check_network_capture(pcap_dir: str) -> Dict[str, Any]:
-    """检查网络捕获"""
+    """Check network capture files"""
     result = {
         "status": "success",
-        "files": [],
+        "pcap_files": [],
         "total_size": 0
     }
     
     try:
-        for file in os.listdir(pcap_dir):
-            if file.endswith('.pcap'):
-                file_path = os.path.join(pcap_dir, file)
+        for filename in os.listdir(pcap_dir):
+            if filename.endswith('.pcap'):
+                file_path = os.path.join(pcap_dir, filename)
                 file_size = os.path.getsize(file_path)
-                result["files"].append({
-                    "name": file,
-                    "size": file_size,
-                    "size_mb": file_size / (1024 * 1024)
+                result["pcap_files"].append({
+                    "name": filename,
+                    "size": file_size
                 })
                 result["total_size"] += file_size
-        
+                
     except Exception as e:
         result["status"] = "error"
         result["error"] = str(e)
@@ -251,98 +248,99 @@ def check_network_capture(pcap_dir: str) -> Dict[str, Any]:
     return result
 
 def extract_timestamp(line: str) -> str:
-    """从日志行中提取时间戳"""
+    """Extract timestamp from log line"""
     try:
-        # 格式: 2025-07-21 11:10:42,831 - INFO - ...
-        timestamp_str = line.split(" - ")[0]
-        return timestamp_str
+        # Look for ISO format timestamp
+        import re
+        timestamp_pattern = r'\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}'
+        match = re.search(timestamp_pattern, line)
+        if match:
+            return match.group()
     except:
-        return ""
+        pass
+    return "unknown"
 
 def generate_summary(phases: Dict[str, Any]) -> Dict[str, Any]:
-    """生成总结"""
+    """Generate summary of all phases"""
     summary = {
         "total_phases": len(phases),
         "successful_phases": 0,
         "failed_phases": 0,
-        "overall_status": "unknown"
+        "phase_details": {}
     }
     
     for phase_name, phase_result in phases.items():
-        if phase_result.get("status") == "success":
-            summary["successful_phases"] += 1
-        else:
-            summary["failed_phases"] += 1
-    
-    if summary["successful_phases"] == summary["total_phases"]:
-        summary["overall_status"] = "success"
-    elif summary["failed_phases"] == summary["total_phases"]:
-        summary["overall_status"] = "failed"
-    else:
-        summary["overall_status"] = "partial"
+        if isinstance(phase_result, dict):
+            status = phase_result.get("status", "unknown")
+            if status == "success":
+                summary["successful_phases"] += 1
+            elif status == "error":
+                summary["failed_phases"] += 1
+            
+            summary["phase_details"][phase_name] = {
+                "status": status,
+                "details": phase_result
+            }
     
     return summary
 
 def print_results(results: Dict[str, Any]):
-    """打印检查结果"""
+    """Print formatted results"""
     print("=" * 60)
-    print(f"🔍 Attack Execution Check Results")
-    print(f"📋 Variant ID: {results['variant_id']}")
-    print(f"⏰ Timestamp: {results['timestamp']}")
+    print(f"Attack Execution Check Results")
+    print(f"Variant: {results['variant_id']}")
+    print(f"Timestamp: {results['timestamp']}")
     print("=" * 60)
     
-    # 打印各阶段结果
+    # Print phase results
+    print("\nPhase Results:")
     for phase_name, phase_result in results["phases"].items():
-        status_icon = "✅" if phase_result.get("status") == "success" else "❌"
-        print(f"\n{status_icon} {phase_name.upper().replace('_', ' ')}")
-        print(f"   Status: {phase_result.get('status', 'unknown')}")
-        
-        if "phases" in phase_result:
-            for sub_phase in phase_result["phases"]:
-                sub_status = "✅" if sub_phase["status"] == "executed" else "❌"
-                print(f"   {sub_status} {sub_phase['name']}: {sub_phase['status']}")
-        
-        if "success_rate" in phase_result:
-            print(f"   Success Rate: {phase_result['success_rate']:.1f}%")
-        
-        if "tools" in phase_result:
-            for tool, tool_info in phase_result["tools"].items():
-                tool_status = "✅" if tool_info["status"] == "success" else "❌"
-                print(f"   {tool_status} {tool}: {tool_info['status']}")
+        if isinstance(phase_result, dict):
+            status = phase_result.get("status", "unknown")
+            status_symbol = "✅" if status == "success" else "❌" if status == "error" else "⚠️"
+            print(f"  {status_symbol} {phase_name}: {status}")
+            
+            # Print phase details
+            if "phases" in phase_result:
+                for sub_phase in phase_result["phases"]:
+                    sub_status = sub_phase.get("status", "unknown")
+                    sub_symbol = "✅" if sub_status == "executed" else "❌"
+                    print(f"    {sub_symbol} {sub_phase['name']}: {sub_status}")
     
-    # 打印总结
+    # Print summary
+    print("\nSummary:")
     summary = results["summary"]
-    print(f"\n📊 SUMMARY")
-    print(f"   Total Phases: {summary['total_phases']}")
-    print(f"   Successful: {summary['successful_phases']}")
-    print(f"   Failed: {summary['failed_phases']}")
-    print(f"   Overall Status: {summary['overall_status'].upper()}")
+    print(f"  Total phases: {summary['total_phases']}")
+    print(f"  Successful: {summary['successful_phases']}")
+    print(f"  Failed: {summary['failed_phases']}")
     
-    if summary["overall_status"] == "success":
-        print("\n🎉 All attack phases executed successfully!")
-    elif summary["overall_status"] == "partial":
-        print("\n⚠️  Some attack phases failed or were incomplete.")
+    # Print recommendations
+    print("\nRecommendations:")
+    if summary["failed_phases"] > 0:
+        print("  ⚠️  Some phases failed. Check logs for details.")
     else:
-        print("\n❌ Attack execution failed.")
+        print("  ✅ All phases completed successfully.")
+    
+    print("=" * 60)
 
 def main():
-    parser = argparse.ArgumentParser(description="Check attack execution")
-    parser.add_argument("--variant-id", required=True, help="Variant ID to check")
-    parser.add_argument("--output", help="Output file for results")
+    parser = argparse.ArgumentParser(description="Check attack execution for a variant")
+    parser.add_argument("variant_id", help="Variant ID to check")
+    parser.add_argument("--output", "-o", help="Output file for results")
     
     args = parser.parse_args()
     
-    # 执行检查
+    # Check attack phases
     results = check_attack_phases(args.variant_id)
     
-    # 打印结果
+    # Print results
     print_results(results)
     
-    # 保存结果
+    # Save results if output file specified
     if args.output:
         with open(args.output, 'w') as f:
             json.dump(results, f, indent=2)
-        print(f"\n💾 Results saved to: {args.output}")
+        print(f"\nResults saved to: {args.output}")
 
 if __name__ == "__main__":
     main() 

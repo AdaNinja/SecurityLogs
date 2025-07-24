@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
-Container Logs ETL Script
-Convert Docker container logs to unified JSON Lines format
+ETL Container Logs
+Process container logs to JSON Lines format
 """
 
 import os
@@ -10,6 +10,12 @@ import subprocess
 import re
 import argparse
 from datetime import datetime
+from typing import Dict, Any, List
+# Fix relative import issue
+import os
+import sys
+sys.path.append(os.path.dirname(os.path.abspath(__file__)))
+from config import get_config
 
 # Container names to process
 CONTAINERS = [
@@ -32,7 +38,7 @@ def parse_container_log_line(line, container_name, variant_id=None):
         "severity": "info",
         "process": container_name,
         "user": None,
-        "is_attack": False,  # 容器日志默认为非攻击
+        "is_attack": False,  # Container logs default to non-attack
         "attack_stage": None,
         "details": {"raw": line}
     }
@@ -133,13 +139,12 @@ def get_container_logs(container_name):
         print(f"Error getting logs from {container_name}: {e}")
         return []
 
-def etl_container_logs(variant_id=None):
+def etl_container_logs(variant_id: str = None) -> bool:
     """ETL container logs to JSON Lines format"""
-    # Create variant-specific output directory
-    if variant_id:
-        output_dir = f"data/processed/{variant_id}/container_logs"
-    else:
-        output_dir = "data/processed/container_logs"
+    print(f"🚀 Processing container logs for variant: {variant_id}")
+    
+    config = get_config(variant_id)
+    output_dir = config.system_logs_data_dir
     os.makedirs(output_dir, exist_ok=True)
     
     # Get container logs using docker logs command

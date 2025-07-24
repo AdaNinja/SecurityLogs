@@ -1,0 +1,27 @@
+Simplified Dataset View Summary for lowscan_aggressive
+============================================================
+Generated: 2025-07-23T21:59:45.440021
+Total records: 18
+Key fields: 6
+
+Auto-labeling Results:
+------------------------------
+Records needing review: 0
+Auto-labeled records: 18
+
+Label Distribution:
+------------------------------
+benign: 18 (100.0%)
+
+Output files:
+- CSV view: data/processed/lowscan_aggressive/datasets/simplified_view.csv
+- Excel view: data/processed/lowscan_aggressive/datasets/simplified_view.xlsx
+- Summary: data/processed/lowscan_aggressive/datasets/simplified_view_summary.txt
+
+Labeling Instructions:
+------------------------------
+1. Open the Excel file for easy editing
+2. Review records marked with 'needs_review' = True
+3. Update 'label' field with correct classification
+4. Add notes in 'notes' field if needed
+5. Save and use for training ML models

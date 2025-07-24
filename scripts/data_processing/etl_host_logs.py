@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
-Host Logs ETL Script
-Convert host system logs to unified JSON Lines format
+ETL Host Logs
+Process host logs to JSON Lines format
 """
 
 import os
@@ -10,6 +10,12 @@ import re
 import argparse
 import glob
 from datetime import datetime
+from typing import Dict, Any, List
+# Fix relative import issue
+import os
+import sys
+sys.path.append(os.path.dirname(os.path.abspath(__file__)))
+from config import get_config
 
 HOSTNAME = os.uname().nodename
 
@@ -129,7 +135,7 @@ def parse_auth_log_line(line):
         "severity": severity,
         "process": service,
         "user": None,
-        "is_attack": False,  # 认证日志默认为非攻击
+        "is_attack": False,  # Authentication logs default to non-attack
         "attack_stage": None,
         "details": {
             "raw": line,
@@ -177,7 +183,7 @@ def parse_kern_log_line(line):
         "severity": severity,
         "process": "kernel",
         "user": None,
-        "is_attack": False,  # 内核日志默认为非攻击
+        "is_attack": False,  # Kernel logs default to non-attack
         "attack_stage": None,
         "details": {
             "raw": line,
@@ -186,13 +192,12 @@ def parse_kern_log_line(line):
     }
     return record
 
-def etl_host_logs(variant_id=None):
+def etl_host_logs(variant_id: str = None) -> bool:
     """ETL host logs to JSON Lines format"""
-    # Create variant-specific output directory
-    if variant_id:
-        output_dir = f"data/processed/{variant_id}/host_logs"
-    else:
-        output_dir = "data/processed/host_logs"
+    print(f"🚀 Processing host logs for variant: {variant_id}")
+    
+    config = get_config(variant_id)
+    output_dir = config.system_logs_data_dir
     os.makedirs(output_dir, exist_ok=True)
     
     # Look for host logs in various possible locations

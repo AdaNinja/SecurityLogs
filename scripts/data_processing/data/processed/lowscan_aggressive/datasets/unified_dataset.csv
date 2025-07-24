@@ -1,0 +1,19 @@
+timestamp,variant_id,data_source,source_file,host,source_type,event_type,severity,process,user,is_attack,attack_stage,details_raw,details_timestamp_note
+2025-07-23T19:31:32Z,lowscan_aggressive,system_logs,securitylogs-webapp.jsonl,linux1,container,,info,securitylogs-webapp,,False,,[Wed Jul 23 19:31:32 UTC 2025] Starting SecurityLogs Web Application...,
+2025-07-23T19:31:32Z,lowscan_aggressive,system_logs,securitylogs-webapp.jsonl,linux1,container,,info,securitylogs-webapp,,False,,[Wed Jul 23 19:31:32 UTC 2025] Setting up PHP-FPM socket directory...,
+2025-07-23T19:31:32Z,lowscan_aggressive,system_logs,securitylogs-webapp.jsonl,linux1,container,,info,securitylogs-webapp,,False,,[Wed Jul 23 19:31:32 UTC 2025] Creating logs directory structure...,
+2025-07-23T19:31:32Z,lowscan_aggressive,system_logs,securitylogs-webapp.jsonl,linux1,container,,info,securitylogs-webapp,,False,,[Wed Jul 23 19:31:32 UTC 2025] Configuring rsyslog...,
+2025-07-23T19:31:32Z,lowscan_aggressive,system_logs,securitylogs-webapp.jsonl,linux1,container,,info,securitylogs-webapp,,False,,[Wed Jul 23 19:31:32 UTC 2025] Configuring PHP-FPM logging...,
+2025-07-23T19:31:32Z,lowscan_aggressive,system_logs,securitylogs-webapp.jsonl,linux1,container,,info,securitylogs-webapp,,False,,[Wed Jul 23 19:31:32 UTC 2025] Starting PHP-FPM...,
+2025-07-23T19:31:32Z,lowscan_aggressive,system_logs,securitylogs-webapp.jsonl,linux1,container,,info,securitylogs-webapp,,False,,[Wed Jul 23 19:31:32 UTC 2025] Waiting for PHP-FPM socket...,
+2025-07-23T19:31:32Z,lowscan_aggressive,system_logs,securitylogs-webapp.jsonl,linux1,container,,info,securitylogs-webapp,,False,,[Wed Jul 23 19:31:32 UTC 2025] PHP-FPM socket created successfully,
+2025-07-23T19:31:32Z,lowscan_aggressive,system_logs,securitylogs-webapp.jsonl,linux1,container,,info,securitylogs-webapp,,False,,[Wed Jul 23 19:31:32 UTC 2025] PHP-FPM socket permissions set,
+2025-07-23T19:31:32Z,lowscan_aggressive,system_logs,securitylogs-webapp.jsonl,linux1,container,,info,securitylogs-webapp,,False,,[Wed Jul 23 19:31:32 UTC 2025] Starting Nginx...,
+2025-07-23T21:59:43.701908Z,lowscan_aggressive,system_logs,securitylogs-webapp.jsonl,linux1,container,,info,securitylogs-webapp,,False,,Starting nginx: nginx.,Default timestamp applied - original log had no timestamp
+2025-07-23T19:31:32Z,lowscan_aggressive,system_logs,securitylogs-webapp.jsonl,linux1,container,,info,securitylogs-webapp,,False,,[Wed Jul 23 19:31:32 UTC 2025] Starting Xvfb...,
+2025-07-23T19:31:32Z,lowscan_aggressive,system_logs,securitylogs-webapp.jsonl,linux1,container,,info,securitylogs-webapp,,False,,[Wed Jul 23 19:31:32 UTC 2025] Starting rsyslog...,
+2025-07-23T21:59:43.702130Z,lowscan_aggressive,system_logs,securitylogs-webapp.jsonl,linux1,container,,info,securitylogs-webapp,,False,,Starting enhanced syslogd: rsyslogd.,Default timestamp applied - original log had no timestamp
+2025-07-23T19:31:33Z,lowscan_aggressive,system_logs,securitylogs-webapp.jsonl,linux1,container,,info,securitylogs-webapp,,False,,[Wed Jul 23 19:31:33 UTC 2025] Starting tcpdump...,
+2025-07-23T19:31:33Z,lowscan_aggressive,system_logs,securitylogs-webapp.jsonl,linux1,container,,info,securitylogs-webapp,,False,,[Wed Jul 23 19:31:33 UTC 2025] Creating application log files...,
+2025-07-23T19:31:33Z,lowscan_aggressive,system_logs,securitylogs-webapp.jsonl,linux1,container,,info,securitylogs-webapp,,False,,[Wed Jul 23 19:31:33 UTC 2025] Web application is ready!,
+2025-07-23T19:31:33Z,lowscan_aggressive,system_logs,securitylogs-webapp.jsonl,linux1,container,,info,securitylogs-webapp,,False,,[Wed Jul 23 19:31:33 UTC 2025] Access the application at: http://localhost:8080,

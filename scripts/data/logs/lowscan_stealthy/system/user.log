@@ -1,0 +1,10 @@
+2025-07-24T02:36:05.181994Z userA: session opened for user userA by (uid=0)
+2025-07-24T02:36:05.181999Z userA: session closed for user userA
+2025-07-24T02:36:05.182002Z userB: session opened for user userB by (uid=0)
+2025-07-24T02:36:05.182004Z userB: session closed for user userB
+2025-07-24T02:36:05.182006Z userA: session opened for user userA by (uid=0)
+2025-07-24T02:36:05.182008Z userA: session closed for user userA
+2025-07-24T02:36:05.182010Z userB: session opened for user userB by (uid=0)
+2025-07-24T02:36:05.182013Z userB: session closed for user userB
+2025-07-24T02:36:05.182015Z userA: session opened for user userA by (uid=0)
+2025-07-24T02:36:05.182017Z userA: session closed for user userA

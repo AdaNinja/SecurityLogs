@@ -47,7 +47,7 @@ class EnhancedPCAPAnalyzer:
         os.makedirs(output_dir, exist_ok=True)
         
         self.output_file = self._get_output_filename(pcap_file)
-    
+        
     def _get_output_filename(self, pcap_file: str) -> str:
         """Generate output filename based on input PCAP file"""
         base_name = os.path.splitext(os.path.basename(pcap_file))[0]
@@ -259,7 +259,7 @@ class EnhancedPCAPAnalyzer:
                         }
                 except:
                     pass
-                    
+        
         except Exception as e:
             if self.debug:
                 logger.debug(f"Error extracting protocol info: {e}")
@@ -312,7 +312,7 @@ class EnhancedPCAPAnalyzer:
                 except Exception as e:
                     if self.debug:
                         logger.debug(f"Error analyzing payload: {e}")
-                        
+        
         except Exception as e:
             if self.debug:
                 logger.debug(f"Error extracting payload info: {e}")
@@ -328,7 +328,7 @@ class EnhancedPCAPAnalyzer:
                 # Convert Unix timestamp to UTC ISO 8601
                 from datetime import datetime
                 timestamp = datetime.utcfromtimestamp(float(packet.time)).isoformat() + "Z"
-            
+        
             # Basic packet information
             packet_info = {
                 "packet_index": packet_index,
@@ -341,19 +341,19 @@ class EnhancedPCAPAnalyzer:
                 "is_attack": False,
                 "attack_stage": None
             }
-            
+        
             # Extract network quintuple
             quintuple = self._extract_network_quintuple(packet)
             packet_info.update(quintuple)
-            
+        
             # Extract protocol information
             protocol_info = self._extract_protocol_info(packet)
             packet_info["protocol_details"] = protocol_info
-            
+        
             # Extract payload information
             payload_info = self._extract_payload_info(packet)
             packet_info["payload"] = payload_info
-            
+        
             # Extract raw data
             raw_data = self._extract_raw_data(packet)
             packet_info["raw_data"] = raw_data
@@ -365,9 +365,9 @@ class EnhancedPCAPAnalyzer:
             
             # Add host information
             packet_info["host"] = os.uname().nodename
-            
+        
             return packet_info
-            
+    
         except Exception as e:
             if self.debug:
                 logger.debug(f"Error analyzing packet {packet_index}: {e}")
@@ -377,7 +377,7 @@ class EnhancedPCAPAnalyzer:
         """Determine if packet represents attack traffic"""
         try:
             # Check for SQL injection patterns in payload
-            payload = packet_info.get("payload", {}).get("http_payload", "")
+            payload = packet_info.get("payload", {}).get("content_preview", "")
             if payload:
                 sql_patterns = ["'", "OR", "UNION", "SELECT", "DROP", "INSERT", "UPDATE", "DELETE"]
                 if any(pattern.lower() in payload.lower() for pattern in sql_patterns):
@@ -412,14 +412,14 @@ class EnhancedPCAPAnalyzer:
                     return "reconnaissance"
             
             # SQL injection
-            payload = packet_info.get("payload", {}).get("http_payload", "")
+            payload = packet_info.get("payload", {}).get("content_preview", "")
             if payload and any(pattern.lower() in payload.lower() for pattern in ["'", "OR", "UNION", "SELECT"]):
                 return "exploit"
             
             # Data exfiltration
-            if packet_info.get("payload", {}).get("data_size", 0) > 1000:
+            if packet_info.get("payload", {}).get("payload_size", 0) > 1000:
                 return "exfiltration"
-                
+        
         except Exception as e:
             if self.debug:
                 logger.debug(f"Error determining attack stage: {e}")
@@ -437,7 +437,7 @@ class EnhancedPCAPAnalyzer:
             
             if self.debug:
                 logger.info(f"Total packets in file: {len(packets)}")
-            
+        
             # Limit packets if specified
             if max_packets:
                 packets = packets[:max_packets]
@@ -469,12 +469,12 @@ class EnhancedPCAPAnalyzer:
                         processed_count += 1
                     elif self.debug and i < 10:  # Show first 10 skipped packets
                         logger.debug(f"Skipping packet {i}: no meaningful data - src_ip: {packet_data.get('src_ip') if packet_data else 'None'}, dst_ip: {packet_data.get('dst_ip') if packet_data else 'None'}")
-                        
+                    
                 except Exception as e:
                     error_count += 1
                     if self.debug and error_count <= 5:  # Show first 5 errors
                         logger.debug(f"Error processing packet {i}: {e}")
-                    continue
+                        continue
             
             if self.debug:
                 logger.info(f"Processed {processed_count} packets, {error_count} errors")
@@ -488,24 +488,72 @@ class EnhancedPCAPAnalyzer:
 def main():
     """Main function for command line usage"""
     parser = argparse.ArgumentParser(description="Enhanced PCAP Analyzer")
-    parser.add_argument("pcap_file", help="PCAP file to analyze")
+    parser.add_argument("--pcap-file", help="PCAP file to analyze")
     parser.add_argument("--variant-id", help="Variant ID for the experiment")
     parser.add_argument("--max-packets", type=int, help="Maximum number of packets to process")
     parser.add_argument("--debug", action="store_true", help="Enable debug logging")
     
     args = parser.parse_args()
     
-    if not os.path.exists(args.pcap_file):
-        print(f"Error: PCAP file {args.pcap_file} not found")
+    # If no pcap_file specified, try to find one for the variant
+    pcap_file = args.pcap_file
+    if not pcap_file and args.variant_id:
+        # Look for PCAP files in the variant's pcap directory
+        pcap_dir = f"data/logs/{args.variant_id}/pcap"
+        if os.path.exists(pcap_dir):
+            pcap_files = [f for f in os.listdir(pcap_dir) if f.endswith('.pcap')]
+            if pcap_files:
+                pcap_file = os.path.join(pcap_dir, pcap_files[0])
+                print(f"Found PCAP file: {pcap_file}")
+    
+    if not pcap_file:
+        print("Error: No PCAP file specified and none found for variant")
+        sys.exit(1)
+    
+    if not os.path.exists(pcap_file):
+        print(f"Error: PCAP file {pcap_file} not found")
         sys.exit(1)
     
     try:
-        analyzer = EnhancedPCAPAnalyzer(args.pcap_file, args.variant_id, args.debug)
+        analyzer = EnhancedPCAPAnalyzer(pcap_file, args.variant_id, args.debug)
         processed_count = analyzer.analyze_pcap_file(args.max_packets)
         print(f"Successfully processed {processed_count} packets")
     except Exception as e:
         print(f"Error: {e}")
         sys.exit(1)
+
+def enhanced_pcap_analyzer(variant_id: str = None) -> bool:
+    """ETL function for enhanced PCAP analysis"""
+    print(f"🚀 Processing PCAP files for variant: {variant_id}")
+    
+    # Look for PCAP files in the variant's pcap directory
+    pcap_dir = f"data/logs/{variant_id}/pcap"
+    if not os.path.exists(pcap_dir):
+        print(f"Warning: PCAP directory not found: {pcap_dir}")
+        print("⚠️  No PCAP records found")
+        return True  # Not an error, just no data
+    
+    pcap_files = [f for f in os.listdir(pcap_dir) if f.endswith('.pcap')]
+    if not pcap_files:
+        print(f"Warning: No PCAP files found in {pcap_dir}")
+        print("⚠️  No PCAP records found")
+        return True  # Not an error, just no data
+    
+    processed_count = 0
+    for pcap_file in pcap_files:
+        pcap_path = os.path.join(pcap_dir, pcap_file)
+        print(f"📁 Processing PCAP file: {pcap_path}")
+        
+        try:
+            analyzer = EnhancedPCAPAnalyzer(pcap_path, variant_id, debug=False)
+            count = analyzer.analyze_pcap_file()
+            processed_count += count
+            print(f"✅ Processed {count} packets from {pcap_file}")
+        except Exception as e:
+            print(f"❌ Error processing {pcap_file}: {e}")
+    
+    print(f"✅ Total processed packets: {processed_count}")
+    return True
 
 if __name__ == "__main__":
     main() 

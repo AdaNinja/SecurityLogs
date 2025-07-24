@@ -1,0 +1,17 @@
+Unified Dataset Summary for lowscan_stealthy
+==================================================
+Generated: 2025-07-23T23:40:10.214059
+Total records: 25204
+Total fields: 56
+
+Data Source Breakdown:
+------------------------------
+system_logs: 25119 records
+security_data: 11 records
+dns_data: 66 records
+proxy_data: 5 records
+analysis: 3 records
+
+Output files:
+- CSV dataset: data/processed/lowscan_stealthy/datasets/unified_dataset.csv
+- Summary: data/processed/lowscan_stealthy/datasets/dataset_summary.txt
