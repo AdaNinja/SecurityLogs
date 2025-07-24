@@ -1,0 +1,17 @@
+Unified Dataset Summary for lowscan_moderate
+==================================================
+Generated: 2025-07-24T02:22:39.536512
+Total records: 37802
+Total fields: 61
+
+Data Source Breakdown:
+------------------------------
+system_logs: 37726 records
+security_data: 11 records
+dns_data: 57 records
+proxy_data: 5 records
+analysis: 3 records
+
+Output files:
+- CSV dataset: /home/jiayi/SecurityLogs/data/processed/lowscan_moderate/datasets/unified_dataset.csv
+- Summary: /home/jiayi/SecurityLogs/data/processed/lowscan_moderate/datasets/dataset_summary.txt

