@@ -1,14 +1,8 @@
 services:
-  web:
-    image: bkimminich/juice-shop:latest
-    networks: [appnet]
-    expose:
-      - "3000"        # only visible inside appnet
-
   nginx:
     image: nginx:alpine
     hostname: fancystore.com
-    networks: 
+    networks:
       edge:
         aliases:
           - fancystore.com
@@ -21,10 +15,20 @@ services:
     depends_on:
       - web
 
+  web:
+    image: bkimminich/juice-shop:latest
+    networks: [appnet]
+    expose:
+      - "3000"        # only visible inside appnet
+
   attacker:
     image: kalilinux/kali-rolling:latest
     networks: [edge]
-    entrypoint: ["bash", "/attack.sh", "--target", "http://fancystore.com"]
+    environment:
+      - TARGET_HOST=fancystore.com
+      - TARGET_PORT=80
+      - ATTACK_TYPE=sql_injection
+      - ATTACK_PHASE=automated
     volumes:
       - ./confs/attacker/attack.sh:/attack.sh:ro
       - ./confs/attacker/attack_scripts/:/opt/scripts/:ro
@@ -32,6 +36,7 @@ services:
       - ./out/logs/:/opt/logs/
     depends_on:
       - nginx
+    command: ["bash", "-c", "apt-get update && apt-get install -y python3 python3-pip curl wget python3-requests python3-dnspython nmap dirb git sqlmap slowhttptest && bash /attack.sh --target http://fancystore.com"]
 
   user:
     image: alpine:latest
