@@ -1,0 +1,44 @@
+services:
+  web:
+    image: bkimminich/juice-shop:latest
+    networks: [appnet]
+    expose:
+      - "3000"        # only visible inside appnet
+
+  nginx:
+    image: nginx:alpine
+    hostname: fancystore.com
+    networks: 
+      edge:
+        aliases:
+          - fancystore.com
+      appnet: {}
+    #ports:
+    #  - "8080:80"       # expose nginx on port 8080
+    volumes:
+      - ./confs/nginx/:/etc/nginx/
+      - ./out/nginx/:/var/log/nginx
+    depends_on:
+      - web
+
+  attacker:
+    image: linuxserver/kali-linux:latest 
+    networks: [edge]
+    entrypoint: ["bash", "/attack.sh", "--target", "http://fancystore.com"]
+    volumes:
+      - ./confs/attacker/attack.sh:/attack.sh:ro
+    depends_on:
+      - nginx
+
+  shopper:
+    image: alpine:latest
+    networks: [edge]
+    entrypoint: ["sh", "/benign.sh", "--target", "http://fancystore.com"]
+    volumes:
+      - ./confs/shopper/benign.sh:/benign.sh:ro
+    depends_on:
+      - nginx
+
+networks:
+  edge: {}
+  appnet: {}

@@ -1,0 +1,51 @@
+services:
+  web:
+    image: bkimminich/juice-shop:latest
+    networks: [appnet]
+    expose:
+      - "3000"        # only visible inside appnet
+
+  nginx-waf:
+    image: owasp/modsecurity-crs:nginx
+    hostname: fancystore.com
+    networks: 
+      edge:
+        aliases:
+          - fancystore.com
+      appnet: {}
+    #ports:
+    #  - "8080:8080"       # clients hit nginx with integrated WAF
+    environment:
+      BACKEND: http://web:3000
+      PROXY: 1
+      PORT: 8080
+      MODSEC_AUDIT_LOG_FORMAT: JSON
+      MODSEC_AUDIT_LOG: /var/log/modsecurity/audit.log
+    volumes:
+      - ./confs/waf/:/etc/modsecurity/
+      - ./out/nginx/:/var/log/nginx
+      - ./out/waf/:/var/log/modsecurity
+    depends_on:
+      - web
+
+  attacker:
+    image: linuxserver/kali-linux:latest 
+    networks: [edge]
+    entrypoint: ["bash", "/attack.sh", "--target", "http://fancystore.com:8080"]
+    volumes:
+      - ./confs/attacker/attack.sh:/attack.sh:ro
+    depends_on:
+      - nginx-waf
+
+  shopper:
+    image: alpine:latest
+    networks: [edge]
+    entrypoint: ["sh", "/benign.sh", "--target", "http://fancystore.com:8080"]
+    volumes:
+      - ./confs/shopper/benign.sh:/benign.sh:ro
+    depends_on:
+      - nginx-waf
+
+networks:
+  edge: {}
+  appnet: {}
