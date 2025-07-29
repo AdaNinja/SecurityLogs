@@ -1,6 +1,0 @@
-2025-07-21 10:47:28 - Login attempt: admin' -- from 172.19.0.5
-2025-07-21 10:47:30 - Login attempt: admin' OR '1'='1 from 172.19.0.5
-2025-07-21 10:47:33 - Login attempt: ' OR 1=1-- from 172.19.0.5
-2025-07-21 10:47:35 - Login attempt: ' UNION SELECT 1,2,3-- from 172.19.0.5
-2025-07-21 10:47:37 - Login attempt: admin'/* from 172.19.0.5
-2025-07-21 10:47:40 - Login attempt: ' OR 'x'='x from 172.19.0.5

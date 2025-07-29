@@ -1,229 +1,191 @@
-# SecurityLogs Project Makefile
-# Simplified management for attack scenarios
+# RAS Security Logs Makefile
+# Unified management for all RAS scenarios and tasks
 
-.PHONY: help build build-clean clean up down run-variant run-all-variants run-variants logs status validate-data show-data variant-complete all netem netem-apply netem-reset check-images
+# Configuration
+RAS_DIR = RAS
+SCENARIO = securitylogs
+SCENARIO_DIR = $(RAS_DIR)/scenario-$(SCENARIO)
+LOG_FILE = $(SCENARIO_DIR)/out/nginx/detailed.log
+OUTPUT_DIR = $(SCENARIO_DIR)/out/processed
 
-# Default scenario
-SCENARIO ?= low-and-slow-sqli
+# Colors for output
+RED = \033[0;31m
+GREEN = \033[0;32m
+YELLOW = \033[1;33m
+BLUE = \033[0;34m
+NC = \033[0m # No Color
+
+.PHONY: help start stop restart logs clean day1 day2 day3 day3-process logs-live status
 
 # Default target
 help:
-	@echo "SecurityLogs - Attack Scenario Management"
+	@echo "$(BLUE)============================================================$(NC)"
+	@echo "$(BLUE)RAS Security Logs Management Makefile$(NC)"
+	@echo "$(BLUE)============================================================$(NC)"
 	@echo ""
-	@echo "QUICK START (Fully Automated):"
-	@echo "  make all                    # Complete workflow: build + run all variants + validate"
-	@echo "  make variant-complete VARIANT=stealthy  # Single variant complete workflow"
+	@echo "$(GREEN)Environment Management:$(NC)"
+	@echo "  make start          - Start RAS environment"
+	@echo "  make stop           - Stop RAS environment"
+	@echo "  make restart        - Restart RAS environment"
+	@echo "  make clean          - Stop and clean all data"
+	@echo "  make status         - Show container status"
 	@echo ""
-	@echo "CORE COMMANDS:"
-	@echo "  build              - Build all Docker images (with host network)"
-	@echo "  build-clean        - Clean cache and rebuild (fixes network issues)"
-	@echo "  clean              - Clean up containers and images"
-	@echo "  clean-data         - Clean up all experiment data (logs, pcaps, processed)"
-	@echo "  clean-all          - Clean up everything (containers, images, and data)"
-	@echo "  up/down            - Start/stop containers"
+	@echo "$(GREEN)Logging & Monitoring:$(NC)"
+	@echo "  make logs           - Show container logs"
+	@echo "  make logs-live      - Show live logs"
 	@echo ""
-	@echo "EXPERIMENT COMMANDS:"
-	@echo "  run-variant        - Run single variant (with ETL processing)"
-	@echo "  run-all-variants   - Run all variants (with ETL processing)"
-	@echo "  run-variants       - Run specific variants (VARIANTS='stealthy moderate')"
+	@echo "$(GREEN)Day-specific Tasks:$(NC)"
+	@echo "  make day1           - Run Day 1: Docker environment migration"
+	@echo "  make day2           - Run Day 2: Attack script realization"
+	@echo "  make day3           - Run Day 3: Benign traffic & log processing"
+	@echo "  make day3-process    - Process existing logs only"
 	@echo ""
-	@echo "DATA COMMANDS:"
-	@echo "  validate-data      - Validate generated datasets"
-	@echo "  show-data          - Show extracted data summary"
+	@echo "$(GREEN)Utility Commands:$(NC)"
+	@echo "  make fix-permissions - Fix file permissions"
+	@echo "  make bridges        - Show available network bridges"
 	@echo ""
-	@echo "MONITORING:"
-	@echo "  logs               - Show container logs"
-	@echo "  status             - Show container status"
-	@echo ""
-	@echo "EXAMPLES:"
-	@echo "  make all                                    # Complete automated workflow"
-	@echo "  make variant-complete VARIANT=stealthy     # Single variant workflow"
-	@echo "  make run-variant VARIANT=moderate          # Run specific variant"
-	@echo "  make validate-data                         # Check data quality"
 
-# Check if Docker images exist
-check-images:
-	@echo "Checking Docker images..."
-	@if ! docker images | grep -q "securitylogs-webapp"; then \
-		echo "Image securitylogs-webapp not found, will build"; \
-		exit 1; \
-	fi
-	@if ! docker images | grep -q "securitylogs-attacker"; then \
-		echo "Image securitylogs-attacker not found, will build"; \
-		exit 1; \
-	fi
-	@if ! docker images | grep -q "securitylogs-tcpdump"; then \
-		echo "Image securitylogs-tcpdump not found, will build"; \
-		exit 1; \
-	fi
-	@if ! docker images | grep -q "securitylogs-dns-server"; then \
-		echo "Image securitylogs-dns-server not found, will build"; \
-		exit 1; \
-	fi
-	@echo "All Docker images found, skipping build"
+# Environment Management
+start:
+	@echo "$(BLUE)Starting RAS environment...$(NC)"
+	cd $(RAS_DIR) && ./ras.sh $(SCENARIO) start
 
-# Build all Docker images (only if needed)
-build: check-images
-	@echo "Building Docker images with host network..."
-	docker build --network=host -t securitylogs-webapp containers/webapp
-	docker build --network=host -t securitylogs-attacker containers/attacker
-	docker build --network=host -t securitylogs-tcpdump containers/tcpdump
-	docker build --network=host -t securitylogs-dns-server containers/dns-server
-	@echo "Build completed!"
+stop:
+	@echo "$(YELLOW)Stopping RAS environment...$(NC)"
+	cd $(RAS_DIR) && ./ras.sh $(SCENARIO) stop
 
-# Force rebuild all Docker images (clean cache)
-build-clean:
-	@echo "Cleaning Docker cache and building images..."
-	docker system prune -a -f
-	docker builder prune -a -f
-	@echo "Cache cleaned, building images with host network..."
-	docker build --network=host -t securitylogs-webapp containers/webapp
-	docker build --network=host -t securitylogs-attacker containers/attacker
-	docker build --network=host -t securitylogs-tcpdump containers/tcpdump
-	docker build --network=host -t securitylogs-dns-server containers/dns-server
-	@echo "Build completed!"
+restart:
+	@echo "$(BLUE)Restarting RAS environment...$(NC)"
+	cd $(RAS_DIR) && ./ras.sh $(SCENARIO) restart
 
-# Clean up containers and images
 clean:
-	@echo "Cleaning up containers and images..."
-	docker-compose -f scenarios/*/docker-compose.yml down --remove-orphans
-	docker rmi securitylogs-webapp securitylogs-attacker securitylogs-tcpdump securitylogs-dns-server 2>/dev/null || true
-	@echo "Cleanup completed!"
+	@echo "$(RED)Cleaning RAS environment...$(NC)"
+	cd $(RAS_DIR) && ./ras.sh $(SCENARIO) clean
 
-# Clean up all data (logs, pcaps, processed data)
-clean-data:
-	@echo "Cleaning up all experiment data..."
-	@echo "Removing logs..."
-	rm -rf data/logs/*
-	@echo "Removing PCAP files..."
-	rm -rf data/pcaps/*
-	@echo "Removing DNS logs..."
-	rm -rf data/dns_logs/*
-	@echo "Removing processed data..."
-	rm -rf data/processed/*
-	@echo "Data cleanup completed!"
-
-# Clean up everything (containers, images, and data)
-clean-all: clean clean-data
-	@echo "Complete cleanup finished!"
-
-# Generic container management
-up:
-	@echo "Starting containers..."
-	@if [ -f "scenarios/low-and-slow-sqli/docker-compose.yml" ]; then \
-		cd scenarios/low-and-slow-sqli && docker-compose up -d; \
-	else \
-		echo "No docker-compose.yml found in current scenario"; \
-	fi
-
-down:
-	@echo "Stopping containers..."
-	@if [ -f "scenarios/low-and-slow-sqli/docker-compose.yml" ]; then \
-		cd scenarios/low-and-slow-sqli && docker-compose down; \
-	else \
-		echo "No docker-compose.yml found in current scenario"; \
-	fi
-
-# Network condition management
-netem-apply:
-	@echo "Applying network conditions..."
-	bash scripts/network/apply_netem.sh
-
-netem-reset:
-	@echo "Resetting network conditions..."
-	bash scripts/network/reset_netem.sh
-
-netem: netem-apply
-	@echo "Network conditions applied"
-
-# Automated variant runners (with interleaved traffic and network conditions by default)
-run-variant:
-	@echo "Running variant with interleaved traffic and network conditions..."
-	@if [ -z "$(VARIANT)" ]; then \
-		echo "Error: VARIANT not specified. Use: make run-variant VARIANT=stealthy"; \
-		exit 1; \
-	fi
-	@echo "Applying network conditions..."
-	@sudo bash scripts/network/apply_netem.sh
-	@echo "Running variant with interleaved traffic..."
-	python3 scripts/run_variant.py $(VARIANT) --interleaved $(if $(BENIGN_MIX),--benign-mix $(BENIGN_MIX)) $(if $(BENIGN_DURATION),--benign-duration $(BENIGN_DURATION))
-	@echo "Resetting network conditions..."
-	@sudo bash scripts/network/reset_netem.sh
-
-run-all-variants:
-	@echo "Running all variants with interleaved traffic and network conditions..."
-	@echo "Applying network conditions..."
-	@sudo bash scripts/network/apply_netem.sh
-	@echo "Running all variants with interleaved traffic..."
-	python3 scripts/run_all_variants.py --interleaved $(if $(BENIGN_MIX),--benign-mix $(BENIGN_MIX)) $(if $(BENIGN_DURATION),--benign-duration $(BENIGN_DURATION))
-	@echo "Resetting network conditions..."
-	@sudo bash scripts/network/reset_netem.sh
-
-run-variants:
-	@echo "Running specific variants with interleaved traffic and network conditions..."
-	@if [ -z "$(VARIANTS)" ]; then \
-		echo "Error: VARIANTS not specified. Use: make run-variants VARIANTS='stealthy moderate'"; \
-		exit 1; \
-	fi
-	@echo "Applying network conditions..."
-	@sudo bash scripts/network/apply_netem.sh
-	@echo "Running variants with interleaved traffic..."
-	python3 scripts/run_all_variants.py --variants $(VARIANTS) --interleaved $(if $(BENIGN_MIX),--benign-mix $(BENIGN_MIX)) $(if $(BENIGN_DURATION),--benign-duration $(BENIGN_DURATION))
-	@echo "Resetting network conditions..."
-	@sudo bash scripts/network/reset_netem.sh
-
-# Legacy commands (for backward compatibility)
-attack:
-	@echo "Running basic SQL injection attack (legacy)..."
-	cd scenarios/low-and-slow-sqli && docker exec securitylogs-attacker python3 /opt/scripts/attack_modules/container_attack.py
-
-# Traffic labeling (legacy - removed log-aggregator)
-label:
-	@echo "Labeling captured traffic..."
-	@echo "Note: log-aggregator has been removed. Use ETL scripts for data processing."
-
-# Data validation and verification
-validate-data:
-	@echo "Validating generated datasets..."
-	@echo "Checking for unified datasets..."
-	@for variant in stealthy moderate aggressive; do \
-		if [ -f "data/processed/lowscan_$${variant}/unified/unified_dataset.csv" ]; then \
-			echo "[OK] Unified dataset found for $$variant"; \
-		else \
-			echo "[MISSING] Unified dataset missing for $$variant"; \
-		fi; \
-		if [ -f "data/processed/lowscan_$${variant}/unified/simplified_view.csv" ]; then \
-			echo "[OK] Simplified view found for $$variant"; \
-		else \
-			echo "[MISSING] Simplified view missing for $$variant"; \
-		fi; \
-	done
-
-show-data:
-	@echo "Showing extracted data summary..."
-	python3 scripts/show_extracted_data.py --summary
-
-# Complete attack workflow (fully automated)
-all: build run-all-variants validate-data
-	@echo "Complete attack workflow finished!"
-	@echo "All variants executed with ETL processing"
-	@echo "Check data/processed/ for results"
-
-# Single variant complete workflow
-variant-complete: build run-variant validate-data
-	@echo "Single variant workflow completed!"
-	@echo "Variant $(VARIANT) executed with ETL processing"
-
-# Quick start for SQL injection scenario
-sqli-quick: build up run-variant VARIANT=stealthy
-	@echo "SQL injection scenario completed!"
-
-# Show logs
-logs:
-	@echo "Showing container logs..."
-	docker-compose -f scenarios/low-and-slow-sqli/docker-compose.yml logs -f
-
-# Show status
 status:
-	@echo "Container status:"
-	docker-compose -f scenarios/low-and-slow-sqli/docker-compose.yml ps
+	@echo "$(BLUE)Container Status:$(NC)"
+	docker ps --filter "name=ras-$(SCENARIO)" --format "table {{.Names}}\t{{.Status}}\t{{.Ports}}"
+
+# Logging & Monitoring
+logs:
+	@echo "$(BLUE)Container Logs:$(NC)"
+	cd $(RAS_DIR) && ./ras.sh $(SCENARIO) logs
+
+logs-live:
+	@echo "$(BLUE)Live Logs (Press Ctrl+C to stop):$(NC)"
+	@tail -f $(LOG_FILE)
+
+# Day 1: Docker Environment Migration
+day1:
+	@echo "$(BLUE)============================================================$(NC)"
+	@echo "$(BLUE)DAY 1: DOCKER ENVIRONMENT MIGRATION$(NC)"
+	@echo "$(BLUE)============================================================$(NC)"
+	@echo "$(GREEN)Step 1: Starting RAS environment...$(NC)"
+	$(MAKE) start
+	@echo "$(GREEN)Step 2: Waiting for containers to initialize...$(NC)"
+	@sleep 30
+	@echo "$(GREEN)Step 3: Checking container status...$(NC)"
+	$(MAKE) status
+	@echo "$(GREEN)Step 4: Verifying attack script execution...$(NC)"
+	@sleep 60
+	@echo "$(GREEN)Day 1 completed! Check logs for attack execution.$(NC)"
+
+# Day 2: Attack Script Realization
+day2:
+	@echo "$(BLUE)============================================================$(NC)"
+	@echo "$(BLUE)DAY 2: ATTACK SCRIPT REALIZATION$(NC)"
+	@echo "$(BLUE)============================================================$(NC)"
+	@echo "$(GREEN)Step 1: Ensuring environment is running...$(NC)"
+	$(MAKE) start
+	@echo "$(GREEN)Step 2: Waiting for attack execution...$(NC)"
+	@sleep 90
+	@echo "$(GREEN)Step 3: Checking attack logs...$(NC)"
+	@echo "$(YELLOW)Recent attack logs:$(NC)"
+	@tail -10 $(LOG_FILE) | grep -E "(attacker|sqlmap|nmap|dirb)" || echo "No attack logs found yet"
+	@echo "$(GREEN)Day 2 completed! Attack scripts should be running.$(NC)"
+
+# Day 3: Benign Traffic & Log Processing
+day3:
+	@echo "$(BLUE)============================================================$(NC)"
+	@echo "$(BLUE)DAY 3: BENIGN TRAFFIC & LOG PROCESSING$(NC)"
+	@echo "$(BLUE)============================================================$(NC)"
+	@echo "$(GREEN)Step 1: Starting environment with benign traffic...$(NC)"
+	$(MAKE) start
+	@echo "$(GREEN)Step 2: Waiting for traffic generation...$(NC)"
+	@sleep 120
+	@echo "$(GREEN)Step 3: Processing logs...$(NC)"
+	$(MAKE) day3-process
+	@echo "$(GREEN)Day 3 completed! Check $(OUTPUT_DIR) for processed data.$(NC)"
+
+# Day 3: Process logs only
+day3-process:
+	@echo "$(BLUE)Processing logs...$(NC)"
+	@mkdir -p $(OUTPUT_DIR)
+	@if [ ! -f $(LOG_FILE) ]; then \
+		echo "$(RED)Error: Log file not found: $(LOG_FILE)$(NC)"; \
+		exit 1; \
+	fi
+	@echo "$(GREEN)Processing $(shell wc -l < $(LOG_FILE)) log entries...$(NC)"
+	cd $(SCENARIO_DIR) && python3 scripts/log_processor.py out/nginx/detailed.log \
+		--output-csv out/processed/day3_processed_logs.csv \
+		--output-json out/processed/day3_processed_logs.json
+	@echo "$(GREEN)Log processing completed!$(NC)"
+	@echo "$(YELLOW)Generated files:$(NC)"
+	@ls -la $(OUTPUT_DIR)/
+
+# Utility Commands
+fix-permissions:
+	@echo "$(BLUE)Fixing file permissions...$(NC)"
+	cd $(RAS_DIR) && ./ras.sh $(SCENARIO) fix-permissions
+
+bridges:
+	@echo "$(BLUE)Available network bridges:$(NC)"
+	cd $(RAS_DIR) && ./ras.sh $(SCENARIO) bridges
+
+# Quick access to specific containers
+logs-attacker:
+	@echo "$(BLUE)Attacker container logs:$(NC)"
+	docker logs -f ras-$(SCENARIO)-attacker-1
+
+logs-user:
+	@echo "$(BLUE)User container logs:$(NC)"
+	docker logs -f ras-$(SCENARIO)-user-1
+
+logs-nginx:
+	@echo "$(BLUE)Nginx container logs:$(NC)"
+	docker logs -f ras-$(SCENARIO)-nginx-1
+
+# Quick stats
+stats:
+	@echo "$(BLUE)Log Statistics:$(NC)"
+	@if [ -f $(LOG_FILE) ]; then \
+		echo "Total log entries: $(shell wc -l < $(LOG_FILE))"; \
+		echo "Attack entries: $(shell grep -c "attacker\|sqlmap\|nmap\|dirb" $(LOG_FILE) || echo "0")"; \
+		echo "Benign entries: $(shell grep -c "Mozilla\|Chrome\|Firefox\|Safari" $(LOG_FILE) || echo "0")"; \
+	else \
+		echo "$(RED)Log file not found: $(LOG_FILE)$(NC)"; \
+	fi
+
+# Development helpers
+dev-restart:
+	@echo "$(BLUE)Development restart (quick)...$(NC)"
+	$(MAKE) stop
+	@sleep 5
+	$(MAKE) start
+
+dev-logs:
+	@echo "$(BLUE)Development logs (all containers)...$(NC)"
+	docker-compose -f $(SCENARIO_DIR)/docker-compose.yml logs -f
+
+# Cleanup helpers
+clean-logs:
+	@echo "$(YELLOW)Cleaning log files...$(NC)"
+	@rm -f $(SCENARIO_DIR)/out/nginx/*.log
+	@rm -f $(SCENARIO_DIR)/out/attacker/*
+	@rm -f $(SCENARIO_DIR)/out/user/*
+	@rm -rf $(OUTPUT_DIR)/*
+
+clean-all:
+	@echo "$(RED)Cleaning everything...$(NC)"
+	$(MAKE) clean
+	$(MAKE) clean-logs

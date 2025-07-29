@@ -39,12 +39,17 @@ services:
     command: ["bash", "-c", "apt-get update && apt-get install -y python3 python3-pip curl wget python3-requests python3-dnspython nmap dirb git sqlmap slowhttptest && bash /attack.sh --target http://fancystore.com"]
 
   user:
-    image: alpine:latest
+    image: python:3.9-alpine
     networks: [edge]
+    environment:
+      - TARGET_HOST=fancystore.com
+      - TARGET_PORT=80
     volumes:
-      - ./confs/user/benign.sh:/benign.sh:ro
+      - ./confs/user/benign_enhanced.py:/benign_enhanced.py:ro
+      - ./out/user/:/opt/output/
     depends_on:
       - nginx
+    command: ["sh", "-c", "pip install requests && python /benign_enhanced.py http://fancystore.com"]
 
 networks:
   edge:
