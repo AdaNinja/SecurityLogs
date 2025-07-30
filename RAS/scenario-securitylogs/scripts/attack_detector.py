@@ -107,33 +107,46 @@ class AttackDetector:
         return result
     
     def _parse_structured_log(self, attack_log: str) -> List[Dict[str, Any]]:
-        """Parse structured attack log with clear markers"""
+        """Parse structured attack log based on PAYLOAD_ID changes"""
         attacks = []
         current_attack = {}
-        in_attack_block = False
+        current_payload_id = None
         
         for line in attack_log.split('\n'):
             line = line.strip()
             
-            if line == "===ATTACK_START===":
-                if in_attack_block:
-                    # If we're already in an attack block, this is a duplicate marker
-                    continue
-                in_attack_block = True
-                current_attack = {}
+            # Skip empty lines and non-key-value lines
+            if not line or ':' not in line:
                 continue
             
-            elif line == "===ATTACK_END===":
-                in_attack_block = False
+            key, value = line.split(':', 1)
+            key = key.strip()
+            value = value.strip()
+            
+            # If we find a PAYLOAD_ID, check if it's a new attack
+            if key == 'PAYLOAD_ID':
+                payload_id = value
+                
+                # If this is a new payload ID, save the previous attack and start a new one
+                if payload_id != current_payload_id:
+                    if current_attack and current_payload_id:
+                        attacks.append(current_attack.copy())
+                    
+                    current_payload_id = payload_id
+                    current_attack = {'PAYLOAD_ID': payload_id}
+                else:
+                    # Same payload ID, update the current attack
+                    current_attack[key] = value
+            else:
+                # Add other key-value pairs to current attack
                 if current_attack:
-                    attacks.append(current_attack)
-                current_attack = {}
-                continue
-            
-            elif in_attack_block and ':' in line:
-                key, value = line.split(':', 1)
-                current_attack[key.strip()] = value.strip()
+                    current_attack[key] = value
         
+        # Don't forget the last attack
+        if current_attack and current_payload_id:
+            attacks.append(current_attack.copy())
+        
+        return attacks
         return attacks
     
     def _extract_http_responses(self, nginx_log: str) -> Dict[str, Dict[str, Any]]:
@@ -209,6 +222,7 @@ class AttackDetector:
         
         # Parse structured attack log
         attacks = self._parse_structured_log(attack_log)
+
         
         # Extract HTTP responses
         http_responses = self._extract_http_responses(nginx_log)
@@ -223,7 +237,7 @@ class AttackDetector:
             
             # Prepare attack data for detection
             attack_data = {
-                'text_data': attack_log,  # Full log for text pattern matching
+                'text_data': '',  # Will be populated if needed
                 'http_status': None,
                 'response_body': '',
                 'response_headers': '',
@@ -237,14 +251,15 @@ class AttackDetector:
                 except (ValueError, KeyError):
                     pass
             
-            # Match HTTP response
-            method = attack.get('METHOD', 'GET')
-            path = attack.get('PATH', '')
-            response_key = f"{method}_{path}"
-            
-            if response_key in http_responses:
-                response = http_responses[response_key]
-                attack_data['http_status'] = response['status']
+            # Match HTTP response (only if we don't have HTTP_CODE from attack log)
+            if attack_data['http_status'] is None:
+                method = attack.get('METHOD', 'GET')
+                path = attack.get('PATH', '')
+                response_key = f"{method}_{path}"
+                
+                if response_key in http_responses:
+                    response = http_responses[response_key]
+                    attack_data['http_status'] = response['status']
             
             # Load JSON data for this payload
             json_file = f"payload_{payload_id}_output.json"
@@ -299,55 +314,22 @@ class AttackDetector:
     
     def generate_report(self, results: Dict[str, Any],
                        output_file: Optional[str] = None) -> str:
-        """Generate detailed attack detection report"""
-        report = []
-        report.append("=" * 60)
-        report.append("ENHANCED ATTACK DETECTION REPORT")
-        report.append("=" * 60)
-        report.append(f"Timestamp: {results['timestamp']}")
-        report.append("")
-        
-        # Overall statistics
-        stats = results['overall_stats']
-        report.append("OVERALL STATISTICS:")
-        report.append(f"  Total Attacks: {stats['total_attacks']}")
-        report.append(f"  Successful: {stats['successful_attacks']}")
-        report.append(f"  Failed: {stats['failed_attacks']}")
-        report.append(f"  Success Rate: {stats['success_rate']:.2f}%")
-        report.append("")
-        
-        # Attack type breakdown
-        report.append("ATTACK TYPE BREAKDOWN:")
-        for attack_type, summary in results['attack_summary'].items():
-            report.append(f"  {attack_type.upper()}:")
-            report.append(f"    Count: {summary['count']}")
-            report.append(f"    Successful: {summary['successful']}")
-            report.append(f"    Failed: {summary['failed']}")
-            report.append(f"    Success Rate: {summary['success_rate']:.2f}%")
-            
-            # Show details for successful attacks
-            successful_details = [d for d in summary['details'] if d['success']]
-            if successful_details:
-                report.append("    Successful Attacks:")
-                for detail in successful_details[:5]:  # Show first 5
-                    report.append(f"      - Payload {detail['payload_id']}: {detail['description']}")
-                    report.append(f"        Evidence: {', '.join(detail['evidence'])}")
-                    report.append(f"        Confidence: {detail['confidence']:.2f}")
-                    if detail['http_status']:
-                        report.append(f"        HTTP Status: {detail['http_status']}")
-            report.append("")
-        
-        report_text = "\n".join(report)
-        
+        """Generate JSON-only attack detection report"""
+        # Only save JSON results, no text report
         if output_file:
             try:
-                with open(output_file, 'w') as f:
-                    f.write(report_text)
-                print(f"Report saved to: {output_file}")
+                # Remove .txt extension and add .json if not present
+                json_file = output_file.replace('.txt', '.json')
+                if not json_file.endswith('.json'):
+                    json_file += '.json'
+                
+                with open(json_file, 'w') as f:
+                    json.dump(results, f, indent=2)
+                print(f"JSON results saved to: {json_file}")
             except Exception as e:
-                print(f"Warning: Could not write report to {output_file}: {e}")
+                print(f"Warning: Could not save JSON results to {json_file}: {e}")
         
-        return report_text
+        return "JSON results generated successfully"
 
 def main():
     parser = argparse.ArgumentParser(description='Enhanced Attack Detection Engine')

@@ -564,12 +564,11 @@ analyze-attack-only:
 		--attack-log $(SCENARIO_DIR)/out/attack-only/attacker/attack.log \
 		--nginx-log $(SCENARIO_DIR)/out/attack-only/nginx/detailed.log \
 		--json-output-dir /tmp/sqlmap_attack \
-		--output $(SCENARIO_DIR)/out/analysis/attack-only/attack_detection_report.txt \
 		--json $(SCENARIO_DIR)/out/analysis/attack-only/attack_detection_results.json
 	@echo "$(YELLOW)Running traditional log analysis...$(NC)"
 	@python3 $(SCENARIO_DIR)/scripts/log_processor.py $(SCENARIO_DIR)/out/attack-only/nginx/detailed.log --output-csv $(SCENARIO_DIR)/out/analysis/attack-only/log_analysis.csv --output-json $(SCENARIO_DIR)/out/analysis/attack-only/log_analysis.json
 	@echo "$(GREEN)Attack-only analysis completed!$(NC)"
-	@echo "$(BLUE)Detection report: $(SCENARIO_DIR)/out/analysis/attack-only/attack_detection_report.txt$(NC)"
+	@echo "$(BLUE)JSON results: $(SCENARIO_DIR)/out/analysis/attack-only/attack_detection_results.json$(NC)"
 
 analyze-benign-only:
 	@echo "$(BLUE)Analyzing benign-only results...$(NC)"
@@ -616,7 +615,7 @@ data-summary:
 	@if [ -d "$(SCENARIO_DIR)/out/benign-only" ]; then \
 		echo "  - Nginx logs: $(shell wc -l < $(SCENARIO_DIR)/out/benign-only/nginx/detailed.log 2>/dev/null || echo 0) lines"; \
 		echo "  - User logs: $(shell wc -l < $(SCENARIO_DIR)/out/benign-only/user/benign_traffic.log 2>/dev/null || echo 0) lines"; \
-	else \
+		else \
 		echo "  - No data found"; \
 	fi
 	@echo "$(GREEN)Mixed mode data:$(NC)"
@@ -624,6 +623,6 @@ data-summary:
 		echo "  - Nginx logs: $(shell wc -l < $(SCENARIO_DIR)/out/mixed/nginx/detailed.log 2>/dev/null || echo 0) lines"; \
 		echo "  - Attack logs: $(shell wc -l < $(SCENARIO_DIR)/out/mixed/attacker/attack.log 2>/dev/null || echo 0) lines"; \
 		echo "  - User logs: $(shell wc -l < $(SCENARIO_DIR)/out/mixed/user/benign_traffic.log 2>/dev/null || echo 0) lines"; \
-	else \
+		else \
 		echo "  - No data found"; \
 	fi

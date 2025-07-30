@@ -3,16 +3,19 @@
 # Format: attack_type -> detection criteria with unified success/failure indicators
 
 sql_injection:
-  type: tool
-  tool_name: sqlmap
-  description: "SQL injection detected by sqlmap tool"
+  type: http
+  description: "SQL injection detected by HTTP response and sqlmap analysis"
   success_indicators:
+    - status: [500]  # HTTP 500 indicates SQL injection caused server error
     - jsonpath: "$.is_injectable == true"
     - jsonpath: "$.injection_point != null"
     - text: "SQL injection found!"
     - text: "sqlmap identified the following injection point"
     - text: "parameter appears to be injectable"
+    - text: "injectable"
+    - text: "vulnerable"
   failure_indicators:
+    - status: [401, 403, 404]  # HTTP 401/403/404 indicate no injection
     - text: "no injection point found"
     - text: "parameter appears to be not injectable"
     - text: "no SQL injection detected"
@@ -27,7 +30,7 @@ xss:
     - body_regex: "onerror=alert"
     - body_regex: "javascript:alert"
   failure_indicators:
-    - status: [403, 406]  # WAF blocking
+    - status: [401, 403, 404, 406]  # WAF blocking or not found
     - body_regex: "blocked by.*WAF"
     - body_regex: "security.*violation"
 
