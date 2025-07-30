@@ -28,6 +28,11 @@ class LogProcessor:
             'Enhanced-Container-Attacker'
         ]
         
+        # Note: In real-world scenarios, we cannot know attacker IPs in advance
+        # IP-based detection should be based on behavior patterns, not hardcoded IPs
+        # This is only for demonstration purposes in controlled environments
+        self.attacker_ips = []  # Empty list - no hardcoded IPs
+        
         self.attack_paths = [
             '/login.php',
             '/admin',
@@ -53,8 +58,8 @@ class LogProcessor:
         
         self.attack_methods = [
             'POST /rest/user/login',
-            'POST /api/Users/',
-            'GET /rest/products/search'
+            'POST /api/Users/'
+            # Removed 'GET /rest/products/search' as it's a legitimate benign endpoint
         ]
         
     def parse_nginx_log_line(self, line):
@@ -118,54 +123,147 @@ class LogProcessor:
         if not log_entry:
             return 'unknown'
             
-        # Check User-Agent
+        # Check User-Agent with fuzzy matching
         user_agent = log_entry.get('user_agent', '').lower()
         for attack_ua in self.attack_user_agents:
             if attack_ua.lower() in user_agent:
                 return 'attack'
+        
+        # Check for attack tool patterns in User-Agent
+        attack_patterns = [
+            r'sqlmap[\/\-\d\.]*',
+            r'nmap[\/\-\d\.]*',
+            r'dirb[\/\-\d\.]*',
+            r'slowhttptest[\/\-\d\.]*',
+            r'nikto[\/\-\d\.]*',
+            r'hydra[\/\-\d\.]*',
+            r'wpscan[\/\-\d\.]*',
+            r'gobuster[\/\-\d\.]*'
+        ]
+        
+        for pattern in attack_patterns:
+            if re.search(pattern, user_agent, re.IGNORECASE):
+                return 'attack'
                 
-        # Check path
+        # Check path with enhanced detection
         path = log_entry.get('path', '').lower()
         for attack_path in self.attack_paths:
             if attack_path.lower() in path:
                 return 'attack'
+        
+        # Check for attack patterns in path using regex
+        path_attack_patterns = [
+            r'\b(admin|wp-admin|phpmyadmin|config|backup|shell|cmd|exec|system)\b',
+            r'\.(env|git|bak|old|tmp|log|ini|conf)$',
+            r'\b(union|select|insert|update|delete|drop|create|alter)\b',
+            r'\/\.(htaccess|htpasswd)',
+            r'\/wp-content\/uploads\/.*\.(php|jsp|asp)',
+            r'\/includes\/.*\.(php|jsp|asp)'
+        ]
+        
+        for pattern in path_attack_patterns:
+            if re.search(pattern, path, re.IGNORECASE):
+                return 'attack'
                 
-        # Check query string for SQL injection patterns
-        query_string = log_entry.get('query_string', '').lower()
-        sql_patterns = ['union', 'select', 'insert', 'update', 'delete', 'drop', 'create', 'alter', 'exec', 'system']
-        for pattern in sql_patterns:
-            if pattern in query_string:
+        # Check query string for SQL injection patterns with enhanced regex
+        query_string = log_entry.get('query_string', '')
+        sql_injection_patterns = [
+            r'\b(union|select|insert|update|delete|drop|create|alter|exec|system)\b',
+            r'(\'|\")\s*(or|and)\s*(\'|\"|\d+)\s*[=<>]\s*(\'|\"|\d+)',
+            r'(\'|\")\s*--\s*$',
+            r'(\'|\")\s*#\s*$',
+            r'(\'|\")\s*/\*.*\*/\s*$',
+            r'(\'|\")\s*union\s+select\b',
+            r'(\'|\")\s*or\s+1\s*=\s*1\b',
+            r'(\'|\")\s*and\s+1\s*=\s*1\b',
+            r'(\'|\")\s*or\s+\'1\'\s*=\s*\'1\b',
+            r'(\'|\")\s*and\s+\'1\'\s*=\s*\'1\b'
+        ]
+        
+        for pattern in sql_injection_patterns:
+            if re.search(pattern, query_string, re.IGNORECASE):
                 return 'attack'
                 
         # Check request body for SQL injection patterns
-        request_body = log_entry.get('request_body', '').lower()
-        for pattern in sql_patterns:
-            if pattern in request_body:
+        request_body = log_entry.get('request_body', '')
+        for pattern in sql_injection_patterns:
+            if re.search(pattern, request_body, re.IGNORECASE):
                 return 'attack'
                 
         # Check method + path combination
         method_path = f"{log_entry.get('method', '')} {log_entry.get('path', '')}"
         if method_path in self.attack_methods:
             return 'attack'
+        
+        # Check source IP address (only for known attack patterns)
+        # In real-world, we would use behavioral analysis instead of hardcoded IPs
+        remote_addr = log_entry.get('remote_addr', '')
+        
+        # Only use IP detection if we have behavioral evidence
+        # This is more realistic than hardcoded IP lists
+        if remote_addr in self.attacker_ips:
+            return 'attack'
+        
+        # Realistic IP-based detection would be:
+        # 1. Rate limiting (too many requests from same IP)
+        # 2. Geographic anomalies (unusual locations)
+        # 3. Behavioral patterns (specific attack sequences)
+        # 4. Reputation lists (known malicious IPs from threat intel)
+        # 
+        # For now, we focus on payload and User-Agent based detection
+        # which is more reliable and doesn't require prior knowledge
+        
+        # Check for suspicious request patterns
+        suspicious_patterns = [
+            r'\.\./',  # Directory traversal
+            r'%2e%2e%2f',  # URL encoded directory traversal
+            r'%252e%252e%252f',  # Double URL encoded
+            r'<script',  # XSS attempts
+            r'javascript:',  # XSS attempts
+            r'data:text/html',  # XSS attempts
+            r'vbscript:',  # XSS attempts
+            r'onload=',  # XSS attempts
+            r'onerror=',  # XSS attempts
+            r'<iframe',  # XSS attempts
+        ]
+        
+        full_url = log_entry.get('path', '') + log_entry.get('query_string', '')
+        for pattern in suspicious_patterns:
+            if re.search(pattern, full_url, re.IGNORECASE):
+                return 'attack'
             
         return 'benign'
         
-    def process_log_file(self):
-        """Process the entire log file"""
+    def process_log_file(self, limit=None, sample=None):
+        """Process the entire log file with optional limits"""
         if not os.path.exists(self.log_file_path):
             print(f"Error: Log file not found: {self.log_file_path}")
             return False
             
         print(f"[*] Processing log file: {self.log_file_path}")
         
+        # Read all lines first
         with open(self.log_file_path, 'r', encoding='utf-8') as f:
-            for line_num, line in enumerate(f, 1):
-                if line.strip():
-                    log_entry = self.parse_nginx_log_line(line)
-                    if log_entry:
-                        log_entry['classification'] = self.classify_traffic(log_entry)
-                        log_entry['line_number'] = line_num
-                        self.processed_logs.append(log_entry)
+            lines = [line.strip() for line in f if line.strip()]
+        
+        # Apply sampling if requested
+        if sample and sample < len(lines):
+            import random
+            lines = random.sample(lines, sample)
+            print(f"[*] Sampled {sample} lines from {len(lines)} total lines")
+        
+        # Apply limit if requested
+        if limit:
+            lines = lines[:limit]
+            print(f"[*] Limited to {limit} lines")
+        
+        # Process lines
+        for line_num, line in enumerate(lines, 1):
+            log_entry = self.parse_nginx_log_line(line)
+            if log_entry:
+                log_entry['classification'] = self.classify_traffic(log_entry)
+                log_entry['line_number'] = line_num
+                self.processed_logs.append(log_entry)
                         
         print(f"[*] Processed {len(self.processed_logs)} log entries")
         return True
@@ -286,14 +384,16 @@ def main():
     parser.add_argument('--output-csv', help='Output CSV file path')
     parser.add_argument('--output-json', help='Output JSON file path')
     parser.add_argument('--summary-only', action='store_true', help='Only print summary, no export')
+    parser.add_argument('--limit', type=int, help='Limit number of log entries to process (default: all)')
+    parser.add_argument('--sample', type=int, help='Sample N log entries for quick testing')
     
     args = parser.parse_args()
     
     # Initialize processor
     processor = LogProcessor(args.log_file)
     
-    # Process log file
-    if not processor.process_log_file():
+    # Process log file with optional limits
+    if not processor.process_log_file(limit=args.limit, sample=args.sample):
         sys.exit(1)
         
     # Print summary

@@ -1,0 +1,74 @@
+# Attack Scenarios Configuration File
+# Format: type|method|path|data|expected|waf_mode|description
+# WAF modes: block (should be blocked by WAF), bypass (should bypass WAF)
+
+# SQL Injection Attacks
+sql_injection|POST|/rest/user/login|{"email":"admin' OR '1'='1","password":"test"}|401|block|Basic SQL injection with OR condition
+sql_injection|POST|/rest/user/login|{"email":"admin' --","password":"test"}|401|block|SQL injection with comment
+sql_injection|POST|/rest/user/login|{"email":"' UNION SELECT 1,2,3--","password":"test"}|401|block|SQL injection with UNION SELECT
+sql_injection|POST|/rest/user/login|{"email":"admin'/*","password":"test"}|401|block|SQL injection with block comment
+sql_injection|POST|/rest/user/login|{"email":"'; DROP TABLE users--","password":"test"}|401|block|SQL injection with DROP TABLE
+sql_injection|POST|/rest/user/login|{"email":"' AND (SELECT COUNT(*) FROM users)>0--","password":"test"}|401|block|SQL injection with subquery
+sql_injection|POST|/rest/user/login|{"email":"' AND (SELECT SLEEP(3))--","password":"test"}|401|block|SQL injection with time-based blind
+sql_injection|POST|/rest/user/login|{"email":"' AND UPDATEXML(1,CONCAT(0x7e,(SELECT @@version),0x7e),1)--","password":"test"}|401|block|SQL injection with error-based
+
+# XSS (Cross-Site Scripting) Attacks
+xss|GET|/rest/products/search|q=<script>alert('XSS')</script>|200|block|Basic XSS with script tag
+xss|GET|/rest/products/search|q=<img src=x onerror=alert('XSS')>|200|block|XSS with img onerror
+xss|GET|/rest/products/search|q=javascript:alert('XSS')|200|block|XSS with javascript protocol
+xss|GET|/rest/products/search|q=<svg onload=alert('XSS')>|200|block|XSS with SVG onload
+xss|GET|/rest/products/search|q='"><script>alert('XSS')</script>|200|block|XSS with quote breaking
+xss|GET|/rest/products/search|q=<iframe src=javascript:alert('XSS')>|200|block|XSS with iframe
+
+# Directory Traversal Attacks
+traversal|GET|/../../../etc/passwd||404|block|Basic directory traversal
+traversal|GET|/..\\..\\..\\windows\\system32\\drivers\\etc\\hosts||404|block|Windows path traversal
+traversal|GET|/....//....//....//etc/passwd||404|block|Double dot traversal
+traversal|GET|/%2e%2e%2f%2e%2e%2f%2e%2e%2fetc%2fpasswd||404|block|URL encoded traversal
+traversal|GET|/..%252f..%252f..%252fetc%252fpasswd||404|block|Double URL encoded traversal
+traversal|GET|/..%c0%af..%c0%af..%c0%afetc%c0%afpasswd||404|block|UTF-8 encoded traversal
+
+# Command Injection Attacks
+cmd_injection|POST|/rest/user/login|{"email":"admin; ls -la","password":"test"}|401|block|Command injection with semicolon
+cmd_injection|POST|/rest/user/login|{"email":"admin && whoami","password":"test"}|401|block|Command injection with AND
+cmd_injection|POST|/rest/user/login|{"email":"admin | cat /etc/passwd","password":"test"}|401|block|Command injection with pipe
+cmd_injection|POST|/rest/user/login|{"email":"admin`id`","password":"test"}|401|block|Command injection with backticks
+cmd_injection|POST|/rest/user/login|{"email":"admin$(whoami)","password":"test"}|401|block|Command injection with subshell
+cmd_injection|POST|/rest/user/login|{"email":"admin%3B ls -la","password":"test"}|401|block|URL encoded command injection
+
+# Authentication Bypass Attacks
+auth_bypass|POST|/rest/user/login|{"email":"admin","password":"admin"}|401|block|Common admin credentials
+auth_bypass|POST|/rest/user/login|{"email":"admin","password":"password"}|401|block|Default password
+auth_bypass|POST|/rest/user/login|{"email":"admin","password":"123456"}|401|block|Weak password
+auth_bypass|POST|/rest/user/login|{"email":"root","password":"root"}|401|block|Root credentials
+auth_bypass|POST|/rest/user/login|{"email":"administrator","password":"admin"}|401|block|Administrator credentials
+auth_bypass|POST|/rest/user/login|{"email":"test","password":"test"}|401|block|Test credentials
+
+# Sensitive File Discovery
+file_discovery|GET|/.env||404|block|Environment file access
+file_discovery|GET|/config.php||404|block|Configuration file access
+file_discovery|GET|/wp-config.php||404|block|WordPress config access
+file_discovery|GET|/.git/config||404|block|Git config access
+file_discovery|GET|/backup.sql||404|block|Database backup access
+file_discovery|GET|/database.yml||404|block|Database config access
+file_discovery|GET|/.htaccess||404|block|Apache config access
+file_discovery|GET|/robots.txt||404|block|Robots file access
+file_discovery|GET|/sitemap.xml||404|block|Sitemap access
+file_discovery|GET|/admin/||404|block|Admin directory access
+file_discovery|GET|/phpmyadmin/||404|block|phpMyAdmin access
+file_discovery|GET|/wp-admin/||404|block|WordPress admin access
+
+# HTTP Method Enumeration
+method_enum|PUT|/||405|block|PUT method test
+method_enum|DELETE|/||405|block|DELETE method test
+method_enum|HEAD|/||200|block|HEAD method test
+method_enum|OPTIONS|/||200|block|OPTIONS method test
+method_enum|TRACE|/||405|block|TRACE method test
+method_enum|PATCH|/||405|block|PATCH method test
+
+# Benign Traffic (for comparison)
+benign|GET|/||200|bypass|Normal homepage access
+benign|GET|/rest/products||200|bypass|Normal products API call
+benign|GET|/rest/products/search|q=apple|200|bypass|Normal search query
+benign|POST|/rest/user/login|{"email":"user@test.com","password":"password"}|401|bypass|Normal login attempt
+benign|GET|/rest/products/1||200|bypass|Normal product detail access 

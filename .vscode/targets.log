@@ -1,17 +1,34 @@
 make all --print-data-base --no-builtin-variables --no-builtin-rules --question
-# GNU Make 4.3
-# Built for aarch64-unknown-linux-gnu
-# Copyright (C) 1988-2020 Free Software Foundation, Inc.
-# License GPLv3+: GNU GPL version 3 or later <http://gnu.org/licenses/gpl.html>
-# This is free software: you are free to change and redistribute it.
-# There is NO WARRANTY, to the extent permitted by law.
+make: *** No rule to make target 'all'.  Stop.
 
-# Make data base, printed on Tue Jul 29 13:32:54 2025
+# GNU Make 4.3
+ 
+# Built for aarch64-unknown-linux-gnu
+ 
+# Copyright (C) 1988-2020 Free Software Foundation, Inc.
+ 
+# License GPLv3+: GNU GPL version 3 or later <http://gnu.org/licenses/gpl.html>
+ 
+# This is free software: you are free to change and redistribute it.
+ 
+# There is NO WARRANTY, to the extent permitted by law.
+ 
+
+ 
+# Make data base, printed on Wed Jul 30 11:52:30 2025
+ 
 
 # Variables
+ 
 
+ 
 # environment
+ 
 LC_ALL = C
+# makefile (from 'Makefile', line 9)
+OUTPUT_DIR = $(SCENARIO_DIR)/out/processed
+# makefile (from 'Makefile', line 8)
+LOG_FILE = $(SCENARIO_DIR)/out/nginx/detailed.log
 # environment
 VSCODE_CWD = /home/jiayi
 # default
@@ -29,6 +46,7 @@ PWD = /home/jiayi/SecurityLogs
 # automatic
 %D = $(patsubst %/,%,$(dir $%))
 # environment
+ 
 XDG_DATA_DIRS = /usr/local/share:/usr/share:/var/lib/snapd/desktop
 # automatic
 ^D = $(patsubst %/,%,$(dir $^))
@@ -42,10 +60,11 @@ LANG = C
 .INCLUDE_DIRS = /usr/local/include /usr/include /usr/include
 # makefile
 MAKEFLAGS = pqrR
+# makefile (from 'Makefile', line 15)
+BLUE = \033[0;34m
 # makefile
 CURDIR := /home/jiayi/SecurityLogs
 # environment
- 
 LESSOPEN = | /usr/bin/lesspipe %s
 # automatic
 *D = $(patsubst %/,%,$(dir $*))
@@ -53,8 +72,8 @@ LESSOPEN = | /usr/bin/lesspipe %s
 MFLAGS = -pqrR
 # default
 .SHELLFLAGS := -c
-# makefile (from 'Makefile', line 7)
-SCENARIO = low-and-slow-sqli
+# makefile (from 'Makefile', line 6)
+SCENARIO = securitylogs
 # automatic
 +D = $(patsubst %/,%,$(dir $+))
 # makefile (from 'Makefile', line 1)
@@ -71,6 +90,7 @@ XDG_SESSION_TYPE = tty
 *F = $(notdir $*)
 # environment
 DBUS_SESSION_BUS_ADDRESS = unix:path=/run/user/1000/bus
+ 
 # environment
 SSL_CERT_DIR = /usr/lib/ssl/certs
 # automatic
@@ -99,8 +119,14 @@ MAKEFILES :=
 MOTD_SHOWN = pam
 # automatic
 ^F = $(notdir $^)
+# makefile (from 'Makefile', line 14)
+YELLOW = \033[1;33m
+# makefile (from 'Makefile', line 7)
+SCENARIO_DIR = $(RAS_DIR)/scenario-$(SCENARIO)
 # environment
 SSH_CLIENT = 172.16.218.1 49815 22
+# makefile (from 'Makefile', line 13)
+GREEN = \033[0;32m
 # environment
 LESSCLOSE = /usr/bin/lesspipe %s %s
 # automatic
@@ -115,8 +141,14 @@ GNUMAKEFLAGS :=
 BROWSER = /home/jiayi/.cursor-server/cli/servers/Stable-a8e95743c5268be73767c46944a71f4465d05c90/server/bin/helpers/browser.sh
 # environment
 LOGNAME = jiayi
+# makefile (from 'Makefile', line 16)
+NC = \033[0m 
 # makefile
 .DEFAULT_GOAL := help
+# makefile (from 'Makefile', line 5)
+RAS_DIR = RAS
+# makefile (from 'Makefile', line 12)
+RED = \033[0;31m
 # environment
 USER = jiayi
 # default
@@ -128,7 +160,7 @@ _ = /home/jiayi/.cursor-server/cli/servers/Stable-a8e95743c5268be73767c46944a71f
 # environment
 XDG_RUNTIME_DIR = /run/user/1000
 # environment
-VSCODE_IPC_HOOK_CLI = /run/user/1000/vscode-ipc-617dab26-1bc0-49ce-841e-f53b253ed634.sock
+VSCODE_IPC_HOOK_CLI = /run/user/1000/vscode-ipc-8b24a01e-218b-4e9d-b230-cb81e86cbe43.sock
 # environment
 XDG_SESSION_CLASS = user
 # environment
@@ -150,11 +182,13 @@ VSCODE_ESM_ENTRYPOINT = vs/workbench/api/node/extensionHostProcess
 # environment
 SSH_CONNECTION = 172.16.218.1 49815 172.16.218.130 22
 # variable set hash-table stats:
-# Load=69/1024=7%, Rehash=0, Collisions=2/103=2%
+ 
+# Load=78/1024=8%, Rehash=0, Collisions=2/108=2%
 
 # Pattern-specific Variable Values
 
 # No pattern-specific variable values.
+ 
 
 # Directories
 
@@ -168,187 +202,337 @@ SSH_CONNECTION = 172.16.218.1 49815 172.16.218.130 22
 
 # Files
 
-run-all-variants:
-#  Phony target (prerequisite of .PHONY).
-#  Implicit rule search has not been done.
-#  File does not exist.
-#  File has not been updated.
-#  recipe to execute (from 'Makefile', line 154):
-	@echo "Running all variants with interleaved traffic and network conditions..."
-	@echo "Applying network conditions..."
-	@sudo bash scripts/network/apply_netem.sh
-	@echo "Running all variants with interleaved traffic..."
-	python3 scripts/run_all_variants.py --interleaved $(if $(BENIGN_MIX),--benign-mix $(BENIGN_MIX)) $(if $(BENIGN_DURATION),--benign-duration $(BENIGN_DURATION))
-	@echo "Resetting network conditions..."
-	@sudo bash scripts/network/reset_netem.sh
-
-netem-apply:
-#  Phony target (prerequisite of .PHONY).
-#  Implicit rule search has not been done.
-#  File does not exist.
-#  File has not been updated.
-#  recipe to execute (from 'Makefile', line 129):
-	@echo "Applying network conditions..."
-	bash scripts/network/apply_netem.sh
-
-run-variant:
-#  Phony target (prerequisite of .PHONY).
-#  Implicit rule search has not been done.
-#  File does not exist.
-#  File has not been updated.
-#  recipe to execute (from 'Makefile', line 141):
-	@echo "Running variant with interleaved traffic and network conditions..."
-	@if [ -z "$(VARIANT)" ]; then \
-		echo "Error: VARIANT not specified. Use: make run-variant VARIANT=stealthy"; \
-		exit 1; \
-	fi
-	@echo "Applying network conditions..."
-	@sudo bash scripts/network/apply_netem.sh
-	@echo "Running variant with interleaved traffic..."
-	python3 scripts/run_variant.py $(VARIANT) --interleaved $(if $(BENIGN_MIX),--benign-mix $(BENIGN_MIX)) $(if $(BENIGN_DURATION),--benign-duration $(BENIGN_DURATION))
-	@echo "Resetting network conditions..."
-	@sudo bash scripts/network/reset_netem.sh
-
-clean-all: clean clean-data
+day3-process-sample:
 #  Implicit rule search has not been done.
 #  Modification time never checked.
 #  File has not been updated.
-#  recipe to execute (from 'Makefile', line 108):
-	@echo "Complete cleanup finished!"
+#  recipe to execute (from 'Makefile', line 219):
+	@echo "$(BLUE)Processing logs with sampling...$(NC)"
+	@mkdir -p $(OUTPUT_DIR)
+	@if [ ! -f $(LOG_FILE) ]; then \
+		echo "$(RED)Error: Log file not found: $(LOG_FILE)$(NC)"; \
+		exit 1; \
+	fi
+	@echo "$(GREEN)Processing 50 random log entries...$(NC)"
+	cd $(SCENARIO_DIR) && python3 scripts/log_processor.py out/nginx/detailed.log \
+		--sample 50 \
+		--output-csv out/processed/day3_processed_logs_sample.csv \
+		--output-json out/processed/day3_processed_logs_sample.json
+	@echo "$(GREEN)Log processing completed!$(NC)"
 
-run-variants:
+start:
 #  Phony target (prerequisite of .PHONY).
 #  Implicit rule search has not been done.
 #  File does not exist.
 #  File has not been updated.
-#  recipe to execute (from 'Makefile', line 163):
-	@echo "Running specific variants with interleaved traffic and network conditions..."
-	@if [ -z "$(VARIANTS)" ]; then \
-		echo "Error: VARIANTS not specified. Use: make run-variants VARIANTS='stealthy moderate'"; \
+#  recipe to execute (from 'Makefile', line 74):
+	@echo "$(BLUE)Starting RAS environment (normal mode)...$(NC)"
+	cd $(RAS_DIR) && ./ras.sh $(SCENARIO) start
+
+attack-waf-custom:
+#  Implicit rule search has not been done.
+#  Modification time never checked.
+#  File has not been updated.
+#  recipe to execute (from 'Makefile', line 407):
+	@echo "$(BLUE)Executing custom attack range in WAF mode...$(NC)"
+	@if [ -z "$(START)" ] || [ -z "$(END)" ]; then \
+		echo "$(RED)Usage: make attack-waf-custom START=5 END=10$(NC)"; \
 		exit 1; \
 	fi
-	@echo "Applying network conditions..."
-	@sudo bash scripts/network/apply_netem.sh
-	@echo "Running variants with interleaved traffic..."
-	python3 scripts/run_all_variants.py --variants $(VARIANTS) --interleaved $(if $(BENIGN_MIX),--benign-mix $(BENIGN_MIX)) $(if $(BENIGN_DURATION),--benign-duration $(BENIGN_DURATION))
-	@echo "Resetting network conditions..."
-	@sudo bash scripts/network/reset_netem.sh
+	cd $(RAS_DIR)/scenario-waf && docker-compose run --rm attacker bash -c "bash /attack.sh --start $(START) --end $(END)"
+
+clean-all:
+#  Implicit rule search has not been done.
+#  Modification time never checked.
+#  File has not been updated.
+#  recipe to execute (from 'Makefile', line 285):
+	@echo "$(RED)Cleaning everything...$(NC)"
+	$(MAKE) clean
+	$(MAKE) clean-logs
+
+stats:
+#  Implicit rule search has not been done.
+#  Modification time never checked.
+#  File has not been updated.
+#  recipe to execute (from 'Makefile', line 256):
+	@echo "$(BLUE)Log Statistics:$(NC)"
+	@if [ -f $(LOG_FILE) ]; then \
+		echo "Total log entries: $(shell wc -l < $(LOG_FILE))"; \
+		echo "Attack entries: $(shell grep -c "attacker\|sqlmap\|nmap\|dirb" $(LOG_FILE) || echo "0")"; \
+		echo "Benign entries: $(shell grep -c "Mozilla\|Chrome\|Firefox\|Safari" $(LOG_FILE) || echo "0")"; \
+	else \
+		echo "$(RED)Log file not found: $(LOG_FILE)$(NC)"; \
+	fi
+
+logs-nginx:
+#  Implicit rule search has not been done.
+#  Modification time never checked.
+#  File has not been updated.
+#  recipe to execute (from 'Makefile', line 251):
+	@echo "$(BLUE)Nginx container logs:$(NC)"
+	docker logs -f ras-$(SCENARIO)-nginx-1
+
+day3-process-clean:
+#  Implicit rule search has not been done.
+#  Modification time never checked.
+#  File has not been updated.
+#  recipe to execute (from 'Makefile', line 188):
+	@echo "$(BLUE)Processing logs with clean classification (no rules)...$(NC)"
+	@mkdir -p $(OUTPUT_DIR)
+	@if [ ! -f $(LOG_FILE) ]; then \
+		echo "$(RED)Error: Log file not found: $(LOG_FILE)$(NC)"; \
+		exit 1; \
+	fi
+	@echo "$(GREEN)Processing $(shell wc -l < $(LOG_FILE)) log entries with NO classification rules...$(NC)"
+	cd $(SCENARIO_DIR) && python3 scripts/log_processor_clean.py out/nginx/detailed.log \
+		--output-csv out/processed/day3_clean_processed_logs.csv \
+		--output-json out/processed/day3_clean_processed_logs.json
+	@echo "$(GREEN)Clean log processing completed!$(NC)"
+	@echo "$(YELLOW)Generated files:$(NC)"
+	@ls -la $(OUTPUT_DIR)/
 
 # Not a target:
 Makefile:
 #  Implicit rule search has been done.
-#  Last modified 2025-07-23 19:03:09.589181719
+#  Last modified 2025-07-30 10:27:55.755808843
 #  File has been updated.
 #  Successfully updated.
+
+bridges-info:
+#  Implicit rule search has not been done.
+#  Modification time never checked.
+#  File has not been updated.
+#  recipe to execute (from 'Makefile', line 359):
+	@echo "$(BLUE)Docker bridge networks:$(NC)"
+	@ip link show | grep -E "^[0-9]+: br-" | awk '{print $2}' | sed 's/://'
+	@echo "$(BLUE)Docker networks:$(NC)"
+	@docker network ls
+
+experiment-start:
+#  Implicit rule search has not been done.
+#  Modification time never checked.
+#  File has not been updated.
+#  recipe to execute (from 'Makefile', line 329):
+	@echo "$(BLUE)Starting experiment environment...$(NC)"
+	@sudo $(SCENARIO_DIR)/scripts/experiment_controller.sh --type $(or $(TYPE),attack) --action start
 
 logs:
 #  Phony target (prerequisite of .PHONY).
 #  Implicit rule search has not been done.
 #  File does not exist.
 #  File has not been updated.
-#  recipe to execute (from 'Makefile', line 223):
-	@echo "Showing container logs..."
-	docker-compose -f scenarios/low-and-slow-sqli/docker-compose.yml logs -f
+#  recipe to execute (from 'Makefile', line 121):
+	@echo "$(BLUE)Container Logs:$(NC)"
+	cd $(RAS_DIR) && ./ras.sh $(SCENARIO) logs
 
-up:
+logs-user:
+#  Implicit rule search has not been done.
+#  Modification time never checked.
+#  File has not been updated.
+#  recipe to execute (from 'Makefile', line 247):
+	@echo "$(BLUE)User container logs:$(NC)"
+	docker logs -f ras-$(SCENARIO)-user-1
+
+day2:
 #  Phony target (prerequisite of .PHONY).
 #  Implicit rule search has not been done.
 #  File does not exist.
 #  File has not been updated.
-#  recipe to execute (from 'Makefile', line 112):
-	@echo "Starting containers..."
-	@if [ -f "scenarios/low-and-slow-sqli/docker-compose.yml" ]; then \
-		cd scenarios/low-and-slow-sqli && docker-compose up -d; \
-	else \
-		echo "No docker-compose.yml found in current scenario"; \
-	fi
-
-attack:
-#  Implicit rule search has not been done.
-#  Modification time never checked.
-#  File has not been updated.
-#  recipe to execute (from 'Makefile', line 177):
-	@echo "Running basic SQL injection attack (legacy)..."
-	cd scenarios/low-and-slow-sqli && docker exec securitylogs-attacker python3 /opt/scripts/attack_modules/container_attack.py
-
-# Not a target:
-VARIANT=stealthy:
-#  Implicit rule search has not been done.
-#  Modification time never checked.
-#  File has not been updated.
+#  recipe to execute (from 'Makefile', line 145):
+	@echo "$(BLUE)============================================================$(NC)"
+	@echo "$(BLUE)DAY 2: ATTACK SCRIPT REALIZATION$(NC)"
+	@echo "$(BLUE)============================================================$(NC)"
+	@echo "$(GREEN)Step 1: Ensuring environment is running...$(NC)"
+	$(MAKE) start
+	@echo "$(GREEN)Step 2: Waiting for attack execution...$(NC)"
+	@sleep 90
+	@echo "$(GREEN)Step 3: Checking attack logs...$(NC)"
+	@echo "$(YELLOW)Recent attack logs:$(NC)"
+	@tail -10 $(LOG_FILE) | grep -E "(attacker|sqlmap|nmap|dirb)" || echo "No attack logs found yet"
+	@echo "$(GREEN)Day 2 completed! Attack scripts should be running.$(NC)"
 
 clean:
 #  Phony target (prerequisite of .PHONY).
 #  Implicit rule search has not been done.
 #  File does not exist.
 #  File has not been updated.
-#  recipe to execute (from 'Makefile', line 88):
-	@echo "Cleaning up containers and images..."
-	docker-compose -f scenarios/*/docker-compose.yml down --remove-orphans
-	docker rmi securitylogs-webapp securitylogs-attacker securitylogs-tcpdump securitylogs-dns-server 2>/dev/null || true
-	@echo "Cleanup completed!"
+#  recipe to execute (from 'Makefile', line 98):
+	@echo "$(RED)Cleaning RAS environment and all experiment data...$(NC)"
+	@echo "$(YELLOW)Step 1: Stopping and cleaning containers...$(NC)"
+	cd $(RAS_DIR) && ./ras.sh $(SCENARIO) clean
+	@echo "$(YELLOW)Step 2: Cleaning network captures...$(NC)"
+	@sudo $(SCENARIO_DIR)/scripts/network_capture.sh --clean 2>/dev/null || true
+	@echo "$(YELLOW)Step 3: Removing all experiment results...$(NC)"
+	@rm -rf $(SCENARIO_DIR)/out/results/* 2>/dev/null || true
+	@echo "$(YELLOW)Step 4: Cleaning individual log files...$(NC)"
+	@rm -f $(SCENARIO_DIR)/out/nginx/*.log 2>/dev/null || true
+	@rm -f $(SCENARIO_DIR)/out/attacker/* 2>/dev/null || true
+	@rm -f $(SCENARIO_DIR)/out/user/* 2>/dev/null || true
+	@rm -rf $(OUTPUT_DIR)/* 2>/dev/null || true
+	@echo "$(YELLOW)Step 5: Removing temporary Docker networks...$(NC)"
+	@docker network rm scenario-securitylogs_edge scenario-securitylogs_appnet 2>/dev/null || true
+	@docker network rm ras-securitylogs-edge ras-securitylogs-appnet 2>/dev/null || true
+	@echo "$(GREEN)✅ All experiment data cleaned successfully!$(NC)"
 
-label:
+attack-analyze-normal:
 #  Implicit rule search has not been done.
 #  Modification time never checked.
 #  File has not been updated.
-#  recipe to execute (from 'Makefile', line 182):
-	@echo "Labeling captured traffic..."
-	@echo "Note: log-aggregator has been removed. Use ETL scripts for data processing."
+#  recipe to execute (from 'Makefile', line 444):
+	@echo "$(BLUE)Analyzing attack results in normal mode...$(NC)"
+	@mkdir -p $(SCENARIO_DIR)/out/analysis
+	@python3 $(SCENARIO_DIR)/scripts/audit_analyzer.py attack \
+		--mode normal \
+		--attack-log $(SCENARIO_DIR)/out/attacker/attack.log \
+		--nginx-log $(SCENARIO_DIR)/out/nginx/access.log \
+		--output-dir $(SCENARIO_DIR)/out/analysis/normal_$(shell date +%Y%m%d-%H%M%S)
 
-check-images:
-#  Phony target (prerequisite of .PHONY).
+attack-waf-help:
 #  Implicit rule search has not been done.
-#  Implicit/static pattern stem: ''
-#  File does not exist.
-#  File has been updated.
-#  Needs to be updated (-q is set).
-# automatic
-# @ := check-images
-# automatic
-# * := 
-# automatic
-# < := 
-# automatic
-# + := 
-# automatic
-# % := 
-# automatic
-# ^ := 
-# automatic
-# ? := 
-# automatic
-# | := 
-# variable set hash-table stats:
-# Load=8/32=25%, Rehash=0, Collisions=1/11=9%
-#  recipe to execute (from 'Makefile', line 46):
-	@echo "Checking Docker images..."
-	@if ! docker images | grep -q "securitylogs-webapp"; then \
-		echo "Image securitylogs-webapp not found, will build"; \
-		exit 1; \
-	fi
-	@if ! docker images | grep -q "securitylogs-attacker"; then \
-		echo "Image securitylogs-attacker not found, will build"; \
-		exit 1; \
-	fi
-	@if ! docker images | grep -q "securitylogs-tcpdump"; then \
-		echo "Image securitylogs-tcpdump not found, will build"; \
-		exit 1; \
- 
-	fi
-	@if ! docker images | grep -q "securitylogs-dns-server"; then \
-		echo "Image securitylogs-dns-server not found, will build"; \
-		exit 1; \
-	fi
-	@echo "All Docker images found, skipping build"
+#  Modification time never checked.
+#  File has not been updated.
+#  recipe to execute (from 'Makefile', line 415):
+	@echo "$(BLUE)Attack script help (WAF mode)...$(NC)"
+	cd $(RAS_DIR)/scenario-waf && docker-compose run --rm attacker bash -c "bash /attack.sh --help"
 
-netem: netem-apply
+attack-waf-traversal:
+#  Implicit rule search has not been done.
+#  Modification time never checked.
+#  File has not been updated.
+#  recipe to execute (from 'Makefile', line 403):
+	@echo "$(BLUE)Executing directory traversal attacks in WAF mode (lines 25-30)...$(NC)"
+	cd $(RAS_DIR)/scenario-waf && docker-compose run --rm attacker bash -c "bash /attack.sh --start 25 --end 30"
+
+day3-process:
 #  Phony target (prerequisite of .PHONY).
 #  Implicit rule search has not been done.
 #  File does not exist.
 #  File has not been updated.
-#  recipe to execute (from 'Makefile', line 137):
-	@echo "Network conditions applied"
+#  recipe to execute (from 'Makefile', line 172):
+	@echo "$(BLUE)Processing logs...$(NC)"
+	@mkdir -p $(OUTPUT_DIR)
+	@if [ ! -f $(LOG_FILE) ]; then \
+		echo "$(RED)Error: Log file not found: $(LOG_FILE)$(NC)"; \
+		exit 1; \
+	fi
+	@echo "$(GREEN)Processing $(shell wc -l < $(LOG_FILE)) log entries...$(NC)"
+	cd $(SCENARIO_DIR) && python3 scripts/log_processor.py out/nginx/detailed.log \
+		--output-csv out/processed/day3_processed_logs.csv \
+		--output-json out/processed/day3_processed_logs.json
+	@echo "$(GREEN)Log processing completed!$(NC)"
+	@echo "$(YELLOW)Generated files:$(NC)"
+	@ls -la $(OUTPUT_DIR)/
+
+stop:
+#  Phony target (prerequisite of .PHONY).
+#  Implicit rule search has not been done.
+#  File does not exist.
+#  File has not been updated.
+#  recipe to execute (from 'Makefile', line 82):
+	@echo "$(YELLOW)Stopping RAS environment...$(NC)"
+	cd $(RAS_DIR) && ./ras.sh $(SCENARIO) stop
+
+logs-live:
+#  Phony target (prerequisite of .PHONY).
+#  Implicit rule search has not been done.
+#  File does not exist.
+#  File has not been updated.
+#  recipe to execute (from 'Makefile', line 125):
+	@echo "$(BLUE)Live Logs (Press Ctrl+C to stop):$(NC)"
+	@tail -f $(LOG_FILE)
+
+attack-traversal:
+#  Implicit rule search has not been done.
+#  Modification time never checked.
+#  File has not been updated.
+#  recipe to execute (from 'Makefile', line 374):
+	@echo "$(BLUE)Executing directory traversal attacks (lines 25-30)...$(NC)"
+	cd $(SCENARIO_DIR) && docker-compose run --rm attacker bash -c "bash /attack.sh --start 25 --end 30"
+
+day1:
+#  Phony target (prerequisite of .PHONY).
+#  Implicit rule search has not been done.
+#  File does not exist.
+#  File has not been updated.
+#  recipe to execute (from 'Makefile', line 130):
+	@echo "$(BLUE)============================================================$(NC)"
+	@echo "$(BLUE)DAY 1: DOCKER ENVIRONMENT MIGRATION$(NC)"
+	@echo "$(BLUE)============================================================$(NC)"
+	@echo "$(GREEN)Step 1: Starting RAS environment...$(NC)"
+	$(MAKE) start
+	@echo "$(GREEN)Step 2: Waiting for containers to initialize...$(NC)"
+	@sleep 30
+	@echo "$(GREEN)Step 3: Checking container status...$(NC)"
+	$(MAKE) status
+	@echo "$(GREEN)Step 4: Verifying attack script execution...$(NC)"
+	@sleep 60
+	@echo "$(GREEN)Day 1 completed! Check logs for attack execution.$(NC)"
+
+day3:
+#  Phony target (prerequisite of .PHONY).
+#  Implicit rule search has not been done.
+#  File does not exist.
+#  File has not been updated.
+#  recipe to execute (from 'Makefile', line 159):
+	@echo "$(BLUE)============================================================$(NC)"
+	@echo "$(BLUE)DAY 3: BENIGN TRAFFIC & LOG PROCESSING$(NC)"
+	@echo "$(BLUE)============================================================$(NC)"
+	@echo "$(GREEN)Step 1: Starting environment with benign traffic...$(NC)"
+	$(MAKE) start
+	@echo "$(GREEN)Step 2: Waiting for traffic generation...$(NC)"
+	@sleep 120
+	@echo "$(GREEN)Step 3: Processing logs...$(NC)"
+	$(MAKE) day3-process
+	@echo "$(GREEN)Day 3 completed! Check $(OUTPUT_DIR) for processed data.$(NC)"
+
+attack-all-waf:
+#  Implicit rule search has not been done.
+ 
+#  Modification time never checked.
+#  File has not been updated.
+#  recipe to execute (from 'Makefile', line 432):
+	@echo "$(BLUE)Running all attacks in WAF mode...$(NC)"
+	@echo "$(YELLOW)Step 1: Starting WAF environment...$(NC)"
+	$(MAKE) start-waf
+	@sleep 30
+	@echo "$(YELLOW)Step 2: Executing all attacks...$(NC)"
+	cd $(RAS_DIR)/scenario-waf && docker-compose run --rm attacker bash -c "apt-get update && apt-get install -y curl sqlmap dirb nmap && bash /attack.sh --target http://fancystore.com:8080"
+	@sleep 60
+	@echo "$(YELLOW)Step 3: Stopping WAF environment...$(NC)"
+	$(MAKE) stop-waf
+	@echo "$(GREEN)All attacks completed in WAF mode$(NC)"
+
+experiment-status:
+#  Implicit rule search has not been done.
+#  Modification time never checked.
+#  File has not been updated.
+#  recipe to execute (from 'Makefile', line 337):
+	@echo "$(BLUE)Experiment status...$(NC)"
+	@$(SCENARIO_DIR)/scripts/experiment_controller.sh --type $(or $(TYPE),attack) --action status
+
+start-waf:
+#  Implicit rule search has not been done.
+#  Modification time never checked.
+#  File has not been updated.
+#  recipe to execute (from 'Makefile', line 78):
+	@echo "$(BLUE)Starting RAS environment (WAF mode)...$(NC)"
+	cd $(RAS_DIR) && ./ras.sh waf start
+
+attack-all-normal:
+#  Implicit rule search has not been done.
+#  Modification time never checked.
+#  File has not been updated.
+#  recipe to execute (from 'Makefile', line 420):
+	@echo "$(BLUE)Running all attacks in normal mode...$(NC)"
+	@echo "$(YELLOW)Step 1: Starting normal environment...$(NC)"
+	$(MAKE) start
+	@sleep 30
+	@echo "$(YELLOW)Step 2: Executing all attacks...$(NC)"
+	cd $(SCENARIO_DIR) && docker-compose run --rm attacker bash -c "apt-get update && apt-get install -y curl sqlmap dirb nmap && bash /attack.sh --target http://fancystore.com"
+	@sleep 60
+	@echo "$(YELLOW)Step 3: Stopping environment...$(NC)"
+	$(MAKE) stop
+	@echo "$(GREEN)All attacks completed in normal mode$(NC)"
 
 # Not a target:
 .DEFAULT:
@@ -356,209 +540,386 @@ netem: netem-apply
 #  Modification time never checked.
 #  File has not been updated.
 
-all: build run-all-variants validate-data
-#  Phony target (prerequisite of .PHONY).
-#  Command line target.
+logs-attack-script:
 #  Implicit rule search has not been done.
+#  Modification time never checked.
+#  File has not been updated.
+#  recipe to execute (from 'Makefile', line 291):
+	@echo "$(BLUE)Attack script output log:$(NC)"
+	@if [ -f $(SCENARIO_DIR)/out/attacker/attack.log ]; then \
+		tail -50 $(SCENARIO_DIR)/out/attacker/attack.log; \
+	else \
+		echo "$(RED)Attack log not found$(NC)"; \
+	fi
+
+# Not a target:
+all:
+#  Command line target.
+#  Implicit rule search has been done.
 #  File does not exist.
-#  File has been updated.
-#  Needs to be updated (-q is set).
-# variable set hash-table stats:
-# Load=0/32=0%, Rehash=0, Collisions=0/3=0%
-#  recipe to execute (from 'Makefile', line 208):
-	@echo "Complete attack workflow finished!"
-	@echo "All variants executed with ETL processing"
-	@echo "Check data/processed/ for results"
+#  File has not been updated.
+
+capture-stop:
+#  Implicit rule search has not been done.
+#  Modification time never checked.
+#  File has not been updated.
+#  recipe to execute (from 'Makefile', line 346):
+	@echo "$(BLUE)Stopping network capture...$(NC)"
+	@sudo $(SCENARIO_DIR)/scripts/network_capture.sh --stop
 
 help:
 #  Phony target (prerequisite of .PHONY).
 #  Implicit rule search has not been done.
 #  File does not exist.
 #  File has not been updated.
-#  recipe to execute (from 'Makefile', line 11):
-	@echo "SecurityLogs - Attack Scenario Management"
+#  recipe to execute (from 'Makefile', line 22):
+	@echo "$(BLUE)============================================================$(NC)"
+	@echo "$(BLUE)RAS Security Logs Management Makefile$(NC)"
+	@echo "$(BLUE)============================================================$(NC)"
 	@echo ""
-	@echo "QUICK START (Fully Automated):"
-	@echo "  make all                    # Complete workflow: build + run all variants + validate"
-	@echo "  make variant-complete VARIANT=stealthy  # Single variant complete workflow"
+	@echo "$(GREEN)Environment Management:$(NC)"
+	@echo "  make start          - Start RAS environment"
+	@echo "  make stop           - Stop RAS environment"
+	@echo "  make restart        - Restart RAS environment"
+	@echo "  make clean          - Stop and clean all data"
+	@echo "  make status         - Show container status"
 	@echo ""
-	@echo "CORE COMMANDS:"
-	@echo "  build              - Build all Docker images (with host network)"
-	@echo "  build-clean        - Clean cache and rebuild (fixes network issues)"
-	@echo "  clean              - Clean up containers and images"
-	@echo "  clean-data         - Clean up all experiment data (logs, pcaps, processed)"
-	@echo "  clean-all          - Clean up everything (containers, images, and data)"
-	@echo "  up/down            - Start/stop containers"
+	@echo "$(GREEN)Logging & Monitoring:$(NC)"
+	@echo "  make logs           - Show container logs"
+	@echo "  make logs-live      - Show live logs"
 	@echo ""
-	@echo "EXPERIMENT COMMANDS:"
-	@echo "  run-variant        - Run single variant (with ETL processing)"
-	@echo "  run-all-variants   - Run all variants (with ETL processing)"
-	@echo "  run-variants       - Run specific variants (VARIANTS='stealthy moderate')"
+	@echo "$(GREEN)Day-specific Tasks:$(NC)"
+	@echo "  make day1           - Run Day 1: Docker environment migration"
+	@echo "  make day2           - Run Day 2: Attack script realization"
+	@echo "  make day3           - Run Day 3: Benign traffic & log processing"
+	@echo "  make day3-process    - Process existing logs only"
+	@echo "  make day3-process-clean - Process logs with NO classification rules"
 	@echo ""
-	@echo "DATA COMMANDS:"
-	@echo "  validate-data      - Validate generated datasets"
-	@echo "  show-data          - Show extracted data summary"
+	@echo "$(GREEN)Utility Commands:$(NC)"
+	@echo "  make fix-permissions - Fix file permissions"
+	@echo "  make bridges        - Show available network bridges"
 	@echo ""
-	@echo "MONITORING:"
-	@echo "  logs               - Show container logs"
-	@echo "  status             - Show container status"
+	@echo "$(GREEN)Attack Script Commands:$(NC)"
+	@echo "  make attack-help    - Show attack script help"
+	@echo "  make attack-list    - Show attack scenarios file"
+	@echo "  make attack-sql     - Execute SQL injection attacks (lines 5-12)"
+	@echo "  make attack-xss     - Execute XSS attacks (lines 15-20)"
+	@echo "  make attack-traversal - Execute traversal attacks (lines 25-30)"
+	@echo "  make attack-custom  - Execute custom range (START=5 END=10)"
 	@echo ""
-	@echo "EXAMPLES:"
-	@echo "  make all                                    # Complete automated workflow"
-	@echo "  make variant-complete VARIANT=stealthy     # Single variant workflow"
-	@echo "  make run-variant VARIANT=moderate          # Run specific variant"
-	@echo "  make validate-data                         # Check data quality"
+	@echo "$(GREEN)WAF Mode Commands:$(NC)"
+	@echo "  make start-waf      - Start environment in WAF mode"
+	@echo "  make stop-waf       - Stop WAF environment"
+	@echo "  make restart-waf    - Restart WAF environment"
+	@echo "  make attack-waf-sql - Execute SQL injection attacks in WAF mode"
+	@echo "  make attack-waf-xss - Execute XSS attacks in WAF mode"
+	@echo "  make attack-waf-custom - Execute custom range in WAF mode (START=5 END=10)"
+	@echo ""
+	@echo "$(GREEN)Attack Analysis Commands:$(NC)"
+	@echo "  make attack-all-normal - Run all attacks in normal mode"
+	@echo "  make attack-all-waf    - Run all attacks in WAF mode"
+	@echo "  make attack-analyze-normal - Analyze normal mode attack results"
+	@echo "  make attack-analyze-waf    - Analyze WAF mode attack results"
+	@echo "  make attack-full-test     - Complete test (both modes + analysis)"
+	@echo ""
 
-build: check-images
-#  Phony target (prerequisite of .PHONY).
-#  Implicit rule search has not been done.
-#  File does not exist.
-#  File has been updated.
-#  Needs to be updated (-q is set).
-# variable set hash-table stats:
-# Load=0/32=0%, Rehash=0, Collisions=0/3=0%
-#  recipe to execute (from 'Makefile', line 67):
-	@echo "Building Docker images with host network..."
-	docker build --network=host -t securitylogs-webapp containers/webapp
-	docker build --network=host -t securitylogs-attacker containers/attacker
-	docker build --network=host -t securitylogs-tcpdump containers/tcpdump
-	docker build --network=host -t securitylogs-dns-server containers/dns-server
-	@echo "Build completed!"
-
-netem-reset:
-#  Phony target (prerequisite of .PHONY).
-#  Implicit rule search has not been done.
-#  File does not exist.
-#  File has not been updated.
-#  recipe to execute (from 'Makefile', line 133):
-	@echo "Resetting network conditions..."
-	bash scripts/network/reset_netem.sh
-
-clean-data:
+logs-attacker:
 #  Implicit rule search has not been done.
 #  Modification time never checked.
 #  File has not been updated.
-#  recipe to execute (from 'Makefile', line 95):
-	@echo "Cleaning up all experiment data..."
-	@echo "Removing logs..."
-	rm -rf data/logs/*
-	@echo "Removing PCAP files..."
-	rm -rf data/pcaps/*
-	@echo "Removing DNS logs..."
-	rm -rf data/dns_logs/*
-	@echo "Removing processed data..."
-	rm -rf data/processed/*
-	@echo "Data cleanup completed!"
+#  recipe to execute (from 'Makefile', line 243):
+	@echo "$(BLUE)Attacker container logs:$(NC)"
+	docker logs -f ras-$(SCENARIO)-attacker-1
 
-show-data:
+restart:
 #  Phony target (prerequisite of .PHONY).
 #  Implicit rule search has not been done.
 #  File does not exist.
 #  File has not been updated.
-#  recipe to execute (from 'Makefile', line 203):
-	@echo "Showing extracted data summary..."
-	python3 scripts/show_extracted_data.py --summary
+#  recipe to execute (from 'Makefile', line 90):
+	@echo "$(BLUE)Restarting RAS environment...$(NC)"
+	cd $(RAS_DIR) && ./ras.sh $(SCENARIO) restart
 
-sqli-quick: build up run-variant VARIANT=stealthy
+clean-logs:
 #  Implicit rule search has not been done.
 #  Modification time never checked.
 #  File has not been updated.
-#  recipe to execute (from 'Makefile', line 219):
-	@echo "SQL injection scenario completed!"
+#  recipe to execute (from 'Makefile', line 278):
+	@echo "$(YELLOW)Cleaning log files...$(NC)"
+	@rm -f $(SCENARIO_DIR)/out/nginx/*.log
+	@rm -f $(SCENARIO_DIR)/out/attacker/*
+	@rm -f $(SCENARIO_DIR)/out/user/*
+	@rm -rf $(OUTPUT_DIR)/*
 
-validate-data:
-#  Phony target (prerequisite of .PHONY).
+attack-waf-xss:
 #  Implicit rule search has not been done.
-#  File does not exist.
+#  Modification time never checked.
 #  File has not been updated.
-#  recipe to execute (from 'Makefile', line 187):
-	@echo "Validating generated datasets..."
-	@echo "Checking for unified datasets..."
-	@for variant in stealthy moderate aggressive; do \
-		if [ -f "data/processed/lowscan_$${variant}/unified/unified_dataset.csv" ]; then \
-			echo "[OK] Unified dataset found for $$variant"; \
-		else \
-			echo "[MISSING] Unified dataset missing for $$variant"; \
-		fi; \
-		if [ -f "data/processed/lowscan_$${variant}/unified/simplified_view.csv" ]; then \
-			echo "[OK] Simplified view found for $$variant"; \
-		else \
-			echo "[MISSING] Simplified view missing for $$variant"; \
-		fi; \
-	done
+#  recipe to execute (from 'Makefile', line 399):
+	@echo "$(BLUE)Executing XSS attacks in WAF mode (lines 15-20)...$(NC)"
+	cd $(RAS_DIR)/scenario-waf && docker-compose run --rm attacker bash -c "bash /attack.sh --start 15 --end 20"
+
+attack-full-test:
+#  Implicit rule search has not been done.
+#  Modification time never checked.
+#  File has not been updated.
+#  recipe to execute (from 'Makefile', line 463):
+	@echo "$(BLUE)Running complete attack test (both modes)...$(NC)"
+	@echo "$(YELLOW)Phase 1: Normal mode attacks...$(NC)"
+	$(MAKE) attack-all-normal
+	@echo "$(YELLOW)Phase 2: WAF mode attacks...$(NC)"
+	$(MAKE) attack-all-waf
+	@echo "$(YELLOW)Phase 3: Analyzing results...$(NC)"
+	$(MAKE) attack-analyze-normal
+	$(MAKE) attack-analyze-waf
+	@echo "$(GREEN)Complete attack test finished!$(NC)"
+	@echo "$(BLUE)Check analysis directories for detailed reports$(NC)"
+
+logs-benign:
+#  Implicit rule search has not been done.
+#  Modification time never checked.
+#  File has not been updated.
+#  recipe to execute (from 'Makefile', line 307):
+	@echo "$(BLUE)Benign traffic log:$(NC)"
+	@if [ -f $(SCENARIO_DIR)/out/user/benign_traffic.log ]; then \
+		tail -20 $(SCENARIO_DIR)/out/user/benign_traffic.log; \
+	else \
+		echo "$(RED)Benign traffic log not found$(NC)"; \
+	fi
+
+experiment-benign:
+#  Implicit rule search has not been done.
+#  Modification time never checked.
+#  File has not been updated.
+#  recipe to execute (from 'Makefile', line 320):
+	@echo "$(BLUE)Running benign experiment...$(NC)"
+	@sudo $(SCENARIO_DIR)/scripts/experiment_controller.sh --name benign-$(shell date +%Y%m%d-%H%M%S) --type benign --action run --duration 300
+
+capture-start:
+#  Implicit rule search has not been done.
+#  Modification time never checked.
+#  File has not been updated.
+#  recipe to execute (from 'Makefile', line 342):
+	@echo "$(BLUE)Starting network capture...$(NC)"
+	@sudo $(SCENARIO_DIR)/scripts/network_capture.sh --start $(shell date +%Y%m%d-%H%M%S)
+
+attack-custom:
+#  Implicit rule search has not been done.
+#  Modification time never checked.
+#  File has not been updated.
+#  recipe to execute (from 'Makefile', line 378):
+	@echo "$(BLUE)Executing custom attack range...$(NC)"
+	@if [ -z "$(START)" ] || [ -z "$(END)" ]; then \
+		echo "$(RED)Usage: make attack-custom START=5 END=10$(NC)"; \
+		exit 1; \
+	fi
+	cd $(SCENARIO_DIR) && docker-compose run --rm attacker bash -c "bash /attack.sh --start $(START) --end $(END)"
+
+attack-xss:
+#  Implicit rule search has not been done.
+#  Modification time never checked.
+#  File has not been updated.
+#  recipe to execute (from 'Makefile', line 370):
+	@echo "$(BLUE)Executing XSS attacks (lines 15-20)...$(NC)"
+	cd $(SCENARIO_DIR) && docker-compose run --rm attacker bash -c "bash /attack.sh --start 15 --end 20"
+
+dev-restart:
+#  Implicit rule search has not been done.
+#  Modification time never checked.
+#  File has not been updated.
+#  recipe to execute (from 'Makefile', line 267):
+	@echo "$(BLUE)Development restart (quick)...$(NC)"
+	$(MAKE) stop
+	@sleep 5
+	$(MAKE) start
+
+attack-help:
+#  Implicit rule search has not been done.
+#  Modification time never checked.
+#  File has not been updated.
+#  recipe to execute (from 'Makefile', line 386):
+	@echo "$(BLUE)Attack script help...$(NC)"
+	cd $(SCENARIO_DIR) && docker-compose run --rm attacker bash -c "bash /attack.sh --help"
+
+attack-list:
+#  Implicit rule search has not been done.
+#  Modification time never checked.
+#  File has not been updated.
+#  recipe to execute (from 'Makefile', line 390):
+	@echo "$(BLUE)Attack scenarios file content...$(NC)"
+	@cat $(SCENARIO_DIR)/confs/attacker/attack_scripts/attacks.txt
+
+attack-analyze-waf:
+#  Implicit rule search has not been done.
+#  Modification time never checked.
+#  File has not been updated.
+#  recipe to execute (from 'Makefile', line 453):
+	@echo "$(BLUE)Analyzing attack results in WAF mode...$(NC)"
+	@mkdir -p $(RAS_DIR)/scenario-waf/out/analysis
+	@python3 $(SCENARIO_DIR)/scripts/audit_analyzer.py attack \
+		--mode waf \
+		--attack-log $(RAS_DIR)/scenario-waf/out/waf/attacker/attack.log \
+		--nginx-log $(RAS_DIR)/scenario-waf/out/waf/nginx/access.log \
+		--modsec-log $(RAS_DIR)/scenario-waf/out/waf/modsecurity/audit.log \
+		--output-dir $(RAS_DIR)/scenario-waf/out/analysis/waf_$(shell date +%Y%m%d-%H%M%S)
+
+restart-waf:
+#  Implicit rule search has not been done.
+#  Modification time never checked.
+#  File has not been updated.
+#  recipe to execute (from 'Makefile', line 94):
+	@echo "$(BLUE)Restarting RAS environment (WAF mode)...$(NC)"
+	cd $(RAS_DIR) && ./ras.sh waf restart
+
+attack-sql:
+#  Implicit rule search has not been done.
+#  Modification time never checked.
+#  File has not been updated.
+#  recipe to execute (from 'Makefile', line 366):
+	@echo "$(BLUE)Executing SQL injection attacks (lines 5-12)...$(NC)"
+ 
+	cd $(SCENARIO_DIR) && docker-compose run --rm attacker bash -c "bash /attack.sh --start 5 --end 12"
+
+experiment-stop:
+#  Implicit rule search has not been done.
+#  Modification time never checked.
+#  File has not been updated.
+#  recipe to execute (from 'Makefile', line 333):
+	@echo "$(BLUE)Stopping experiment environment...$(NC)"
+	@sudo $(SCENARIO_DIR)/scripts/experiment_controller.sh --type $(or $(TYPE),attack) --action stop
+
+dev-logs:
+#  Implicit rule search has not been done.
+#  Modification time never checked.
+#  File has not been updated.
+#  recipe to execute (from 'Makefile', line 273):
+	@echo "$(BLUE)Development logs (all containers)...$(NC)"
+	docker-compose -f $(SCENARIO_DIR)/docker-compose.yml logs -f
+
+capture-clean:
+#  Implicit rule search has not been done.
+#  Modification time never checked.
+#  File has not been updated.
+#  recipe to execute (from 'Makefile', line 354):
+	@echo "$(BLUE)Cleaning network captures...$(NC)"
+	@sudo $(SCENARIO_DIR)/scripts/network_capture.sh --clean
+
+experiment-mixed:
+#  Implicit rule search has not been done.
+#  Modification time never checked.
+#  File has not been updated.
+#  recipe to execute (from 'Makefile', line 324):
+	@echo "$(BLUE)Running mixed experiment...$(NC)"
+	@sudo $(SCENARIO_DIR)/scripts/experiment_controller.sh --name mixed-$(shell date +%Y%m%d-%H%M%S) --type mixed --action run --duration 900
+
+capture-list:
+ 
+#  Implicit rule search has not been done.
+ 
+#  Modification time never checked.
+#  File has not been updated.
+#  recipe to execute (from 'Makefile', line 350):
+	@echo "$(BLUE)Listing network captures...$(NC)"
+	@$(SCENARIO_DIR)/scripts/network_capture.sh --list
 
 status:
 #  Phony target (prerequisite of .PHONY).
 #  Implicit rule search has not been done.
 #  File does not exist.
 #  File has not been updated.
-#  recipe to execute (from 'Makefile', line 228):
-	@echo "Container status:"
-	docker-compose -f scenarios/low-and-slow-sqli/docker-compose.yml ps
+#  recipe to execute (from 'Makefile', line 116):
+	@echo "$(BLUE)Container Status:$(NC)"
+	docker ps --filter "name=ras-$(SCENARIO)" --format "table {{.Names}}\t{{.Status}}\t{{.Ports}}"
 
-build-clean:
-#  Phony target (prerequisite of .PHONY).
+experiment-attack:
 #  Implicit rule search has not been done.
-#  File does not exist.
+#  Modification time never checked.
 #  File has not been updated.
-#  recipe to execute (from 'Makefile', line 76):
-	@echo "Cleaning Docker cache and building images..."
-	docker system prune -a -f
-	docker builder prune -a -f
-	@echo "Cache cleaned, building images with host network..."
-	docker build --network=host -t securitylogs-webapp containers/webapp
-	docker build --network=host -t securitylogs-attacker containers/attacker
-	docker build --network=host -t securitylogs-tcpdump containers/tcpdump
-	docker build --network=host -t securitylogs-dns-server containers/dns-server
-	@echo "Build completed!"
+#  recipe to execute (from 'Makefile', line 316):
+	@echo "$(BLUE)Running attack experiment...$(NC)"
+	@sudo $(SCENARIO_DIR)/scripts/experiment_controller.sh --name attack-$(shell date +%Y%m%d-%H%M%S) --type attack --action run --duration 600
 
-variant-complete: build run-variant validate-data
-#  Phony target (prerequisite of .PHONY).
-#  Implicit rule search has not been done.
-#  File does not exist.
-#  File has not been updated.
-#  recipe to execute (from 'Makefile', line 214):
-	@echo "Single variant workflow completed!"
-	@echo "Variant $(VARIANT) executed with ETL processing"
-
-# Not a target:
-.SUFFIXES:
+.PHONY: help start stop restart logs clean day1 day2 day3 day3-process logs-live status
 #  Implicit rule search has not been done.
 #  Modification time never checked.
 #  File has not been updated.
 
-.PHONY: help build build-clean clean up down run-variant run-all-variants run-variants logs status validate-data show-data variant-complete all netem netem-apply netem-reset check-images
+day3-process-limit:
 #  Implicit rule search has not been done.
 #  Modification time never checked.
 #  File has not been updated.
+#  recipe to execute (from 'Makefile', line 204):
+	@echo "$(BLUE)Processing logs with limit...$(NC)"
+	@mkdir -p $(OUTPUT_DIR)
+	@if [ ! -f $(LOG_FILE) ]; then \
+		echo "$(RED)Error: Log file not found: $(LOG_FILE)$(NC)"; \
+		exit 1; \
+	fi
+	@echo "$(GREEN)Processing first 100 log entries...$(NC)"
+	cd $(SCENARIO_DIR) && python3 scripts/log_processor.py out/nginx/detailed.log \
+		--limit 100 \
+		--output-csv out/processed/day3_processed_logs_100.csv \
+		--output-json out/processed/day3_processed_logs_100.json
+	@echo "$(GREEN)Log processing completed!$(NC)"
 
-down:
-#  Phony target (prerequisite of .PHONY).
+attack-waf-sql:
 #  Implicit rule search has not been done.
-#  File does not exist.
+#  Modification time never checked.
 #  File has not been updated.
-#  recipe to execute (from 'Makefile', line 120):
-	@echo "Stopping containers..."
-	@if [ -f "scenarios/low-and-slow-sqli/docker-compose.yml" ]; then \
-		cd scenarios/low-and-slow-sqli && docker-compose down; \
+#  recipe to execute (from 'Makefile', line 395):
+	@echo "$(BLUE)Executing SQL injection attacks in WAF mode (lines 5-12)...$(NC)"
+	cd $(RAS_DIR)/scenario-waf && docker-compose run --rm attacker bash -c "bash /attack.sh --start 5 --end 12"
+
+logs-network:
+#  Implicit rule search has not been done.
+#  Modification time never checked.
+#  File has not been updated.
+#  recipe to execute (from 'Makefile', line 299):
+	@echo "$(BLUE)Network capture files:$(NC)"
+	@if [ -d $(SCENARIO_DIR)/out/network ]; then \
+		ls -la $(SCENARIO_DIR)/out/network/; \
 	else \
-		echo "No docker-compose.yml found in current scenario"; \
+		echo "$(RED)Network capture directory not found$(NC)"; \
 	fi
 
+stop-waf:
+#  Implicit rule search has not been done.
+#  Modification time never checked.
+#  File has not been updated.
+#  recipe to execute (from 'Makefile', line 86):
+	@echo "$(YELLOW)Stopping RAS environment (WAF mode)...$(NC)"
+	cd $(RAS_DIR) && ./ras.sh waf stop
+
+fix-permissions:
+#  Implicit rule search has not been done.
+#  Modification time never checked.
+#  File has not been updated.
+#  recipe to execute (from 'Makefile', line 234):
+	@echo "$(BLUE)Fixing file permissions...$(NC)"
+	cd $(RAS_DIR) && ./ras.sh $(SCENARIO) fix-permissions
+
+bridges:
+#  Implicit rule search has not been done.
+#  Modification time never checked.
+#  File has not been updated.
+#  recipe to execute (from 'Makefile', line 238):
+	@echo "$(BLUE)Available network bridges:$(NC)"
+	cd $(RAS_DIR) && ./ras.sh $(SCENARIO) bridges
+
 # files hash-table stats:
-# Load=29/1024=3%, Rehash=0, Collisions=2/92=2%
+# Load=63/1024=6%, Rehash=0, Collisions=1/97=1%
 # VPATH Search Paths
 
 # No 'vpath' search paths.
 
 # No general ('VPATH' variable) search path.
 
-# strcache buffers: 1 (0) / strings = 41 / storage = 374 B / avg = 9 B
-# current buf: size = 8162 B / used = 374 B / count = 41 / avg = 9 B
+# strcache buffers: 1 (0) / strings = 75 / storage = 881 B / avg = 11 B
+# current buf: size = 8162 B / used = 881 B / count = 75 / avg = 11 B
 
-# strcache performance: lookups = 104 / hit rate = 60%
+# strcache performance: lookups = 150 / hit rate = 50%
 # hash-table stats:
-# Load=41/8192=1%, Rehash=0, Collisions=1/104=1%
-# Finished Make data base on Tue Jul 29 13:32:54 2025
+# Load=75/8192=1%, Rehash=0, Collisions=0/150=0%
+# Finished Make data base on Wed Jul 30 11:52:30 2025
 
  

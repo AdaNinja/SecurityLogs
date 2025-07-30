@@ -1,25 +1,35 @@
+version: '3.8'
+
 services:
   nginx:
     image: nginx:alpine
     hostname: fancystore.com
+    ports:
+      - "80:80"
     networks:
       edge:
         aliases:
           - fancystore.com
       appnet: {}
-    #ports:
-    #  - "8080:80"       # expose nginx on port 8080
     volumes:
       - ./confs/nginx/:/etc/nginx/
-      - ./out/nginx/:/var/log/nginx
+      - ./out/${MODE:-mixed}/nginx/:/var/log/nginx
     depends_on:
       - web
+    profiles:
+      - attack-only
+      - benign-only
+      - mixed
 
   web:
     image: bkimminich/juice-shop:latest
     networks: [appnet]
     expose:
       - "3000"        # only visible inside appnet
+    profiles:
+      - attack-only
+      - benign-only
+      - mixed
 
   attacker:
     image: kalilinux/kali-rolling:latest
@@ -29,14 +39,17 @@ services:
       - TARGET_PORT=80
       - ATTACK_TYPE=sql_injection
       - ATTACK_PHASE=automated
+      - WAF_MODE=${WAF_MODE:-disabled}
     volumes:
       - ./confs/attacker/attack.sh:/attack.sh:ro
       - ./confs/attacker/attack_scripts/:/opt/scripts/:ro
-      - ./out/attacker/:/opt/output/
-      - ./out/logs/:/opt/logs/
+      - ./out/${MODE:-mixed}/attacker/:/opt/output/
+      - ./out/${MODE:-mixed}/attacker/:/log
     depends_on:
       - nginx
-    command: ["bash", "-c", "apt-get update && apt-get install -y python3 python3-pip curl wget python3-requests python3-dnspython nmap dirb git sqlmap slowhttptest && bash /attack.sh --target http://fancystore.com"]
+    profiles:
+      - attack-only
+      - mixed
 
   user:
     image: python:3.9-alpine
@@ -44,15 +57,20 @@ services:
     environment:
       - TARGET_HOST=fancystore.com
       - TARGET_PORT=80
+      - WAF_MODE=${WAF_MODE:-disabled}
     volumes:
       - ./confs/user/benign_enhanced.py:/benign_enhanced.py:ro
-      - ./out/user/:/opt/output/
+      - ./out/${MODE:-mixed}/user/:/opt/output/
     depends_on:
       - nginx
-    command: ["sh", "-c", "pip install requests && python /benign_enhanced.py http://fancystore.com"]
+    profiles:
+      - benign-only
+      - mixed
 
 networks:
   edge:
     driver: bridge
+    name: ras-vanilla-edge
   appnet:
     driver: bridge
+    name: ras-vanilla-appnet

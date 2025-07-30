@@ -1,0 +1,113 @@
+# Attack Scenarios Configuration File
+# Format: type|method|path|data|expected|waf_mode|description
+# WAF modes: block (should be blocked by WAF), bypass (should bypass WAF)
+
+# =============================================================================
+# SQL Injection Attacks (Block Mode)
+# =============================================================================
+sql_injection|POST|/rest/user/login|{"email":"admin' OR '1'='1","password":"test"}|401|block|Basic SQL injection with OR condition
+sql_injection|POST|/rest/user/login|{"email":"admin' --","password":"test"}|401|block|SQL injection with comment
+sql_injection|POST|/rest/user/login|{"email":"' UNION SELECT 1,2,3--","password":"test"}|401|block|SQL injection with UNION SELECT
+sql_injection|POST|/rest/user/login|{"email":"admin'/*","password":"test"}|401|block|SQL injection with block comment
+sql_injection|POST|/rest/user/login|{"email":"'; DROP TABLE users--","password":"test"}|401|block|SQL injection with DROP TABLE
+sql_injection|POST|/rest/user/login|{"email":"' AND (SELECT COUNT(*) FROM users)>0--","password":"test"}|401|block|SQL injection with subquery
+sql_injection|POST|/rest/user/login|{"email":"' AND (SELECT SLEEP(3))--","password":"test"}|401|block|SQL injection with time-based blind
+sql_injection|POST|/rest/user/login|{"email":"' AND UPDATEXML(1,CONCAT(0x7e,(SELECT @@version),0x7e),1)--","password":"test"}|401|block|SQL injection with error-based
+
+# =============================================================================
+# SQL Injection Attacks (Bypass Mode - WAF Evasion Techniques)
+# =============================================================================
+sql_injection|POST|/rest/user/login|{"email":"admin' AnD/**/1=1--","password":"test"}|401|bypass|Obfuscated AND condition with comments
+sql_injection|POST|/rest/user/login|{"email":"admin'%20OR%201=1--","password":"test"}|401|bypass|URL-encoded SQL injection
+sql_injection|POST|/rest/user/login|{"email":"admin'%0AOR%0A1=1--","password":"test"}|401|bypass|Newline-encoded SQL injection
+sql_injection|POST|/rest/user/login|{"email":"admin'%09OR%091=1--","password":"test"}|401|bypass|Tab-encoded SQL injection
+sql_injection|POST|/rest/user/login|{"email":"admin'%0D%0AOR%0D%0A1=1--","password":"test"}|401|bypass|CRLF-encoded SQL injection
+sql_injection|POST|/rest/user/login|{"email":"admin'%0COR%0C1=1--","password":"test"}|401|bypass|Form-feed encoded SQL injection
+
+# =============================================================================
+# XSS (Cross-Site Scripting) Attacks (Block Mode)
+# =============================================================================
+xss|GET|/rest/products/search?q=<script>alert('XSS')</script>||200|block|Basic XSS with script tag
+xss|GET|/rest/products/search?q=<img src=x onerror=alert('XSS')>||200|block|XSS with img onerror
+xss|GET|/rest/products/search?q=javascript:alert('XSS')||200|block|XSS with javascript protocol
+xss|GET|/rest/products/search?q=<svg onload=alert('XSS')>||200|block|XSS with SVG onload
+xss|GET|/rest/products/search?q='"><script>alert('XSS')</script>||200|block|XSS with quote breaking
+xss|GET|/rest/products/search?q=<iframe src=javascript:alert('XSS')>||200|block|XSS with iframe
+
+# =============================================================================
+# XSS (Cross-Site Scripting) Attacks (Bypass Mode - WAF Evasion)
+# =============================================================================
+xss|GET|/rest/products/search?q=<ScRiPt>alert('XSS')</ScRiPt>||200|bypass|Case-mixed XSS
+xss|GET|/rest/products/search?q=<script%20src=x%20onerror=alert('XSS')>||200|bypass|URL-encoded XSS
+xss|GET|/rest/products/search?q=<script/**/src=x/**/onerror=alert('XSS')>||200|bypass|Comment-obfuscated XSS
+xss|GET|/rest/products/search?q=<script>eval(String.fromCharCode(97,108,101,114,116,40,39,88,83,83,39,41))</script>||200|bypass|CharCode-encoded XSS
+xss|GET|/rest/products/search?q=<script>setTimeout('alert(\"XSS\")',100)</script>||200|bypass|setTimeout XSS
+xss|GET|/rest/products/search?q=<script>Function('alert(\"XSS\")')()</script>||200|bypass|Function constructor XSS
+
+# =============================================================================
+# Directory Traversal Attacks (Juice Shop Specific Endpoints)
+# =============================================================================
+traversal|GET|/assetsPublic/download?fileName=../../../../etc/passwd||200|block|Directory traversal via download endpoint
+traversal|GET|/assetsPublic/download?fileName=..%2F..%2F..%2F..%2Fetc%2Fpasswd||200|block|URL-encoded traversal
+traversal|GET|/assetsPublic/download?fileName=..%252f..%252f..%252f..%252fetc%252fpasswd||200|block|Double URL-encoded traversal
+traversal|GET|/assetsPublic/download?fileName=..%c0%af..%c0%af..%c0%af..%c0%afetc%c0%afpasswd||200|block|UTF-8 encoded traversal
+traversal|GET|/assetsPublic/download?fileName=....//....//....//etc/passwd||200|block|Double dot traversal
+traversal|GET|/assetsPublic/download?fileName=..\\..\\..\\..\\windows\\system32\\drivers\\etc\\hosts||200|block|Windows path traversal
+
+# =============================================================================
+# Command Injection Attacks
+# =============================================================================
+cmd_injection|POST|/rest/user/login|{"email":"admin; ls -la","password":"test"}|401|block|Command injection with semicolon
+cmd_injection|POST|/rest/user/login|{"email":"admin && whoami","password":"test"}|401|block|Command injection with AND
+cmd_injection|POST|/rest/user/login|{"email":"admin | cat /etc/passwd","password":"test"}|401|block|Command injection with pipe
+cmd_injection|POST|/rest/user/login|{"email":"admin`id`","password":"test"}|401|block|Command injection with backticks
+cmd_injection|POST|/rest/user/login|{"email":"admin$(whoami)","password":"test"}|401|block|Command injection with subshell
+cmd_injection|POST|/rest/user/login|{"email":"admin%3B ls -la","password":"test"}|401|block|URL encoded command injection
+
+# =============================================================================
+# Authentication Bypass Attacks (Block Mode)
+# =============================================================================
+auth_bypass|POST|/rest/user/login|{"email":"admin","password":"admin"}|401|block|Common admin credentials
+auth_bypass|POST|/rest/user/login|{"email":"admin","password":"password"}|401|block|Default password
+auth_bypass|POST|/rest/user/login|{"email":"admin","password":"123456"}|401|block|Weak password
+auth_bypass|POST|/rest/user/login|{"email":"root","password":"root"}|401|block|Root credentials
+auth_bypass|POST|/rest/user/login|{"email":"administrator","password":"admin"}|401|block|Administrator credentials
+auth_bypass|POST|/rest/user/login|{"email":"test","password":"test"}|401|block|Test credentials
+
+# =============================================================================
+# Authentication Bypass Attacks (Bypass Mode - Encoding Techniques)
+# =============================================================================
+auth_bypass|POST|/rest/user/login|{"email":"admin","password":"pa%73%73word"}|401|bypass|URL-encoded credentials
+auth_bypass|POST|/rest/user/login|{"email":"admin","password":"p%61ssw%6frd"}|401|bypass|Hex-encoded credentials
+auth_bypass|POST|/rest/user/login|{"email":"admin","password":"p%u0061ssw%u006frd"}|401|bypass|Unicode-encoded credentials
+auth_bypass|POST|/rest/user/login|{"email":"admin","password":"p%00assw%00ord"}|401|bypass|Null-byte encoded credentials
+auth_bypass|POST|/rest/user/login|{"email":"admin","password":"p%0aassw%0aord"}|401|bypass|Newline-encoded credentials
+auth_bypass|POST|/rest/user/login|{"email":"admin","password":"p%0dassw%0dord"}|401|bypass|CR-encoded credentials
+
+# =============================================================================
+# Sensitive File Discovery (Juice Shop Specific)
+# =============================================================================
+file_discovery|GET|/.env||200|block|Environment file access
+file_discovery|GET|/config.php||200|block|Configuration file access
+file_discovery|GET|/wp-config.php||200|block|WordPress config access
+file_discovery|GET|/.git/config||200|block|Git config access
+file_discovery|GET|/backup.sql||200|block|Database backup access
+file_discovery|GET|/database.yml||200|block|Database config access
+file_discovery|GET|/.htaccess||200|block|Apache config access
+file_discovery|GET|/robots.txt||200|block|Robots file access
+file_discovery|GET|/sitemap.xml||200|block|Sitemap access
+file_discovery|GET|/admin/||200|block|Admin directory access
+file_discovery|GET|/phpmyadmin/||200|block|phpMyAdmin access
+file_discovery|GET|/wp-admin/||200|block|WordPress admin access
+
+# =============================================================================
+# HTTP Method Enumeration
+# =============================================================================
+method_enum|PUT|/||200|block|PUT method test
+method_enum|DELETE|/||200|block|DELETE method test
+method_enum|HEAD|/||200|block|HEAD method test
+method_enum|OPTIONS|/||200|block|OPTIONS method test
+method_enum|TRACE|/||200|block|TRACE method test
+method_enum|PATCH|/||200|block|PATCH method test
+
+ 

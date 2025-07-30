@@ -23,29 +23,48 @@ services:
       MODSEC_AUDIT_LOG: /var/log/modsecurity/audit.log
     volumes:
       - ./confs/waf/:/etc/modsecurity/
-      - ./out/nginx/:/var/log/nginx
-      - ./out/waf/:/var/log/modsecurity
+      - ./out/waf/nginx/:/var/log/nginx
+      - ./out/waf/modsecurity/:/var/log/modsecurity
     depends_on:
       - web
 
   attacker:
-    image: linuxserver/kali-linux:latest 
+    image: kalilinux/kali-rolling:latest
     networks: [edge]
-    entrypoint: ["bash", "/attack.sh", "--target", "http://fancystore.com:8080"]
+    environment:
+      - TARGET_HOST=fancystore.com
+      - TARGET_PORT=8080
+      - ATTACK_TYPE=sql_injection
+      - ATTACK_PHASE=automated
+      - WAF_MODE=enabled
     volumes:
       - ./confs/attacker/attack.sh:/attack.sh:ro
+      - ./confs/attacker/attack_scripts/:/opt/scripts/:ro
+      - ./out/waf/attacker/:/opt/output/
+      - ./out/waf/logs/:/opt/logs/
+      - ./out/waf/attacker/:/log
     depends_on:
       - nginx-waf
+    command: ["bash", "-c", "apt-get update && apt-get install -y python3 python3-pip curl wget python3-requests python3-dnspython nmap dirb git sqlmap slowhttptest tcpdump && bash /attack.sh --target http://fancystore.com:8080"]
 
-  shopper:
-    image: alpine:latest
+  user:
+    image: python:3.9-alpine
     networks: [edge]
-    entrypoint: ["sh", "/benign.sh", "--target", "http://fancystore.com:8080"]
+    environment:
+      - TARGET_HOST=fancystore.com
+      - TARGET_PORT=8080
+      - WAF_MODE=enabled
     volumes:
-      - ./confs/shopper/benign.sh:/benign.sh:ro
+      - ./confs/user/benign_enhanced.py:/benign_enhanced.py:ro
+      - ./out/waf/user/:/opt/output/
     depends_on:
       - nginx-waf
+    command: ["sh", "-c", "pip install requests && python /benign_enhanced.py http://fancystore.com:8080"]
 
 networks:
-  edge: {}
-  appnet: {}
+  edge:
+    driver: bridge
+    name: ras-waf-edge
+  appnet:
+    driver: bridge
+    name: ras-waf-appnet

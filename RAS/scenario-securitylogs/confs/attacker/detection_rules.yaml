@@ -1,0 +1,101 @@
+# Attack Detection Rules Configuration
+# This file defines how to determine if an attack was successful
+# Format: attack_type -> detection criteria with unified success/failure indicators
+
+sql_injection:
+  type: tool
+  tool_name: sqlmap
+  description: "SQL injection detected by sqlmap tool"
+  success_indicators:
+    - jsonpath: "$.is_injectable == true"
+    - jsonpath: "$.injection_point != null"
+    - text: "SQL injection found!"
+    - text: "sqlmap identified the following injection point"
+    - text: "parameter appears to be injectable"
+  failure_indicators:
+    - text: "no injection point found"
+    - text: "parameter appears to be not injectable"
+    - text: "no SQL injection detected"
+    - jsonpath: "$.is_injectable == false"
+
+xss:
+  type: http
+  description: "XSS attack based on HTTP response"
+  success_indicators:
+    - status: [200, 500]  # 200: payload accepted, 500: server error due to XSS
+    - body_regex: "<script>alert"
+    - body_regex: "onerror=alert"
+    - body_regex: "javascript:alert"
+  failure_indicators:
+    - status: [403, 406]  # WAF blocking
+    - body_regex: "blocked by.*WAF"
+    - body_regex: "security.*violation"
+
+traversal:
+  type: http
+  description: "Directory traversal attack"
+  success_indicators:
+    - status: [200, 500]  # 200: file found, 500: server error due to traversal
+    - body_regex: "root:.*:0:0:"  # /etc/passwd content
+    - body_regex: "Windows.*System32"  # Windows system files
+    - body_regex: "BEGIN:VCARD"  # Contact files
+  failure_indicators:
+    - status: [403, 404]  # Access denied or file not found
+    - body_regex: "404.*not found"
+    - body_regex: "403.*forbidden"
+
+cmd_injection:
+  type: http
+  description: "Command injection attack"
+  success_indicators:
+    - status: [200, 401, 500]  # Various success indicators
+    - body_regex: "uid=[0-9]+\\(.*\\)"  # Command output pattern
+    - body_regex: "root:x:0:0:"  # /etc/passwd content
+    - body_regex: "[a-zA-Z0-9]+@[a-zA-Z0-9]+"  # User info
+  failure_indicators:
+    - status: [403, 406]  # WAF blocking
+    - body_regex: "command.*not.*allowed"
+    - body_regex: "security.*violation"
+
+auth_bypass:
+  type: http
+  description: "Authentication bypass attempt"
+  success_indicators:
+    - status: [200, 302]  # 200: login success, 302: redirect to protected area
+    - header_regex: "Set-Cookie: sessionid="  # Session cookie set
+    - header_regex: "Location: /dashboard"  # Redirect to protected area
+    - body_regex: "welcome.*admin"
+  failure_indicators:
+    - status: [401, 403]  # Authentication failed
+    - body_regex: "invalid.*credentials"
+    - body_regex: "access.*denied"
+
+file_discovery:
+  type: http
+  description: "Sensitive file discovery"
+  success_indicators:
+    - status: [200, 403]  # 200: file found, 403: forbidden (file exists)
+    - body_regex: "BEGIN:VCARD|^\\S|<?php|database|config"  # Various file content patterns
+    - body_regex: "password.*=.*['\"]"  # Configuration files
+    - body_regex: "DB_HOST.*=.*['\"]"  # Database config
+  failure_indicators:
+    - status: [404]  # File not found (expected for most test files)
+    - body_regex: "404.*not found"
+
+method_enum:
+  type: http
+  description: "HTTP method enumeration"
+  success_indicators:
+    - status: [200, 405]  # 200: method allowed, 405: method not allowed
+    - body_regex: "method.*not.*allowed"  # 405 response
+    - body_regex: "allowed.*methods"  # Server response
+  failure_indicators:
+    - status: [0, -1]  # Connection refused or timeout
+    - body_regex: "connection.*refused"
+
+# Generic patterns for different response types
+patterns:
+  sql_error: "(mysql|postgresql|sqlite|oracle).*error"
+  xss_reflection: "<script>alert\\(.*\\)</script>|<img.*onerror="
+  command_output: "uid=[0-9]+\\(.*\\)|root:.*:0:0:|[a-zA-Z0-9]+@[a-zA-Z0-9]+"
+  file_content: "BEGIN:VCARD|<?php|database|config|password|secret" 
