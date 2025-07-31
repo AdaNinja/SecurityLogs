@@ -18,6 +18,10 @@ SUCCESS_COUNT=0
 FAILED_COUNT=0
 EXECUTED_COUNT=0
 
+# Get container IP for log correlation
+CONTAINER_IP=$(hostname -i | awk '{print $1}')
+echo "[INFO] Container IP: $CONTAINER_IP"
+
 # Color codes for output
 RED='\033[0;31m'
 GREEN='\033[0;32m'
@@ -35,7 +39,7 @@ generate_attack_headers() {
     export HTTP_X_ATTACK_ID="attack_$(date +%s)_${RANDOM}"
     export HTTP_X_PAYLOAD_ID="payload_${payload_id}"
     export HTTP_X_ATTACK_TYPE="${attack_type}"
-    export HTTP_X_TIMESTAMP="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
+    export HTTP_X_TIMESTAMP="$(date -u +%Y-%m-%dT%H:%M:%S.%3NZ)"
     
     echo "  [INFO] Generated attack headers:"
     echo "    X-Attack-ID: $HTTP_X_ATTACK_ID"

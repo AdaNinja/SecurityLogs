@@ -20,6 +20,7 @@ services:
       - attack-only
       - benign-only
       - mixed
+      - mixed-parallel
 
   web:
     image: bkimminich/juice-shop:latest
@@ -30,6 +31,7 @@ services:
       - attack-only
       - benign-only
       - mixed
+      - mixed-parallel
 
   attacker:
     build:
@@ -52,6 +54,7 @@ services:
     profiles:
       - attack-only
       - mixed
+      - mixed-parallel
 
   user:
     image: alpine:latest
@@ -69,6 +72,10 @@ services:
     profiles:
       - benign-only
       - mixed
+      - mixed-parallel
+    # Add resources for browser automation
+    shm_size: '2gb'
+    mem_limit: 2g
 
 networks:
   edge:

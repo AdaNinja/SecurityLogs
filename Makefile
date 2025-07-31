@@ -65,6 +65,7 @@ help:
 	@echo "  make attack-only [START=1] [END=25] - Run attacks only with custom payload range"
 	@echo "  make benign-only       - Run benign traffic only (no attacks)"
 	@echo "  make attack-mixed [START=1] [END=25] - Run both attacks and benign traffic with custom payload range"
+	@echo "  make attack-mixed-parallel [START=1] [END=25] [BENIGN_DURATION=120] - Run parallel mixed traffic (attacks and benign in parallel)"
 	@echo "  make attack-all-waf    - Run all attacks in WAF mode"
 	@echo "  make attack-analyze-normal - Analyze normal mode attack results"
 	@echo "  make attack-analyze-waf    - Analyze WAF mode attack results"
@@ -497,33 +498,89 @@ benign-only:
 # Run both attacks and benign traffic (mixed mode)
 # Usage: make attack-mixed [START=1] [END=25]
 attack-mixed: build-attacker
+
+# Run parallel mixed traffic (attacks and benign traffic run in parallel)
+# Usage: make attack-mixed-parallel [START=1] [END=25] [BENIGN_DURATION=120]
+attack-mixed-parallel: build-attacker
+	@echo "$(BLUE)Running parallel mixed mode (attacks and benign traffic in parallel)...$(NC)"
+	@echo "$(YELLOW)Payload range: $(or $(START),1) to $(or $(END),25)$(NC)"
+	@echo "$(YELLOW)Benign duration: $(or $(BENIGN_DURATION),120) seconds$(NC)"
+	@echo "$(YELLOW)Step 1: Creating parallel mixed output directory structure...$(NC)"
+	@rm -rf $(SCENARIO_DIR)/out/mixed-parallel/*
+	@mkdir -p $(SCENARIO_DIR)/out/mixed-parallel/attacker
+	@mkdir -p $(SCENARIO_DIR)/out/mixed-parallel/auditd
+	@mkdir -p $(SCENARIO_DIR)/out/mixed-parallel/nginx
+	@mkdir -p $(SCENARIO_DIR)/out/mixed-parallel/pcap
+	@mkdir -p $(SCENARIO_DIR)/out/mixed-parallel/user
+	@echo "$(YELLOW)Step 2: Starting background services (nginx, web)...$(NC)"
+	cd $(SCENARIO_DIR) && MODE=mixed-parallel docker-compose --profile mixed-parallel up -d nginx web
+	@sleep 10
+	@echo "$(YELLOW)Step 3: Starting host auditd for container monitoring...$(NC)"
+	@sudo bash -c 'if ! command -v auditd &> /dev/null; then apt-get update && apt-get install -y auditd audispd-plugins; fi'
+	@sudo systemctl restart auditd 2>/dev/null || echo "Warning: Could not restart auditd"
+	@sudo bash -c 'truncate -s0 /var/log/audit/audit.log' 2>/dev/null || echo "Warning: Could not clear audit log"
+	@echo "$(YELLOW)Step 4: Starting network capture...$(NC)"
+	@sudo MODE=mixed-parallel $(SCENARIO_DIR)/scripts/network_capture.sh --start mixed-parallel-$(shell date +%Y%m%d-%H%M%S)
+	@sleep 15
+	@echo "$(YELLOW)Step 5: Starting benign traffic in background...$(NC)"
+	cd $(SCENARIO_DIR) && MODE=mixed-parallel docker-compose --profile mixed-parallel up -d user
+	@sleep 10
+	@echo "$(YELLOW)Step 6: Starting attack traffic in parallel...$(NC)"
+	cd $(SCENARIO_DIR) && MODE=mixed-parallel docker-compose --profile mixed-parallel run --rm attacker bash /attack.sh --target http://fancystore.com --start $(or $(START),1) --end $(or $(END),25)
+	@echo "$(YELLOW)Step 7: Waiting for benign traffic completion...$(NC)"
+	@sleep $(or $(BENIGN_DURATION),120)
+	@echo "$(YELLOW)Step 8: Stopping network capture...$(NC)"
+	@sudo MODE=mixed-parallel $(SCENARIO_DIR)/scripts/network_capture.sh --stop
+	@echo "$(YELLOW)Step 9: Collecting auditd logs...$(NC)"
+	@if [ -f /var/log/audit/audit.log ]; then \
+		sudo cp /var/log/audit/audit.log $(SCENARIO_DIR)/out/mixed-parallel/auditd/ 2>/dev/null \
+			&& sudo chown $(USER):$(USER) $(SCENARIO_DIR)/out/mixed-parallel/auditd/audit.log \
+			|| echo "Warning: Could not copy auditd log"; \
+		echo "Auditd log collected successfully"; \
+	else \
+		echo "Warning: /var/log/audit/audit.log not found"; \
+	fi
+	@echo "$(YELLOW)Step 10: Stopping environment...$(NC)"
+	cd $(SCENARIO_DIR) && MODE=mixed-parallel docker-compose --profile mixed-parallel down
+	@echo "$(GREEN)Parallel mixed mode completed!$(NC)"
+	@echo "$(BLUE)Data saved to: $(SCENARIO_DIR)/out/mixed-parallel/$(NC)"
 	@echo "$(BLUE)Running mixed mode (attacks + benign traffic)...$(NC)"
 	@echo "$(YELLOW)Payload range: $(or $(START),1) to $(or $(END),25)$(NC)"
-	@echo "$(YELLOW)Step 1: Cleaning old outputs...$(NC)"
+	@echo "$(YELLOW)Step 1: Creating mixed output directory structure...$(NC)"
 	@rm -rf $(SCENARIO_DIR)/out/mixed/*
-	@mkdir -p $(SCENARIO_DIR)/out/mixed/nginx
 	@mkdir -p $(SCENARIO_DIR)/out/mixed/attacker
-	@mkdir -p $(SCENARIO_DIR)/out/mixed/user
+	@mkdir -p $(SCENARIO_DIR)/out/mixed/auditd
+	@mkdir -p $(SCENARIO_DIR)/out/mixed/nginx
 	@mkdir -p $(SCENARIO_DIR)/out/mixed/pcap
-	@echo "$(YELLOW)Step 2: Starting services...$(NC)"
-	cd $(SCENARIO_DIR) && MODE=mixed docker-compose --profile mixed up -d nginx web attacker user
-	@sleep 5
-	@echo "$(YELLOW)Step 3: Starting network capture...$(NC)"
+	@mkdir -p $(SCENARIO_DIR)/out/mixed/user
+	@echo "$(YELLOW)Step 2: Starting background services (nginx, web, user)...$(NC)"
+	cd $(SCENARIO_DIR) && MODE=mixed docker-compose --profile mixed up -d nginx web user
+	@sleep 10
+	@echo "$(YELLOW)Step 3: Starting host auditd for container monitoring...$(NC)"
+	@sudo bash -c 'if ! command -v auditd &> /dev/null; then apt-get update && apt-get install -y auditd audispd-plugins; fi'
+	@sudo systemctl restart auditd 2>/dev/null || echo "Warning: Could not restart auditd"
+	@sudo bash -c 'truncate -s0 /var/log/audit/audit.log' 2>/dev/null || echo "Warning: Could not clear audit log"
+	@echo "$(YELLOW)Step 4: Starting network capture...$(NC)"
 	@sudo MODE=mixed $(SCENARIO_DIR)/scripts/network_capture.sh --start mixed-$(shell date +%Y%m%d-%H%M%S)
-	@sleep 30
-	@echo "$(YELLOW)Step 4: Executing attacks from line $(or $(START),1) to $(or $(END),25)...$(NC)"
-	cd $(SCENARIO_DIR) && docker-compose exec attacker bash /attack.sh --target http://fancystore.com --start $(or $(START),1) --end $(or $(END),25) &
-	@echo "$(YELLOW)Step 5: Executing benign traffic...$(NC)"
-	cd $(SCENARIO_DIR) && docker-compose exec user /benign.sh --target http://fancystore.com &
-	@wait
-	@sleep 60
-	@echo "$(YELLOW)Step 6: Stopping network capture...$(NC)"
+	@sleep 15
+	@echo "$(YELLOW)Step 5: Running attacker script synchronously...$(NC)"
+	cd $(SCENARIO_DIR) && MODE=mixed docker-compose --profile mixed run --rm attacker bash /attack.sh --target http://fancystore.com --start $(or $(START),1) --end $(or $(END),25)
+	@echo "$(YELLOW)Step 6: Post-attack waiting period...$(NC)"
+	@sleep 15
+	@echo "$(YELLOW)Step 7: Stopping network capture...$(NC)"
 	@sudo MODE=mixed $(SCENARIO_DIR)/scripts/network_capture.sh --stop
-	@echo "$(YELLOW)Step 7: Collecting nginx logs...$(NC)"
-	@docker cp scenario-securitylogs-nginx-1:/var/log/nginx/detailed.log $(SCENARIO_DIR)/out/mixed/nginx/ 2>/dev/null || echo "Warning: Could not copy nginx detailed.log"
-	@docker cp scenario-securitylogs-nginx-1:/var/log/nginx/access.log $(SCENARIO_DIR)/out/mixed/nginx/ 2>/dev/null || echo "Warning: Could not copy nginx access.log"
-	@docker cp scenario-securitylogs-nginx-1:/var/log/nginx/error.log $(SCENARIO_DIR)/out/mixed/nginx/ 2>/dev/null || echo "Warning: Could not copy nginx error.log"
-	@echo "$(YELLOW)Step 8: Stopping environment...$(NC)"
+	@echo "$(YELLOW)Step 8: User logs collected via volume mount...$(NC)"
+	@echo "$(YELLOW)Step 9: Collecting auditd logs...$(NC)"
+	@if [ -f /var/log/audit/audit.log ]; then \
+		sudo cp /var/log/audit/audit.log $(SCENARIO_DIR)/out/mixed/auditd/ 2>/dev/null \
+			&& sudo chown $(USER):$(USER) $(SCENARIO_DIR)/out/mixed/auditd/audit.log \
+			|| echo "Warning: Could not copy auditd log"; \
+		echo "Auditd log collected successfully"; \
+	else \
+		echo "Warning: /var/log/audit/audit.log not found"; \
+	fi
+	@echo "$(YELLOW)Step 10: Nginx logs collected via volume mount...$(NC)"
+	@echo "$(YELLOW)Step 11: Stopping environment...$(NC)"
 	cd $(SCENARIO_DIR) && MODE=mixed docker-compose --profile mixed down
 	@echo "$(GREEN)Mixed mode completed!$(NC)"
 	@echo "$(BLUE)Data saved to: $(SCENARIO_DIR)/out/mixed/$(NC)"
@@ -591,6 +648,45 @@ analyze-attack-only:
 	@echo "$(YELLOW)Running rule-based attack detection...$(NC)"
 	@python3 $(SCENARIO_DIR)/scripts/attack_detector.py \
 		--rules $(SCENARIO_DIR)/confs/attacker/detection_rules.yaml \
+
+analyze-mixed:
+	@echo "$(BLUE)Analyzing mixed mode results (attacks + benign + auditd)...$(NC)"
+	@if [ ! -f "$(SCENARIO_DIR)/out/mixed/attacker/attack.log" ]; then \
+		echo "$(RED)Error: Attack log not found. Run 'make attack-mixed' first.$(NC)"; \
+		exit 1; \
+	fi
+	@mkdir -p $(SCENARIO_DIR)/out/analysis/mixed
+	@echo "$(YELLOW)Step 1: Analyzing attack logs...$(NC)"
+	@python3 $(SCENARIO_DIR)/scripts/audit_analyzer.py attack \
+		--mode mixed \
+		--attack-log $(SCENARIO_DIR)/out/mixed/attacker/attack.log \
+		--nginx-log $(SCENARIO_DIR)/out/mixed/nginx/detailed.log \
+		--output-dir $(SCENARIO_DIR)/out/analysis/mixed/attack_$(shell date +%Y%m%d-%H%M%S)
+	@echo "$(YELLOW)Step 2: Analyzing auditd logs...$(NC)"
+	@if [ -f "$(SCENARIO_DIR)/out/mixed/auditd/audit.log" ]; then \
+		python3 $(SCENARIO_DIR)/scripts/audit_analyzer.py audit \
+			$(SCENARIO_DIR)/out/mixed/auditd/audit.log \
+			--output-csv $(SCENARIO_DIR)/out/analysis/mixed/auditd_events.csv \
+			--output-json $(SCENARIO_DIR)/out/analysis/mixed/auditd_events.json; \
+	else \
+		echo "$(YELLOW)Warning: No auditd log found$(NC)"; \
+	fi
+	@echo "$(YELLOW)Step 3: Generating ground truth labels...$(NC)"
+	@python3 $(SCENARIO_DIR)/scripts/label_generator.py \
+		--attack-log $(SCENARIO_DIR)/out/mixed/attacker/attack.log \
+		--user-log $(SCENARIO_DIR)/out/mixed/user/user.log \
+		--auditd-log $(SCENARIO_DIR)/out/mixed/auditd/audit.log \
+		--nginx-log $(SCENARIO_DIR)/out/mixed/nginx/detailed.log \
+		--output-dir $(SCENARIO_DIR)/out/analysis/mixed/labels_$(shell date +%Y%m%d-%H%M%S)
+	@echo "$(YELLOW)Step 4: Generating multi-source correlation report...$(NC)"
+	@python3 $(SCENARIO_DIR)/scripts/multi_source_analyzer.py \
+		--attack-log $(SCENARIO_DIR)/out/mixed/attacker/attack.log \
+		--nginx-log $(SCENARIO_DIR)/out/mixed/nginx/detailed.log \
+		--user-log $(SCENARIO_DIR)/out/mixed/user/user.log \
+		--auditd-log $(SCENARIO_DIR)/out/mixed/auditd/audit.log \
+		--output-dir $(SCENARIO_DIR)/out/analysis/mixed/correlation_$(shell date +%Y%m%d-%H%M%S)
+	@echo "$(GREEN)Mixed mode analysis completed!$(NC)"
+	@echo "$(BLUE)Analysis results saved to: $(SCENARIO_DIR)/out/analysis/mixed/$(NC)"
 		--attack-log $(SCENARIO_DIR)/out/attack-only/attacker/attack.log \
 		--nginx-log $(SCENARIO_DIR)/out/attack-only/nginx/detailed.log \
 		--json-output-dir /tmp/sqlmap_attack \
@@ -606,11 +702,7 @@ analyze-benign-only:
 	@python3 $(SCENARIO_DIR)/scripts/log_processor.py $(SCENARIO_DIR)/out/benign-only/nginx/detailed.log --output $(SCENARIO_DIR)/out/analysis/benign-only/
 	@echo "$(GREEN)Benign-only analysis completed!$(NC)"
 
-analyze-mixed:
-	@echo "$(BLUE)Analyzing mixed mode results...$(NC)"
-	@mkdir -p $(SCENARIO_DIR)/out/analysis/mixed
-	@python3 $(SCENARIO_DIR)/scripts/log_processor.py $(SCENARIO_DIR)/out/mixed/nginx/detailed.log --output $(SCENARIO_DIR)/out/analysis/mixed/
-	@echo "$(GREEN)Mixed mode analysis completed!$(NC)"
+
 
 # Clean specific mode data
 clean-attack-only:
