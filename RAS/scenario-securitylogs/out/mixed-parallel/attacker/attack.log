@@ -1,0 +1,121 @@
+[INFO] Container IP: 172.19.0.4
+[*] Attacking target: http://fancystore.com
+[*] Attack file: /opt/scripts/attacks.txt
+[*] Executing attacks from line 1 to 3
+Setting up environment variables...
+Environment variables set:
+  TARGET_HOST: fancystore.com
+  TARGET_PORT: 80
+  ATTACK_TYPE: comprehensive
+  ATTACK_PHASE: automated
+  VARIANT_ID: full_attack_suite
+Starting Comprehensive Attack Script...
+Sleeping for 30 seconds before starting the attack...
+[*] ========================================
+[*] COMPREHENSIVE ATTACK EXECUTION
+[*] ========================================
+[*] Executing attacks from attack file...
+[START] Executing attacks from file at Thu Jul 31 14:43:56 UTC 2025
+[*] Attack file: /opt/scripts/attacks.txt
+[*] Total lines in attack file: 112
+[*] Total attack payloads: 69
+[*] Executing payloads 1 to 3 (out of 69 total payloads)
+===ATTACK_START===
+PAYLOAD_ID: 1
+LINE_NUM: 8
+ATTACK_TYPE: sql_injection
+TOOL: sqlmap
+DESCRIPTION: Basic SQL injection with OR condition
+METHOD: POST
+PATH: /rest/user/login
+DATA: {"email":"admin' OR '1'='1","password":"test"}
+EXPECTED: 401
+WAF_MODE: block
+TIMESTAMP: 2025-07-31T14:43:56Z
+===ATTACK_START===
+  [INFO] Generated attack headers:
+    X-Attack-ID: attack_1753973036_28891
+    X-Payload-ID: payload_1
+    X-Attack-Type: sql_injection
+    X-Timestamp: 2025-07-31T14:43:56.465Z
+  [REAL ATTACK] Using sqlmap for SQL injection testing...
+  [INFO] sqlmap available, using professional tool
+  [TOOL_USED] sqlmap
+  [INFO] Running sqlmap against: http://fancystore.com/rest/user/login
+  [FAILED] No SQL injection detected (HTTP 401, sqlmap: false)
+  [TOOL_STATUS] FAILED - No SQL injection indicators found
+===ATTACK_END===
+PAYLOAD_ID: 1
+RESULT: SUCCESS
+HTTP_CODE: 401
+TIMESTAMP: 2025-07-31T14:43:56Z
+===ATTACK_END===
+===ATTACK_START===
+PAYLOAD_ID: 2
+LINE_NUM: 9
+ATTACK_TYPE: sql_injection
+TOOL: sqlmap
+DESCRIPTION: SQL injection with comment
+METHOD: POST
+PATH: /rest/user/login
+DATA: {"email":"admin' --","password":"test"}
+EXPECTED: 401
+WAF_MODE: block
+TIMESTAMP: 2025-07-31T14:43:57Z
+===ATTACK_START===
+  [INFO] Generated attack headers:
+    X-Attack-ID: attack_1753973037_3948
+    X-Payload-ID: payload_2
+    X-Attack-Type: sql_injection
+    X-Timestamp: 2025-07-31T14:43:57.581Z
+  [REAL ATTACK] Using sqlmap for SQL injection testing...
+  [INFO] sqlmap available, using professional tool
+  [TOOL_USED] sqlmap
+  [INFO] Running sqlmap against: http://fancystore.com/rest/user/login
+  [FAILED] No SQL injection detected (HTTP 401, sqlmap: false)
+  [TOOL_STATUS] FAILED - No SQL injection indicators found
+===ATTACK_END===
+PAYLOAD_ID: 2
+RESULT: SUCCESS
+HTTP_CODE: 401
+TIMESTAMP: 2025-07-31T14:43:57Z
+===ATTACK_END===
+===ATTACK_START===
+PAYLOAD_ID: 3
+LINE_NUM: 10
+ATTACK_TYPE: sql_injection
+TOOL: sqlmap
+DESCRIPTION: SQL injection with UNION SELECT
+METHOD: POST
+PATH: /rest/user/login
+DATA: {"email":"' UNION SELECT 1,2,3--","password":"test"}
+EXPECTED: 401
+WAF_MODE: block
+TIMESTAMP: 2025-07-31T14:43:58Z
+===ATTACK_START===
+  [INFO] Generated attack headers:
+    X-Attack-ID: attack_1753973038_17001
+    X-Payload-ID: payload_3
+    X-Attack-Type: sql_injection
+    X-Timestamp: 2025-07-31T14:43:58.628Z
+  [REAL ATTACK] Using sqlmap for SQL injection testing...
+  [INFO] sqlmap available, using professional tool
+  [TOOL_USED] sqlmap
+  [INFO] Running sqlmap against: http://fancystore.com/rest/user/login
+  [SUCCESS] SQL injection detected (HTTP 500, sqlmap: false)
+  [TOOL_OUTPUT] /tmp/sqlmap_attack/payload_2_output.json
+  [TOOL_STATUS] SUCCESS - sqlmap completed
+===ATTACK_END===
+PAYLOAD_ID: 3
+RESULT: SUCCESS
+HTTP_CODE: 500
+TIMESTAMP: 2025-07-31T14:43:58Z
+===ATTACK_END===
+[DONE] Executed 3 attacks from file at Thu Jul 31 14:43:59 UTC 2025
+[*] Success: 1, Failed: 2
+[*] Attack file execution completed
+[*] ========================================
+[*] ATTACK EXECUTION COMPLETED
+[*] ========================================
+[*] All attacks have been executed successfully
+[*] Check /log/attack.log for detailed results
