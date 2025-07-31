@@ -4,6 +4,9 @@
 # Supports multiple attack tools: sqlmap, xsstrike, gobuster, commix, hydra, nmap
 # Format: type|tool|method|path|data|expected|waf_mode|description
 
+# Redirect all output to log file
+exec > >(tee /log/attack.log) 2>&1
+
 set -e
 
 # Global variables
@@ -22,6 +25,25 @@ YELLOW='\033[1;33m'
 BLUE='\033[0;34m'
 NC='\033[0m' # No Color
 
+# Function to generate attack headers for log correlation
+generate_attack_headers() {
+    local attack_type="$1"
+    local payload_id="$2"
+    local description="$3"
+    
+    # Generate unique identifiers
+    export HTTP_X_ATTACK_ID="attack_$(date +%s)_${RANDOM}"
+    export HTTP_X_PAYLOAD_ID="payload_${payload_id}"
+    export HTTP_X_ATTACK_TYPE="${attack_type}"
+    export HTTP_X_TIMESTAMP="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
+    
+    echo "  [INFO] Generated attack headers:"
+    echo "    X-Attack-ID: $HTTP_X_ATTACK_ID"
+    echo "    X-Payload-ID: $HTTP_X_PAYLOAD_ID"
+    echo "    X-Attack-Type: $HTTP_X_ATTACK_TYPE"
+    echo "    X-Timestamp: $HTTP_X_TIMESTAMP"
+}
+
 # Function to run SQL injection attacks with sqlmap
 run_sqlmap() {
     local method="$1"
@@ -29,8 +51,32 @@ run_sqlmap() {
     local data="$3"
     local expected="$4"
     local description="$5"
+    local payload_id="$6"
+    
+    # Generate attack headers
+    generate_attack_headers "sql_injection" "$payload_id" "$description"
     
     echo "  [REAL ATTACK] Using sqlmap for SQL injection testing..."
+    
+    # Check if sqlmap is available
+    if ! command -v sqlmap &> /dev/null; then
+        echo "  [ERROR] sqlmap is not available"
+        echo "  [TOOL_STATUS] FAILED - sqlmap not found"
+        echo "  [FALLBACK_STATUS] NOT_AVAILABLE - No fallback mechanism"
+        return 1
+    fi
+    
+    # Check if curl is available for HTTP status verification
+    if ! command -v curl &> /dev/null; then
+        echo "  [ERROR] curl is not available for HTTP status verification"
+        echo "  [TOOL_STATUS] FAILED - curl not found"
+        echo "  [FALLBACK_STATUS] NOT_AVAILABLE - No fallback mechanism"
+        return 1
+    fi
+    
+    echo "  [INFO] sqlmap available, using professional tool"
+    echo "  [TOOL_USED] sqlmap"
+    
     mkdir -p /tmp/sqlmap_attack
     
     # Extract parameter from path or data
@@ -53,13 +99,17 @@ run_sqlmap() {
         --dump-format=json \
         --random-agent 2>&1 | tee /tmp/sqlmap_attack/payload_${EXECUTED_COUNT}_output.txt)
     
-    # Get actual HTTP status from curl test
+    # Get actual HTTP status from curl test with attack headers
     http_code="000"
     if [[ "$method" == "POST" ]]; then
         curl_response=$(curl -s -w "%{http_code}" \
             -X "$method" \
             -H "User-Agent: attacker" \
             -H "Content-Type: application/json" \
+            -H "X-Attack-ID: $HTTP_X_ATTACK_ID" \
+            -H "X-Payload-ID: $HTTP_X_PAYLOAD_ID" \
+            -H "X-Attack-Type: $HTTP_X_ATTACK_TYPE" \
+            -H "X-Timestamp: $HTTP_X_TIMESTAMP" \
             -d "$data" \
             --max-time 10 \
             "$TARGET$path")
@@ -79,9 +129,11 @@ run_sqlmap() {
     if [ "$http_code" = "500" ] || [ "$injection_found" = true ]; then
         echo "  [SUCCESS] SQL injection detected (HTTP $http_code, sqlmap: $injection_found)"
         echo "  [TOOL_OUTPUT] /tmp/sqlmap_attack/payload_${EXECUTED_COUNT}_output.json"
+        echo "  [TOOL_STATUS] SUCCESS - sqlmap completed"
         return 0
     else
         echo "  [FAILED] No SQL injection detected (HTTP $http_code, sqlmap: $injection_found)"
+        echo "  [TOOL_STATUS] FAILED - No SQL injection indicators found"
         return 1
     fi
 }
@@ -93,41 +145,31 @@ run_xsstrike() {
     local data="$3"
     local expected="$4"
     local description="$5"
+    local payload_id="$6"
+    
+    # Generate attack headers
+    generate_attack_headers "xss" "$payload_id" "$description"
     
     echo "  [REAL ATTACK] Using XSStrike for XSS testing..."
     
-    # Install XSStrike if not available
+    # Check if XSStrike is available
     if ! command -v xsstrike &> /dev/null; then
-        echo "  [INFO] Installing XSStrike..."
-        pip3 install --break-system-packages xsstrike --quiet || {
-            echo "  [WARNING] Failed to install XSStrike, using curl fallback"
-            # Fallback to curl-based XSS testing
-            response=$(curl -s -w "%{http_code}" \
-                -X "$method" \
-                -H "User-Agent: attacker" \
-                -H "X-Forwarded-For: 192.168.1.100" \
-                -H "X-Real-IP: 192.168.1.100" \
-                --max-time 10 \
-                "$TARGET$path")
-            
-            http_code=$(echo "$response" | tail -c 4)
-            response_body=$(echo "$response" | head -c -4)
-            
-            # Check for XSS reflection in response
-            xss_reflected=false
-            if echo "$response_body" | grep -q "<script>\|javascript:\|onerror=\|onload="; then
-                xss_reflected=true
-            fi
-            
-            if [[ "$xss_reflected" == true || "$http_code" == "500" ]]; then
-                echo "  [SUCCESS] XSS payload reflected or caused server error (HTTP $http_code)"
-                return 0
-            else
-                echo "  [FAILED] XSS attack failed - no reflection detected (HTTP $http_code)"
-                return 1
-            fi
-        }
+        echo "  [ERROR] XSStrike is not available"
+        echo "  [TOOL_STATUS] FAILED - XSStrike not found"
+        echo "  [FALLBACK_STATUS] NOT_AVAILABLE - No fallback mechanism"
+        return 1
     fi
+    
+    # Check if curl is available for HTTP status verification
+    if ! command -v curl &> /dev/null; then
+        echo "  [ERROR] curl is not available for HTTP status verification"
+        echo "  [TOOL_STATUS] FAILED - curl not found"
+        echo "  [FALLBACK_STATUS] NOT_AVAILABLE - No fallback mechanism"
+        return 1
+    fi
+    
+    echo "  [INFO] XSStrike available, using professional tool"
+    echo "  [TOOL_USED] xsstrike"
     
     # Run XSStrike
     echo "  [INFO] Running XSStrike against: $TARGET$path"
@@ -153,6 +195,10 @@ run_xsstrike() {
     curl_response=$(curl -s -w "%{http_code}" \
         -X "$method" \
         -H "User-Agent: attacker" \
+        -H "X-Attack-ID: $HTTP_X_ATTACK_ID" \
+        -H "X-Payload-ID: $HTTP_X_PAYLOAD_ID" \
+        -H "X-Attack-Type: $HTTP_X_ATTACK_TYPE" \
+        -H "X-Timestamp: $HTTP_X_TIMESTAMP" \
         --max-time 10 \
         "$TARGET$path")
     
@@ -165,9 +211,11 @@ run_xsstrike() {
     if [ "$xss_found" = true ] || [ "$http_code" = "500" ]; then
         echo "  [SUCCESS] XSS detected by XSStrike (HTTP $http_code)"
         echo "  [TOOL_OUTPUT] /tmp/xsstrike_output.txt"
+        echo "  [TOOL_STATUS] SUCCESS - XSStrike completed"
         return 0
     else
         echo "  [FAILED] No XSS detected (HTTP $http_code)"
+        echo "  [TOOL_STATUS] FAILED - No XSS indicators found"
         return 1
     fi
 }
@@ -179,39 +227,31 @@ run_gobuster() {
     local data="$3"
     local expected="$4"
     local description="$5"
+    local payload_id="$6"
+    
+    # Generate attack headers
+    generate_attack_headers "traversal" "$payload_id" "$description"
     
     echo "  [REAL ATTACK] Using Gobuster for directory traversal testing..."
     
-    # Install Gobuster if not available
+    # Check if Gobuster is available
     if ! command -v gobuster &> /dev/null; then
-        echo "  [INFO] Installing Gobuster..."
-        apt-get update && apt-get install -y gobuster || {
-            echo "  [WARNING] Failed to install Gobuster, using curl fallback"
-            # Fallback to curl-based traversal testing
-            response=$(curl -s -w "%{http_code}" \
-                -X "$method" \
-                -H "User-Agent: attacker" \
-                --max-time 10 \
-                "$TARGET$path")
-            
-            http_code=$(echo "$response" | tail -c 4)
-            response_body=$(echo "$response" | head -c -4)
-            
-            # Check for directory traversal indicators
-            traversal_success=false
-            if echo "$response_body" | grep -q "root:.*:0:0:\|Windows.*System32\|BEGIN:VCARD"; then
-                traversal_success=true
-            fi
-            
-            if [[ "$traversal_success" == true || "$http_code" == "500" ]]; then
-                echo "  [SUCCESS] Directory traversal successful - sensitive file content found (HTTP $http_code)"
-                return 0
-            else
-                echo "  [FAILED] Directory traversal failed - no sensitive content (HTTP $http_code)"
-                return 1
-            fi
-        }
+        echo "  [ERROR] Gobuster is not available"
+        echo "  [TOOL_STATUS] FAILED - Gobuster not found"
+        echo "  [FALLBACK_STATUS] NOT_AVAILABLE - No fallback mechanism"
+        return 1
     fi
+    
+    # Check if curl is available for HTTP status verification
+    if ! command -v curl &> /dev/null; then
+        echo "  [ERROR] curl is not available for HTTP status verification"
+        echo "  [TOOL_STATUS] FAILED - curl not found"
+        echo "  [FALLBACK_STATUS] NOT_AVAILABLE - No fallback mechanism"
+        return 1
+    fi
+    
+    echo "  [INFO] Gobuster available, using professional tool"
+    echo "  [TOOL_USED] gobuster"
     
     # Extract wordlist from data field
     wordlist=$(echo "$data" | sed 's/wordlist=//')
@@ -241,6 +281,10 @@ EOF
     curl_response=$(curl -s -w "%{http_code}" \
         -X "$method" \
         -H "User-Agent: attacker" \
+        -H "X-Attack-ID: $HTTP_X_ATTACK_ID" \
+        -H "X-Payload-ID: $HTTP_X_PAYLOAD_ID" \
+        -H "X-Attack-Type: $HTTP_X_ATTACK_TYPE" \
+        -H "X-Timestamp: $HTTP_X_TIMESTAMP" \
         --max-time 10 \
         "$TARGET$path")
     
@@ -253,9 +297,11 @@ EOF
     if [ "$traversal_found" = true ] || [ "$http_code" = "500" ]; then
         echo "  [SUCCESS] Directory traversal detected by Gobuster (HTTP $http_code)"
         echo "  [TOOL_OUTPUT] /tmp/gobuster_output.txt"
+        echo "  [TOOL_STATUS] SUCCESS - Gobuster completed"
         return 0
     else
         echo "  [FAILED] No directory traversal detected (HTTP $http_code)"
+        echo "  [TOOL_STATUS] FAILED - No traversal indicators found"
         return 1
     fi
 }
@@ -267,41 +313,31 @@ run_commix() {
     local data="$3"
     local expected="$4"
     local description="$5"
+    local payload_id="$6"
+    
+    # Generate attack headers
+    generate_attack_headers "command_injection" "$payload_id" "$description"
     
     echo "  [REAL ATTACK] Using Commix for command injection testing..."
     
-    # Install Commix if not available
+    # Check if Commix is available
     if ! command -v commix &> /dev/null; then
-        echo "  [INFO] Installing Commix..."
-        pip3 install --break-system-packages commix --quiet || {
-            echo "  [WARNING] Failed to install Commix, using curl fallback"
-            # Fallback to curl-based command injection testing
-            response=$(curl -s -w "%{http_code}" \
-                -X "$method" \
-                -H "User-Agent: attacker" \
-                -H "Content-Type: application/json" \
-                -d "$data" \
-                --max-time 10 \
-                "$TARGET$path")
-            
-            http_code=$(echo "$response" | tail -c 4)
-            response_body=$(echo "$response" | head -c -4)
-            
-            # Check for command injection indicators
-            cmd_injection_success=false
-            if echo "$response_body" | grep -q "uid=[0-9]+\\(.*\\)\|root:.*:0:0:\|[a-zA-Z0-9]+@[a-zA-Z0-9]+"; then
-                cmd_injection_success=true
-            fi
-            
-            if [[ "$cmd_injection_success" == true || "$http_code" == "500" ]]; then
-                echo "  [SUCCESS] Command injection successful - command output detected (HTTP $http_code)"
-                return 0
-            else
-                echo "  [FAILED] Command injection failed - no command output (HTTP $http_code)"
-                return 1
-            fi
-        }
+        echo "  [ERROR] Commix is not available"
+        echo "  [TOOL_STATUS] FAILED - Commix not found"
+        echo "  [FALLBACK_STATUS] NOT_AVAILABLE - No fallback mechanism"
+        return 1
     fi
+    
+    # Check if curl is available for HTTP status verification
+    if ! command -v curl &> /dev/null; then
+        echo "  [ERROR] curl is not available for HTTP status verification"
+        echo "  [TOOL_STATUS] FAILED - curl not found"
+        echo "  [FALLBACK_STATUS] NOT_AVAILABLE - No fallback mechanism"
+        return 1
+    fi
+    
+    echo "  [INFO] Commix available, using professional tool"
+    echo "  [TOOL_USED] commix"
     
     # Run Commix
     echo "  [INFO] Running Commix against: $TARGET$path"
@@ -327,6 +363,10 @@ run_commix() {
         -X "$method" \
         -H "User-Agent: attacker" \
         -H "Content-Type: application/json" \
+        -H "X-Attack-ID: $HTTP_X_ATTACK_ID" \
+        -H "X-Payload-ID: $HTTP_X_PAYLOAD_ID" \
+        -H "X-Attack-Type: $HTTP_X_ATTACK_TYPE" \
+        -H "X-Timestamp: $HTTP_X_TIMESTAMP" \
         -d "$data" \
         --max-time 10 \
         "$TARGET$path")
@@ -340,9 +380,11 @@ run_commix() {
     if [ "$cmd_injection_found" = true ] || [ "$http_code" = "500" ]; then
         echo "  [SUCCESS] Command injection detected by Commix (HTTP $http_code)"
         echo "  [TOOL_OUTPUT] /tmp/commix_output.txt"
+        echo "  [TOOL_STATUS] SUCCESS - Commix completed"
         return 0
     else
         echo "  [FAILED] No command injection detected (HTTP $http_code)"
+        echo "  [TOOL_STATUS] FAILED - No command injection indicators found"
         return 1
     fi
 }
@@ -354,34 +396,31 @@ run_hydra() {
     local data="$3"
     local expected="$4"
     local description="$5"
+    local payload_id="$6"
+    
+    # Generate attack headers
+    generate_attack_headers "auth_bypass" "$payload_id" "$description"
     
     echo "  [REAL ATTACK] Using Hydra for authentication bypass testing..."
     
-    # Install Hydra if not available
+    # Check if Hydra is available
     if ! command -v hydra &> /dev/null; then
-        echo "  [INFO] Installing Hydra..."
-        apt-get update && apt-get install -y hydra || {
-            echo "  [WARNING] Failed to install Hydra, using curl fallback"
-            # Fallback to curl-based auth testing
-            response=$(curl -s -w "%{http_code}" \
-                -X "$method" \
-                -H "User-Agent: attacker" \
-                -H "Content-Type: application/json" \
-                -d "$data" \
-                --max-time 10 \
-                "$TARGET$path")
-            
-            http_code=$(echo "$response" | tail -c 4)
-            
-            if [[ "$http_code" == "200" || "$http_code" == "302" ]]; then
-                echo "  [SUCCESS] Authentication bypass successful - access granted (HTTP $http_code)"
-                return 0
-            else
-                echo "  [FAILED] Authentication bypass failed - access denied (HTTP $http_code)"
-                return 1
-            fi
-        }
+        echo "  [ERROR] Hydra is not available"
+        echo "  [TOOL_STATUS] FAILED - Hydra not found"
+        echo "  [FALLBACK_STATUS] NOT_AVAILABLE - No fallback mechanism"
+        return 1
     fi
+    
+    # Check if curl is available for HTTP status verification
+    if ! command -v curl &> /dev/null; then
+        echo "  [ERROR] curl is not available for HTTP status verification"
+        echo "  [TOOL_STATUS] FAILED - curl not found"
+        echo "  [FALLBACK_STATUS] NOT_AVAILABLE - No fallback mechanism"
+        return 1
+    fi
+    
+    echo "  [INFO] Hydra available, using professional tool"
+    echo "  [TOOL_USED] hydra"
     
     # Extract userlist and passlist from data field
     userlist=$(echo "$data" | sed 's/userlist=\([^ ]*\).*/\1/')
@@ -413,6 +452,10 @@ run_hydra() {
         -X "$method" \
         -H "User-Agent: attacker" \
         -H "Content-Type: application/json" \
+        -H "X-Attack-ID: $HTTP_X_ATTACK_ID" \
+        -H "X-Payload-ID: $HTTP_X_PAYLOAD_ID" \
+        -H "X-Attack-Type: $HTTP_X_ATTACK_TYPE" \
+        -H "X-Timestamp: $HTTP_X_TIMESTAMP" \
         -d "{\"email\":\"$userlist\",\"password\":\"$passlist\"}" \
         --max-time 10 \
         "$TARGET$path")
@@ -426,9 +469,11 @@ run_hydra() {
     if [ "$auth_bypass_found" = true ] || [ "$http_code" = "200" ] || [ "$http_code" = "302" ]; then
         echo "  [SUCCESS] Authentication bypass detected by Hydra (HTTP $http_code)"
         echo "  [TOOL_OUTPUT] /tmp/hydra_output.txt"
+        echo "  [TOOL_STATUS] SUCCESS - Hydra completed"
         return 0
     else
         echo "  [FAILED] No authentication bypass detected (HTTP $http_code)"
+        echo "  [TOOL_STATUS] FAILED - No authentication bypass indicators found"
         return 1
     fi
 }
@@ -440,39 +485,31 @@ run_file_discovery() {
     local data="$3"
     local expected="$4"
     local description="$5"
+    local payload_id="$6"
+    
+    # Generate attack headers
+    generate_attack_headers "file_discovery" "$payload_id" "$description"
     
     echo "  [REAL ATTACK] Using Gobuster for file discovery testing..."
     
-    # Install Gobuster if not available
+    # Check if Gobuster is available
     if ! command -v gobuster &> /dev/null; then
-        echo "  [INFO] Installing Gobuster..."
-        apt-get update && apt-get install -y gobuster || {
-            echo "  [WARNING] Failed to install Gobuster, using curl fallback"
-            # Fallback to curl-based file discovery testing
-            response=$(curl -s -w "%{http_code}" \
-                -X "$method" \
-                -H "User-Agent: attacker" \
-                --max-time 10 \
-                "$TARGET$path")
-            
-            http_code=$(echo "$response" | tail -c 4)
-            response_body=$(echo "$response" | head -c -4)
-            
-            # Check for sensitive file content
-            sensitive_content=false
-            if echo "$response_body" | grep -q "BEGIN:VCARD\|<?php\|database\|config\|password.*=.*['\"]\|DB_HOST.*=.*['\"]"; then
-                sensitive_content=true
-            fi
-            
-            if [[ "$sensitive_content" == true || "$http_code" == "200" ]]; then
-                echo "  [SUCCESS] Sensitive file found (HTTP $http_code)"
-                return 0
-            else
-                echo "  [FAILED] No sensitive file found (HTTP $http_code)"
-                return 1
-            fi
-        }
+        echo "  [ERROR] Gobuster is not available"
+        echo "  [TOOL_STATUS] FAILED - Gobuster not found"
+        echo "  [FALLBACK_STATUS] NOT_AVAILABLE - No fallback mechanism"
+        return 1
     fi
+    
+    # Check if curl is available for HTTP status verification
+    if ! command -v curl &> /dev/null; then
+        echo "  [ERROR] curl is not available for HTTP status verification"
+        echo "  [TOOL_STATUS] FAILED - curl not found"
+        echo "  [FALLBACK_STATUS] NOT_AVAILABLE - No fallback mechanism"
+        return 1
+    fi
+    
+    echo "  [INFO] Gobuster available, using professional tool"
+    echo "  [TOOL_USED] gobuster"
     
     # Extract wordlist from data field
     wordlist=$(echo "$data" | sed 's/wordlist=//')
@@ -500,6 +537,10 @@ run_file_discovery() {
     curl_response=$(curl -s -w "%{http_code}" \
         -X "$method" \
         -H "User-Agent: attacker" \
+        -H "X-Attack-ID: $HTTP_X_ATTACK_ID" \
+        -H "X-Payload-ID: $HTTP_X_PAYLOAD_ID" \
+        -H "X-Attack-Type: $HTTP_X_ATTACK_TYPE" \
+        -H "X-Timestamp: $HTTP_X_TIMESTAMP" \
         --max-time 10 \
         "$TARGET$path")
     
@@ -512,9 +553,11 @@ run_file_discovery() {
     if [ "$file_found" = true ] || [ "$http_code" = "200" ]; then
         echo "  [SUCCESS] Sensitive file detected by Gobuster (HTTP $http_code)"
         echo "  [TOOL_OUTPUT] /tmp/gobuster_file_output.txt"
+        echo "  [TOOL_STATUS] SUCCESS - Gobuster completed"
         return 0
     else
         echo "  [FAILED] No sensitive file detected (HTTP $http_code)"
+        echo "  [TOOL_STATUS] FAILED - No sensitive file indicators found"
         return 1
     fi
 }
@@ -526,37 +569,34 @@ run_nmap() {
     local data="$3"
     local expected="$4"
     local description="$5"
+    local payload_id="$6"
+    
+    # Generate attack headers
+    generate_attack_headers "http_method_enum" "$payload_id" "$description"
     
     echo "  [REAL ATTACK] Using Nmap for HTTP method enumeration testing..."
     
+    # Check if Nmap is available
+    if ! command -v nmap &> /dev/null; then
+        echo "  [ERROR] Nmap is not available"
+        echo "  [TOOL_STATUS] FAILED - Nmap not found"
+        echo "  [FALLBACK_STATUS] NOT_AVAILABLE - No fallback mechanism"
+        return 1
+    fi
+    
+    # Check if curl is available for HTTP status verification
+    if ! command -v curl &> /dev/null; then
+        echo "  [ERROR] curl is not available for HTTP status verification"
+        echo "  [TOOL_STATUS] FAILED - curl not found"
+        echo "  [FALLBACK_STATUS] NOT_AVAILABLE - No fallback mechanism"
+        return 1
+    fi
+    
+    echo "  [INFO] Nmap available, using professional tool"
+    echo "  [TOOL_USED] nmap"
+    
     # Extract host from URL
     TARGET_HOST=$(echo "$TARGET" | sed 's|^https*://||' | sed 's|/.*$||')
-    
-    # Install Nmap if not available
-    if ! command -v nmap &> /dev/null; then
-        echo "  [INFO] Installing Nmap..."
-        apt-get update && apt-get install -y nmap || {
-            echo "  [WARNING] Failed to install Nmap, using curl fallback"
-            # Fallback to curl-based method testing
-            for method_test in PUT DELETE HEAD OPTIONS TRACE PATCH; do
-                response=$(curl -s -w "%{http_code}" \
-                    -X "$method_test" \
-                    -H "User-Agent: attacker" \
-                    --max-time 10 \
-                    "$TARGET$path")
-                
-                http_code=$(echo "$response" | tail -c 4)
-                
-                if [[ "$http_code" != "405" && "$http_code" != "501" ]]; then
-                    echo "  [SUCCESS] HTTP method $method_test allowed (HTTP $http_code)"
-                    return 0
-                fi
-            done
-            
-            echo "  [FAILED] No unusual HTTP methods found"
-            return 1
-        }
-    fi
     
     # Extract nmap arguments from method field
     nmap_args=$(echo "$method" | sed 's/nmap|//')
@@ -575,6 +615,10 @@ run_nmap() {
     curl_response=$(curl -s -w "%{http_code}" \
         -X "OPTIONS" \
         -H "User-Agent: attacker" \
+        -H "X-Attack-ID: $HTTP_X_ATTACK_ID" \
+        -H "X-Payload-ID: $HTTP_X_PAYLOAD_ID" \
+        -H "X-Attack-Type: $HTTP_X_ATTACK_TYPE" \
+        -H "X-Timestamp: $HTTP_X_TIMESTAMP" \
         --max-time 10 \
         "$TARGET$path")
     
@@ -587,9 +631,11 @@ run_nmap() {
     if [ "$method_found" = true ] || [ "$http_code" != "405" ]; then
         echo "  [SUCCESS] Unusual HTTP methods detected by Nmap (HTTP $http_code)"
         echo "  [TOOL_OUTPUT] /tmp/nmap_output.txt"
+        echo "  [TOOL_STATUS] SUCCESS - Nmap completed"
         return 0
     else
         echo "  [FAILED] No unusual HTTP methods detected (HTTP $http_code)"
+        echo "  [TOOL_STATUS] FAILED - No unusual HTTP methods found"
         return 1
     fi
 }
@@ -623,7 +669,8 @@ execute_attacks() {
         line_num=$((line_num + 1))
         
         # Skip comments and empty lines
-        if [[ "$attack_type" =~ ^#.*$ ]] || [[ -z "$attack_type" ]]; then
+        # Comments can start with # or be empty lines
+        if [[ "$attack_type" =~ ^[[:space:]]*#.*$ ]] || [[ "$attack_type" =~ ^[[:space:]]*$ ]] || [[ -z "$attack_type" ]]; then
             continue
         fi
         
@@ -655,14 +702,14 @@ execute_attacks() {
         # Execute the attack based on tool
         case "$tool" in
             "sqlmap")
-                if run_sqlmap "$method" "$path" "$data" "$expected" "$description"; then
+                if run_sqlmap "$method" "$path" "$data" "$expected" "$description" "$payload_count"; then
                     SUCCESS_COUNT=$((SUCCESS_COUNT + 1))
                 else
                     FAILED_COUNT=$((FAILED_COUNT + 1))
                 fi
                 ;;
             "xsstrike")
-                if run_xsstrike "$method" "$path" "$data" "$expected" "$description"; then
+                if run_xsstrike "$method" "$path" "$data" "$expected" "$description" "$payload_count"; then
                     SUCCESS_COUNT=$((SUCCESS_COUNT + 1))
                 else
                     FAILED_COUNT=$((FAILED_COUNT + 1))
@@ -670,13 +717,13 @@ execute_attacks() {
                 ;;
             "gobuster")
                 if [[ "$attack_type" == "traversal" ]]; then
-                    if run_gobuster "$method" "$path" "$data" "$expected" "$description"; then
+                    if run_gobuster "$method" "$path" "$data" "$expected" "$description" "$payload_count"; then
                         SUCCESS_COUNT=$((SUCCESS_COUNT + 1))
                     else
                         FAILED_COUNT=$((FAILED_COUNT + 1))
                     fi
                 elif [[ "$attack_type" == "file_discovery" ]]; then
-                    if run_file_discovery "$method" "$path" "$data" "$expected" "$description"; then
+                    if run_file_discovery "$method" "$path" "$data" "$expected" "$description" "$payload_count"; then
                         SUCCESS_COUNT=$((SUCCESS_COUNT + 1))
                     else
                         FAILED_COUNT=$((FAILED_COUNT + 1))
@@ -684,21 +731,21 @@ execute_attacks() {
                 fi
                 ;;
             "commix")
-                if run_commix "$method" "$path" "$data" "$expected" "$description"; then
+                if run_commix "$method" "$path" "$data" "$expected" "$description" "$payload_count"; then
                     SUCCESS_COUNT=$((SUCCESS_COUNT + 1))
                 else
                     FAILED_COUNT=$((FAILED_COUNT + 1))
                 fi
                 ;;
             "hydra")
-                if run_hydra "$method" "$path" "$data" "$expected" "$description"; then
+                if run_hydra "$method" "$path" "$data" "$expected" "$description" "$payload_count"; then
                     SUCCESS_COUNT=$((SUCCESS_COUNT + 1))
                 else
                     FAILED_COUNT=$((FAILED_COUNT + 1))
                 fi
                 ;;
             "nmap")
-                if run_nmap "$method" "$path" "$data" "$expected" "$description"; then
+                if run_nmap "$method" "$path" "$data" "$expected" "$description" "$payload_count"; then
                     SUCCESS_COUNT=$((SUCCESS_COUNT + 1))
                 else
                     FAILED_COUNT=$((FAILED_COUNT + 1))

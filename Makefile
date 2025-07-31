@@ -427,27 +427,38 @@ attack-waf-help:
 	@echo "$(BLUE)Attack script help (WAF mode)...$(NC)"
 	cd $(RAS_DIR)/scenario-waf && docker-compose run --rm attacker bash -c "bash /attack.sh --help"
 
+# Build attacker image with pre-installed tools
+build-attacker:
+	@echo "$(BLUE)Building attacker image with pre-installed tools...$(NC)"
+	cd $(SCENARIO_DIR)/confs/attacker && docker build --network host -t ras-attacker:latest .
+	@echo "$(GREEN)Attacker image built successfully!$(NC)"
+
 # Run attacks only (no benign traffic)
 # Usage: make attack-only [START=1] [END=25]
-attack-only:
+attack-only: build-attacker
 	@echo "$(BLUE)Running attacks only (no benign traffic)...$(NC)"
 	@echo "$(YELLOW)Payload range: $(or $(START),1) to $(or $(END),25)$(NC)"
-	@echo "$(YELLOW)Step 1: Creating attack-only data directory...$(NC)"
+	@echo "$(YELLOW)Step 1: Cleaning old outputs...$(NC)"
+	@rm -rf $(SCENARIO_DIR)/out/attack-only/*
 	@mkdir -p $(SCENARIO_DIR)/out/attack-only/nginx
 	@mkdir -p $(SCENARIO_DIR)/out/attack-only/attacker
 	@mkdir -p $(SCENARIO_DIR)/out/attack-only/pcap
-	@echo "$(YELLOW)Step 2: Starting environment with attack-only configuration...$(NC)"
-	cd $(SCENARIO_DIR) && MODE=attack-only docker-compose --profile attack-only up -d nginx web
+	@echo "$(YELLOW)Step 2: Starting services...$(NC)"
+	cd $(SCENARIO_DIR) && MODE=attack-only docker-compose --profile attack-only up -d nginx web attacker
 	@sleep 5
 	@echo "$(YELLOW)Step 3: Starting network capture...$(NC)"
 	@sudo MODE=attack-only $(SCENARIO_DIR)/scripts/network_capture.sh --start attack-only-$(shell date +%Y%m%d-%H%M%S)
 	@sleep 30
 	@echo "$(YELLOW)Step 4: Executing attacks from line $(or $(START),1) to $(or $(END),25)...$(NC)"
-	cd $(SCENARIO_DIR) && MODE=attack-only docker-compose --profile attack-only run --rm attacker bash -c "apt-get update && apt-get install -y curl sqlmap dirb nmap && bash /attack.sh --target http://fancystore.com --start $(or $(START),1) --end $(or $(END),25)"
+	cd $(SCENARIO_DIR) && docker-compose exec attacker bash /attack.sh --target http://fancystore.com --start $(or $(START),1) --end $(or $(END),25)
 	@sleep 60
 	@echo "$(YELLOW)Step 5: Stopping network capture...$(NC)"
 	@sudo MODE=attack-only $(SCENARIO_DIR)/scripts/network_capture.sh --stop
-	@echo "$(YELLOW)Step 6: Stopping environment...$(NC)"
+	@echo "$(YELLOW)Step 6: Collecting nginx logs...$(NC)"
+	@docker cp scenario-securitylogs-nginx-1:/var/log/nginx/detailed.log $(SCENARIO_DIR)/out/attack-only/nginx/ 2>/dev/null || echo "Warning: Could not copy nginx detailed.log"
+	@docker cp scenario-securitylogs-nginx-1:/var/log/nginx/access.log $(SCENARIO_DIR)/out/attack-only/nginx/ 2>/dev/null || echo "Warning: Could not copy nginx access.log"
+	@docker cp scenario-securitylogs-nginx-1:/var/log/nginx/error.log $(SCENARIO_DIR)/out/attack-only/nginx/ 2>/dev/null || echo "Warning: Could not copy nginx error.log"
+	@echo "$(YELLOW)Step 7: Stopping environment...$(NC)"
 	cd $(SCENARIO_DIR) && MODE=attack-only docker-compose --profile attack-only down
 	@echo "$(GREEN)Attack-only mode completed!$(NC)"
 	@echo "$(BLUE)Data saved to: $(SCENARIO_DIR)/out/attack-only/$(NC)"
@@ -455,45 +466,64 @@ attack-only:
 # Run benign traffic only (no attacks)
 benign-only:
 	@echo "$(BLUE)Running benign traffic only (no attacks)...$(NC)"
-	@echo "$(YELLOW)Step 1: Creating benign-only data directory...$(NC)"
-	@mkdir -p $(SCENARIO_DIR)/out/benign-only/{nginx,attacker,user,logs,pcap}
-	@echo "$(YELLOW)Step 2: Starting environment with benign-only configuration...$(NC)"
-	cd $(SCENARIO_DIR) && MODE=benign-only docker-compose --profile benign-only up -d nginx web
+	@echo "$(YELLOW)Step 1: Cleaning old outputs...$(NC)"
+	@rm -rf $(SCENARIO_DIR)/out/benign-only/*
+	@mkdir -p $(SCENARIO_DIR)/out/benign-only/nginx
+	@mkdir -p $(SCENARIO_DIR)/out/benign-only/user
+	@mkdir -p $(SCENARIO_DIR)/out/benign-only/pcap
+	@echo "$(YELLOW)Step 2: Starting services...$(NC)"
+	cd $(SCENARIO_DIR) && MODE=benign-only docker-compose --profile benign-only up -d nginx web user
 	@sleep 5
 	@echo "$(YELLOW)Step 3: Starting network capture...$(NC)"
 	@sudo MODE=benign-only $(SCENARIO_DIR)/scripts/network_capture.sh --start benign-only-$(shell date +%Y%m%d-%H%M%S)
 	@sleep 30
 	@echo "$(YELLOW)Step 4: Executing benign traffic...$(NC)"
-	cd $(SCENARIO_DIR) && MODE=benign-only docker-compose --profile benign-only run --rm user bash -c "pip install requests && python /benign_enhanced.py http://fancystore.com"
-	@sleep 60
+	cd $(SCENARIO_DIR) && docker-compose exec user /benign.sh --target http://fancystore.com &
+	@sleep 120
+	@echo "$(YELLOW)Step 4.5: Stopping benign traffic...$(NC)"
+	@docker stop scenario-securitylogs-user-1 2>/dev/null || true
+	@sleep 10
 	@echo "$(YELLOW)Step 5: Stopping network capture...$(NC)"
 	@sudo MODE=benign-only $(SCENARIO_DIR)/scripts/network_capture.sh --stop
-	@echo "$(YELLOW)Step 6: Stopping environment...$(NC)"
+	@echo "$(YELLOW)Step 6: Collecting nginx logs...$(NC)"
+	@docker cp scenario-securitylogs-nginx-1:/var/log/nginx/detailed.log $(SCENARIO_DIR)/out/benign-only/nginx/ 2>/dev/null || echo "Warning: Could not copy nginx detailed.log"
+	@docker cp scenario-securitylogs-nginx-1:/var/log/nginx/access.log $(SCENARIO_DIR)/out/benign-only/nginx/ 2>/dev/null || echo "Warning: Could not copy nginx access.log"
+	@docker cp scenario-securitylogs-nginx-1:/var/log/nginx/error.log $(SCENARIO_DIR)/out/benign-only/nginx/ 2>/dev/null || echo "Warning: Could not copy nginx error.log"
+	@echo "$(YELLOW)Step 7: Stopping environment...$(NC)"
 	cd $(SCENARIO_DIR) && MODE=benign-only docker-compose --profile benign-only down
 	@echo "$(GREEN)Benign-only mode completed!$(NC)"
 	@echo "$(BLUE)Data saved to: $(SCENARIO_DIR)/out/benign-only/$(NC)"
 
 # Run both attacks and benign traffic (mixed mode)
 # Usage: make attack-mixed [START=1] [END=25]
-attack-mixed:
+attack-mixed: build-attacker
 	@echo "$(BLUE)Running mixed mode (attacks + benign traffic)...$(NC)"
 	@echo "$(YELLOW)Payload range: $(or $(START),1) to $(or $(END),25)$(NC)"
-	@echo "$(YELLOW)Step 1: Creating mixed data directory...$(NC)"
-	@mkdir -p $(SCENARIO_DIR)/out/mixed/{nginx,attacker,user,logs,pcap}
-	@echo "$(YELLOW)Step 2: Starting environment with mixed configuration...$(NC)"
-	cd $(SCENARIO_DIR) && MODE=mixed docker-compose --profile mixed up -d
+	@echo "$(YELLOW)Step 1: Cleaning old outputs...$(NC)"
+	@rm -rf $(SCENARIO_DIR)/out/mixed/*
+	@mkdir -p $(SCENARIO_DIR)/out/mixed/nginx
+	@mkdir -p $(SCENARIO_DIR)/out/mixed/attacker
+	@mkdir -p $(SCENARIO_DIR)/out/mixed/user
+	@mkdir -p $(SCENARIO_DIR)/out/mixed/pcap
+	@echo "$(YELLOW)Step 2: Starting services...$(NC)"
+	cd $(SCENARIO_DIR) && MODE=mixed docker-compose --profile mixed up -d nginx web attacker user
 	@sleep 5
 	@echo "$(YELLOW)Step 3: Starting network capture...$(NC)"
 	@sudo MODE=mixed $(SCENARIO_DIR)/scripts/network_capture.sh --start mixed-$(shell date +%Y%m%d-%H%M%S)
 	@sleep 30
-	@echo "$(YELLOW)Step 4: Executing mixed traffic...$(NC)"
-	cd $(SCENARIO_DIR) && MODE=mixed docker-compose --profile mixed run --rm attacker bash -c "apt-get update && apt-get install -y curl sqlmap dirb nmap && bash /attack.sh --target http://fancystore.com --start $(or $(START),1) --end $(or $(END),25)" &
-	cd $(SCENARIO_DIR) && MODE=mixed docker-compose --profile mixed run --rm user bash -c "pip install requests && python /benign_enhanced.py http://fancystore.com" &
+	@echo "$(YELLOW)Step 4: Executing attacks from line $(or $(START),1) to $(or $(END),25)...$(NC)"
+	cd $(SCENARIO_DIR) && docker-compose exec attacker bash /attack.sh --target http://fancystore.com --start $(or $(START),1) --end $(or $(END),25) &
+	@echo "$(YELLOW)Step 5: Executing benign traffic...$(NC)"
+	cd $(SCENARIO_DIR) && docker-compose exec user /benign.sh --target http://fancystore.com &
 	@wait
 	@sleep 60
-	@echo "$(YELLOW)Step 5: Stopping network capture...$(NC)"
+	@echo "$(YELLOW)Step 6: Stopping network capture...$(NC)"
 	@sudo MODE=mixed $(SCENARIO_DIR)/scripts/network_capture.sh --stop
-	@echo "$(YELLOW)Step 6: Stopping environment...$(NC)"
+	@echo "$(YELLOW)Step 7: Collecting nginx logs...$(NC)"
+	@docker cp scenario-securitylogs-nginx-1:/var/log/nginx/detailed.log $(SCENARIO_DIR)/out/mixed/nginx/ 2>/dev/null || echo "Warning: Could not copy nginx detailed.log"
+	@docker cp scenario-securitylogs-nginx-1:/var/log/nginx/access.log $(SCENARIO_DIR)/out/mixed/nginx/ 2>/dev/null || echo "Warning: Could not copy nginx access.log"
+	@docker cp scenario-securitylogs-nginx-1:/var/log/nginx/error.log $(SCENARIO_DIR)/out/mixed/nginx/ 2>/dev/null || echo "Warning: Could not copy nginx error.log"
+	@echo "$(YELLOW)Step 8: Stopping environment...$(NC)"
 	cd $(SCENARIO_DIR) && MODE=mixed docker-compose --profile mixed down
 	@echo "$(GREEN)Mixed mode completed!$(NC)"
 	@echo "$(BLUE)Data saved to: $(SCENARIO_DIR)/out/mixed/$(NC)"
