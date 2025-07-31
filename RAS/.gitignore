@@ -1,2 +1,6 @@
 */out/*
 !*/out/.gitkeep
+!*/out/*/nginx/
+!*/out/*/attacker/
+!*/out/*/user/
+!*/out/*/pcap/
