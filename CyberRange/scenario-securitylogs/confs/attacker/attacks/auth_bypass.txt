@@ -1,0 +1,12 @@
+auth_bypass|hydra|POST|/rest/user/login|userlist=admin@juice-sh.op passlist=admin|401|block|Common admin credentials
+auth_bypass|hydra|POST|/rest/user/login|userlist=admin@juice-sh.op passlist=password|401|block|Default password
+auth_bypass|hydra|POST|/rest/user/login|userlist=admin@juice-sh.op passlist=123456|401|block|Weak password
+auth_bypass|hydra|POST|/rest/user/login|userlist=admin@juice-sh.op passlist=admin123|401|block|Admin with numbers
+auth_bypass|hydra|POST|/rest/user/login|userlist=admin@juice-sh.op passlist=admin@123|401|block|Admin with symbols
+auth_bypass|hydra|POST|/rest/user/login|userlist=admin@juice-sh.op passlist=admin@juice-sh.op|401|block|Email as password
+auth_bypass|hydra|POST|/rest/user/login|userlist=admin@juice-sh.op passlist=pa%73%73word|401|bypass|URL-encoded credentials
+auth_bypass|hydra|POST|/rest/user/login|userlist=admin@juice-sh.op passlist=p%61ssw%6frd|401|bypass|Hex-encoded credentials
+auth_bypass|hydra|POST|/rest/user/login|userlist=admin@juice-sh.op passlist=p%u0061ssw%u006frd|401|bypass|Unicode-encoded credentials
+auth_bypass|hydra|POST|/rest/user/login|userlist=admin@juice-sh.op passlist=p%00assw%00ord|401|bypass|Null-byte encoded credentials
+auth_bypass|hydra|POST|/rest/user/login|userlist=admin@juice-sh.op passlist=p%0aassw%0aord|401|bypass|Newline-encoded credentials
+auth_bypass|hydra|POST|/rest/user/login|userlist=admin@juice-sh.op passlist=p%0dassw%0dord|401|bypass|CR-encoded credentials

@@ -1,0 +1,6 @@
+traversal|gobuster|GET|/assetsPublic/download|wordlist=../../../../etc/passwd|200|block|Directory traversal via download endpoint
+traversal|gobuster|GET|/assetsPublic/download|wordlist=..%2F..%2F..%2F..%2Fetc%2Fpasswd|200|block|URL-encoded traversal
+traversal|gobuster|GET|/assetsPublic/download|wordlist=..%252f..%252f..%252f..%252fetc%252fpasswd|200|block|Double URL-encoded traversal
+traversal|gobuster|GET|/assetsPublic/download|wordlist=..%c0%af..%c0%af..%c0%af..%c0%afetc%c0%afpasswd|200|block|UTF-8 encoded traversal
+traversal|gobuster|GET|/assetsPublic/download|wordlist=....//....//....//etc/passwd|200|block|Double dot traversal
+traversal|gobuster|GET|/assetsPublic/download|wordlist=..\\..\\..\\..\\windows\\system32\\drivers\\etc\\hosts|200|block|Windows path traversal

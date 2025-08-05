@@ -1,0 +1,174 @@
+# 模块化场景设计示例
+# 目标：让用户"只关心想要做什么"而不用管"怎么做"
+
+name: web-attack-demo1          # 场景名称，随意取
+random_seed: 1234                # 随机种子，用于保证可重复性
+
+# 一、基础设施节点（nodes）
+nodes:
+  - id: juice-shop
+    image: bkimminich/juice-shop # Docker 镜像
+    env:                        # 可选：环境变量
+      NODE_ENV: production
+    ports:                      # 可选：端口映射
+      - "80:80"
+      - "3000:3000"
+    volumes:                    # 可选：挂载卷
+      - "/home/jiayi/SecurityLogs/CyberRange/logs/juice_shop:/app/logs"
+      - "/home/jiayi/SecurityLogs/CyberRange/scenario-securitylogs/confs/nginx/nginx.conf:/etc/nginx/nginx.conf:ro"
+      - "/home/jiayi/SecurityLogs/CyberRange/logs/nginx:/var/log/nginx"
+    networks:
+      - internal-net
+      - external-net
+    # 以后可以扩展成 VM 模块：
+    # driver: proxmox
+    # template: ubuntu-20.04
+
+
+
+  - id: attacker
+    image: ras-attacker:latest  # 使用您自定义的attacker镜像
+    volumes:
+      - "/home/jiayi/SecurityLogs/CyberRange/scenario-securitylogs/confs/attacker:/scripts"  # use the attacker script in the confs/attacker folder
+      - "/home/jiayi/SecurityLogs/CyberRange/logs/attacker:/logs"
+    env:
+      - TARGET_URL=http://nginx:80
+      - TARGET_HOST=nginx
+      - TARGET_PORT=80
+    networks:
+      - internal-net
+
+  - id: benign_user
+    image: python:3.9-slim
+    command: ["tail", "-f", "/dev/null"]  # Keep container running
+    volumes:
+      - "/home/jiayi/SecurityLogs/CyberRange/scenario-securitylogs/confs/user:/scripts"
+      - "/home/jiayi/SecurityLogs/CyberRange/logs/benign_user:/logs"
+    env:
+      - TARGET_URL=http://nginx:80
+      - USER_TYPE=normal
+    networks:
+      - internal-net
+
+# 二、攻击者行为（attackers）
+attackers:
+  - id: sql_injector             # 行为模块 ID
+    script: "/scripts/attack.sh"  # 要在什么容器里、以什么脚本执行
+    target: attacker             # 目标节点
+    trigger:                     # 触发方式
+      type: at_start             # 可选：at_start / after(<seconds>) / event(<name>)
+    payload_config:
+      files: ["/scripts/attack_scripts/attacks.txt"]
+      lines: [1, 10]             # 前10个有效载荷
+      strategy: sequential
+
+  - id: xss_attack
+    script: "/scripts/attack.sh"
+    target: attacker
+    trigger:
+      type: delay
+      seconds: 15
+    payload_config:
+      files: ["/scripts/attack_scripts/attacks.txt"]
+      lines: [11, 20]            # 第11-20个有效载荷
+      strategy: sequential
+
+# 三、良性用户行为（users）
+users:
+  - id: normal_browsing
+    script: "/scripts/benign.sh"
+    target: benign_user
+    trigger:
+      type: schedule            # 可选：定时重复
+      cron: "*/10 * * * *"      # 每 10 秒一次（简化版）
+  - id: login_and_shopping
+    script: "/scripts/benign.sh"
+    target: benign_user
+    trigger:
+      type: after
+      seconds: 30
+
+# 四、网络与拓扑（可选高级）
+networks:
+  internal:
+    driver: bridge
+    name: internal-net
+    subnets:
+      - "172.27.0.0/16"
+  external:
+    driver: bridge
+    name: external-net
+    subnets:
+      - "172.28.0.0/16"
+
+# 五、日志收集（logs_to_collect）
+logs_to_collect:
+  - container: juice-shop
+    path: /var/log/nginx/access.log
+    parser: nginx_parser
+    output: nginx_access.csv
+  - container: juice-shop
+    path: /app/logs/application.log
+    parser: application_parser
+    output: juice_shop_app.csv
+  - container: attacker
+    path: /logs/attack.log
+    parser: attacker_parser
+    output: attack_log.csv
+  - container: benign_user
+    path: /logs/user.log
+    parser: user_parser
+    output: user_behavior.csv
+
+# 六、钩子（hooks）
+hooks:
+  # 在日志拷出以后要执行的脚本
+  after_logs_collected:
+    - script: "./scripts/convert_to_csv.sh"
+      context: ["all_log_files", "scenario_name"]
+      timeout: 60
+    - script: "./scripts/enrich_with_labels.py"
+      context: ["log_files", "attack_info"]
+      timeout: 120
+
+  # 场景开始前的钩子
+  after_start:
+    - script: "./scripts/verify_services.py"
+      context: ["nodes", "health_check"]
+      timeout: 30
+
+# 七、场景超时与重试
+timeout_seconds: 120             # 场景总时长（秒），超时自动 teardown
+retry:
+  max_attempts: 3                # 如果某个容器跑不起来，最多重试多少次
+
+# 八、输出配置
+output:
+  base_dir: "data/modular_demo"
+  formats: ["csv", "json"]
+  compression: false
+  retention:
+    days: 7
+    max_size: "5GB"
+
+# 九、监控配置
+monitoring:
+  metrics:
+    - name: "container_health"
+      interval: 30
+      alert_threshold: 0.8
+    - name: "attack_success_rate"
+      interval: 60
+      alert_threshold: 0.5
+  alerts:
+    - condition: "container_down"
+      action: "restart_container"
+      max_attempts: 3
+
+# 十、自定义模块（扩展点）
+# 如果未来要加 VM，就再定义一个 vm_nodes:
+# vm_nodes:
+#   - id: win10
+#     template: win10-template
+#     cpu: 4
+#     memory: 8192 

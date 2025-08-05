@@ -1,0 +1,120 @@
+# CyberRange Basic Web Attack Scenario
+# 基础Web攻击测试场景
+
+scenario:
+  name: "basic_web_attack"
+  description: "基础Web攻击测试场景"
+  duration: 180  # 3分钟
+  random_seed: 42
+  version: "1.0"
+
+infrastructure:
+  networks:
+    - name: "test_network"
+      driver: "bridge"
+      subnet: "172.21.0.0/16"
+      gateway: "172.21.0.1"
+  
+  nodes:
+    - name: "juice_shop"
+      role: "target"
+      image: "bkimminich/juice-shop:latest"
+      ports:
+        - "3000:3000"
+      networks: ["test_network"]
+      volumes:
+        - "./logs/juice_shop:/app/logs"
+      environment:
+        - NODE_ENV=production
+      health_check:
+        url: "http://localhost:3000"
+        interval: 30
+        timeout: 10
+        retries: 3
+      
+    - name: "attacker"
+      role: "attacker"
+      image: "python:3.9-slim"
+      networks: ["test_network"]
+      volumes:
+        - "./scenario-securitylogs/confs/attacker:/scripts"
+        - "./logs/attacker:/logs"
+      environment:
+        - TARGET_URL=http://juice_shop:3000
+        - TARGET_HOST=juice_shop
+        - TARGET_PORT=3000
+      command: ["/bin/bash", "-c", "tail -f /dev/null"]
+
+behaviors:
+  attacks:
+    - name: "comprehensive_attack"
+      node: "attacker"
+      script: "/scripts/attack.sh"
+      trigger:
+        type: "delay"
+        value: 10  # 10秒后开始
+      payload_config:
+        files: ["/scripts/attack_scripts/attacks.txt"]
+        lines: [1, 20]  # 使用前20行载荷
+        strategy: "sequential"
+      interval: 2  # 每次攻击间隔2秒
+      duration: 120  # 攻击持续2分钟
+
+data_collection:
+  logs:
+    - source: "juice_shop"
+      path: "/app/logs/application.log"
+      parser: "application_parser"
+      output: "juice_shop_logs.csv"
+      real_time: true
+      
+    - source: "attacker"
+      path: "/logs/attack.log"
+      parser: "attacker_parser"
+      output: "attack_log.csv"
+      real_time: true
+
+hooks:
+  pre_scenario:
+    - name: "setup_basic_environment"
+      script: "hooks/setup_basic.sh"
+      context: ["scenario_name", "duration"]
+      timeout: 30
+      
+  post_node_start:
+    - name: "verify_juice_shop"
+      script: "hooks/verify_juice_shop.py"
+      context: ["node_info", "health_check"]
+      timeout: 20
+      
+  post_scenario:
+    - name: "basic_cleanup"
+      script: "hooks/basic_cleanup.sh"
+      context: ["scenario_name", "containers"]
+      timeout: 30
+
+output:
+  base_dir: "data/basic_scenario"
+  scenario_dir: "{scenario_name}_{timestamp}"
+  formats: ["csv"]
+  compression: false
+  retention:
+    days: 7
+    max_size: "1GB"
+
+monitoring:
+  metrics:
+    - name: "container_health"
+      interval: 30
+      alert_threshold: 0.8
+    - name: "attack_success_rate"
+      interval: 60
+      alert_threshold: 0.5
+      
+  alerts:
+    - condition: "container_down"
+      action: "restart_container"
+      max_retries: 2
+    - condition: "attack_failed"
+      action: "log_warning"
+      max_retries: 1 

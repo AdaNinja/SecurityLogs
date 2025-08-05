@@ -1,0 +1,273 @@
+{
+  "report_metadata": {
+    "generated_at": "2025-07-31T09:03:15.451126",
+    "analysis_version": "1.0",
+    "report_type": "comprehensive_security_analysis"
+  },
+  "experiment_configuration": {
+    "mode": "attack-only",
+    "target": "fancystore.com",
+    "attack_tools": [
+      "sqlmap",
+      "xsstrike",
+      "gobuster",
+      "commix",
+      "hydra",
+      "nmap"
+    ],
+    "log_sources": [
+      "attacker",
+      "nginx",
+      "network_capture"
+    ]
+  },
+  "attack_execution_summary": {
+    "total_attacks_executed": 68,
+    "successful_attacks": 68,
+    "failed_attacks": 0,
+    "success_rate_percentage": 100.0,
+    "execution_status": "completed"
+  },
+  "tool_effectiveness_analysis": {
+    "tool_usage_statistics": {
+      "sqlmap": 14,
+      "xsstrike": 12,
+      "gobuster": 18,
+      "commix": 6,
+      "hydra": 12,
+      "nmap": 6
+    },
+    "attack_type_distribution": {
+      "comprehensive": 1,
+      "sql_injection": 14,
+      "xss": 12,
+      "traversal": 6,
+      "cmd_injection": 6,
+      "auth_bypass": 12,
+      "file_discovery": 12,
+      "method_enum": 6
+    },
+    "professional_tool_usage_confirmed": true,
+    "fallback_mechanism_used": false
+  },
+  "vulnerability_assessment": {
+    "vulnerabilities_detected": [
+      {
+        "payload_id": 3,
+        "http_code": "500",
+        "severity": "high"
+      },
+      {
+        "payload_id": 7,
+        "http_code": "500",
+        "severity": "high"
+      },
+      {
+        "payload_id": 11,
+        "http_code": "500",
+        "severity": "high"
+      },
+      {
+        "payload_id": 13,
+        "http_code": "500",
+        "severity": "high"
+      },
+      {
+        "payload_id": 15,
+        "http_code": "200",
+        "severity": "medium"
+      },
+      {
+        "payload_id": 17,
+        "http_code": "200",
+        "severity": "medium"
+      },
+      {
+        "payload_id": 19,
+        "http_code": "200",
+        "severity": "medium"
+      },
+      {
+        "payload_id": 21,
+        "http_code": "200",
+        "severity": "medium"
+      },
+      {
+        "payload_id": 23,
+        "http_code": "200",
+        "severity": "medium"
+      },
+      {
+        "payload_id": 25,
+        "http_code": "200",
+        "severity": "medium"
+      },
+      {
+        "payload_id": 27,
+        "http_code": "200",
+        "severity": "medium"
+      },
+      {
+        "payload_id": 29,
+        "http_code": "200",
+        "severity": "medium"
+      },
+      {
+        "payload_id": 31,
+        "http_code": "200",
+        "severity": "medium"
+      },
+      {
+        "payload_id": 33,
+        "http_code": "500",
+        "severity": "high"
+      },
+      {
+        "payload_id": 35,
+        "http_code": "500",
+        "severity": "high"
+      },
+      {
+        "payload_id": 37,
+        "http_code": "500",
+        "severity": "high"
+      },
+      {
+        "payload_id": 51,
+        "http_code": "200",
+        "severity": "medium"
+      },
+      {
+        "payload_id": 53,
+        "http_code": "200",
+        "severity": "medium"
+      },
+      {
+        "payload_id": 55,
+        "http_code": "200",
+        "severity": "medium"
+      },
+      {
+        "payload_id": 57,
+        "http_code": "200",
+        "severity": "medium"
+      },
+      {
+        "payload_id": 59,
+        "http_code": "200",
+        "severity": "medium"
+      },
+      {
+        "payload_id": 61,
+        "http_code": "200",
+        "severity": "medium"
+      }
+    ],
+    "total_vulnerabilities": 22,
+    "high_severity_vulnerabilities": 7,
+    "medium_severity_vulnerabilities": 15
+  },
+  "http_traffic_analysis": {
+    "total_http_requests": 62,
+    "status_code_distribution": {
+      "401": 17,
+      "500": 14,
+      "200": 31
+    },
+    "http_method_distribution": {
+      "POST": 32,
+      "GET": 30
+    },
+    "average_response_time_seconds": 172.18
+  },
+  "network_capture_summary": {
+    "total_capture_files": 1,
+    "total_capture_size_mb": 2.44,
+    "capture_files": [
+      {
+        "filename": "attack-only-20250731-083649_20250731_083712.pcap",
+        "size_mb": 2.44
+      }
+    ]
+  },
+  "multi_source_logging_verification": {
+    "attacker_logs_collected": true,
+    "nginx_logs_collected": true,
+    "network_captures_collected": true,
+    "log_correlation_possible": true
+  },
+  "payload_execution_details": {
+    "successful_payload_ids": [
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7,
+      8,
+      9,
+      10,
+      11,
+      12,
+      13,
+      14,
+      15,
+      16,
+      17,
+      18,
+      19,
+      20,
+      21,
+      22,
+      23,
+      24,
+      25,
+      26,
+      27,
+      28,
+      29,
+      30,
+      31,
+      32,
+      33,
+      34,
+      35,
+      36,
+      37,
+      38,
+      39,
+      40,
+      41,
+      42,
+      43,
+      44,
+      45,
+      46,
+      47,
+      48,
+      49,
+      50,
+      51,
+      52,
+      53,
+      54,
+      55,
+      56,
+      57,
+      58,
+      59,
+      60,
+      61,
+      62,
+      63,
+      64,
+      65,
+      66,
+      67,
+      68
+    ],
+    "failed_payload_ids": [],
+    "total_unique_payloads": 68
+  }
+}

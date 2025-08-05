@@ -1,0 +1,12 @@
+xss|xsstrike|GET|/rest/products/search|q=<script>alert('XSS')</script>|200|block|Basic XSS with script tag
+xss|xsstrike|GET|/rest/products/search|q=<img src=x onerror=alert('XSS')>|200|block|XSS with img onerror
+xss|xsstrike|GET|/rest/products/search|q=javascript:alert('XSS')|200|block|XSS with javascript protocol
+xss|xsstrike|GET|/rest/products/search|q=<svg onload=alert('XSS')>|200|block|XSS with SVG onload
+xss|xsstrike|GET|/rest/products/search|q='"><script>alert('XSS')</script>|200|block|XSS with quote breaking
+xss|xsstrike|GET|/rest/products/search|q=<iframe src=javascript:alert('XSS')>|200|block|XSS with iframe
+xss|xsstrike|GET|/rest/products/search|q=<ScRiPt>alert('XSS')</ScRiPt>|200|bypass|Case-mixed XSS
+xss|xsstrike|GET|/rest/products/search|q=<script%20src=x%20onerror=alert('XSS')>|200|bypass|URL-encoded XSS
+xss|xsstrike|GET|/rest/products/search|q=<script/**/src=x/**/onerror=alert('XSS')>|200|bypass|Comment-obfuscated XSS
+xss|xsstrike|GET|/rest/products/search|q=<script>eval(String.fromCharCode(97,108,101,114,116,40,39,88,83,83,39,41))</script>|200|bypass|CharCode-encoded XSS
+xss|xsstrike|GET|/rest/products/search|q=<script>setTimeout('alert(\"XSS\")',100)</script>|200|bypass|setTimeout XSS
+xss|xsstrike|GET|/rest/products/search|q=<script>Function('alert(\"XSS\")')()</script>|200|bypass|Function constructor XSS

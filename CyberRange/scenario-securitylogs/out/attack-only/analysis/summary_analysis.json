@@ -1,0 +1,134 @@
+{
+  "execution_summary": {
+    "total_attacks_executed": 68,
+    "successful_attacks": 68,
+    "failed_attacks": 0,
+    "success_rate_percentage": 100.0,
+    "execution_status": "completed"
+  },
+  "vulnerability_summary": {
+    "vulnerabilities_detected": [
+      {
+        "payload_id": 3,
+        "http_code": "500",
+        "severity": "high"
+      },
+      {
+        "payload_id": 7,
+        "http_code": "500",
+        "severity": "high"
+      },
+      {
+        "payload_id": 11,
+        "http_code": "500",
+        "severity": "high"
+      },
+      {
+        "payload_id": 13,
+        "http_code": "500",
+        "severity": "high"
+      },
+      {
+        "payload_id": 15,
+        "http_code": "200",
+        "severity": "medium"
+      },
+      {
+        "payload_id": 17,
+        "http_code": "200",
+        "severity": "medium"
+      },
+      {
+        "payload_id": 19,
+        "http_code": "200",
+        "severity": "medium"
+      },
+      {
+        "payload_id": 21,
+        "http_code": "200",
+        "severity": "medium"
+      },
+      {
+        "payload_id": 23,
+        "http_code": "200",
+        "severity": "medium"
+      },
+      {
+        "payload_id": 25,
+        "http_code": "200",
+        "severity": "medium"
+      },
+      {
+        "payload_id": 27,
+        "http_code": "200",
+        "severity": "medium"
+      },
+      {
+        "payload_id": 29,
+        "http_code": "200",
+        "severity": "medium"
+      },
+      {
+        "payload_id": 31,
+        "http_code": "200",
+        "severity": "medium"
+      },
+      {
+        "payload_id": 33,
+        "http_code": "500",
+        "severity": "high"
+      },
+      {
+        "payload_id": 35,
+        "http_code": "500",
+        "severity": "high"
+      },
+      {
+        "payload_id": 37,
+        "http_code": "500",
+        "severity": "high"
+      },
+      {
+        "payload_id": 51,
+        "http_code": "200",
+        "severity": "medium"
+      },
+      {
+        "payload_id": 53,
+        "http_code": "200",
+        "severity": "medium"
+      },
+      {
+        "payload_id": 55,
+        "http_code": "200",
+        "severity": "medium"
+      },
+      {
+        "payload_id": 57,
+        "http_code": "200",
+        "severity": "medium"
+      },
+      {
+        "payload_id": 59,
+        "http_code": "200",
+        "severity": "medium"
+      },
+      {
+        "payload_id": 61,
+        "http_code": "200",
+        "severity": "medium"
+      }
+    ],
+    "total_vulnerabilities": 22,
+    "high_severity_vulnerabilities": 7,
+    "medium_severity_vulnerabilities": 15
+  },
+  "tool_usage_summary": {
+    "sqlmap": 14,
+    "xsstrike": 12,
+    "gobuster": 18,
+    "commix": 6,
+    "hydra": 12,
+    "nmap": 6
+  }
+}

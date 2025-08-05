@@ -1,0 +1,371 @@
+#!/usr/bin/env python3
+"""
+Log Parser for CyberRange
+Parses various log files and outputs unified CSV format
+"""
+
+import os
+import sys
+import argparse
+import logging
+import csv
+from pathlib import Path
+from datetime import datetime
+
+# Add current directory to path for imports
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+
+# Import parsers from flattened structure
+from nginx_parser import NginxParser
+from attack_parser import AttackParser
+from user_parser import ApplicationParser
+
+
+def setup_logging():
+    """Setup logging configuration"""
+    logging.basicConfig(
+        level=logging.INFO,
+        format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+    )
+
+
+def parse_pcap_file(input_file: str, output_file: str) -> bool:
+    """Parse PCAP file to CSV format"""
+    try:
+        import subprocess
+        from pcap_parser import PcapParser
+        
+        # Convert PCAP to text using tcpdump
+        try:
+            result = subprocess.run([
+                'tcpdump', '-r', input_file, '-n', '-tttt'
+            ], capture_output=True, text=True, timeout=30)
+            
+            if result.returncode != 0:
+                logging.error(f"❌ tcpdump failed: {result.stderr}")
+                return False
+            
+            tcpdump_output = result.stdout
+            
+        except subprocess.TimeoutExpired:
+            logging.error(f"❌ tcpdump timeout for file: {input_file}")
+            return False
+        except FileNotFoundError:
+            logging.error(f"❌ tcpdump not found. Please install tcpdump.")
+            return False
+        
+        # Parse the tcpdump output
+        parser = PcapParser('network_traffic')
+        parsed_count = parser.parse_tcpdump_output(tcpdump_output, output_file)
+        
+        if parsed_count > 0:
+            logging.info(f"✅ PCAP file parsed successfully: {output_file} ({parsed_count} lines)")
+            return True
+        else:
+            logging.warning(f"⚠️ No data parsed from PCAP file: {input_file}")
+            return False
+            
+    except Exception as e:
+        logging.error(f"❌ Failed to parse PCAP file {input_file}: {e}")
+        return False
+
+
+def parse_nginx_logs(input_file: str, output_file: str):
+    """Parse nginx logs to CSV"""
+    try:
+        parser = NginxParser('nginx')
+        
+        with open(input_file, 'r', encoding='utf-8') as f:
+            lines = f.readlines()
+
+        with open(output_file, 'w', encoding='utf-8', newline='') as csv_file:
+            # Write CSV header
+            csv_file.write('timestamp,source_type,source_name,event_type,severity,message,ip_src,ip_dst,port_src,port_dst,protocol,user_agent,request_method,request_path,response_code,payload,label\n')
+            
+            for line in lines:
+                line = line.strip()
+                if line:
+                    result = parser.parse_line(line)
+                    if result:
+                        # Escape quotes in CSV fields
+                        message = result['message'].replace('"', '""')
+                        user_agent = result['user_agent'].replace('"', '""')
+                        payload = result['payload'].replace('"', '""')
+                        
+                        csv_file.write(f'{result["timestamp"]},{result["source_type"]},{result["source_name"]},{result["event_type"]},{result["severity"]},"{message}",{result["ip_src"]},{result["ip_dst"]},{result["port_src"]},{result["port_dst"]},{result["protocol"]},"{user_agent}",{result["request_method"]},{result["request_path"]},{result["response_code"]},"{payload}",{result["label"]}\n')
+
+        logging.info(f"✅ Nginx logs parsed successfully: {output_file}")
+        return True
+        
+    except Exception as e:
+        logging.error(f"❌ Failed to parse nginx logs: {e}")
+        return False
+
+
+def parse_attack_logs(input_file: str, output_file: str):
+    """Parse attack logs to CSV"""
+    try:
+        from attack_parser import AttackParser
+        
+        parser = AttackParser('attacker')
+        
+        with open(input_file, 'r', encoding='utf-8') as f:
+            lines = f.readlines()
+
+        with open(output_file, 'w', encoding='utf-8', newline='') as csv_file:
+            # Write CSV header
+            csv_file.write('timestamp,source_type,source_name,event_type,severity,message,ip_src,ip_dst,port_src,port_dst,protocol,user_agent,request_method,request_path,response_code,payload,label\n')
+            
+            for line in lines:
+                line = line.strip()
+                if line:
+                    result = parser.parse_line(line)
+                    if result:
+                        # Escape quotes in CSV fields
+                        message = result['message'].replace('"', '""')
+                        user_agent = result['user_agent'].replace('"', '""')
+                        payload = result['payload'].replace('"', '""')
+                        
+                        csv_file.write(f'{result["timestamp"]},{result["source_type"]},{result["source_name"]},{result["event_type"]},{result["severity"]},"{message}",{result["ip_src"]},{result["ip_dst"]},{result["port_src"]},{result["port_dst"]},{result["protocol"]},"{user_agent}",{result["request_method"]},{result["request_path"]},{result["response_code"]},"{payload}",{result["label"]}\n')
+
+        logging.info(f"✅ Attack logs parsed successfully: {output_file}")
+        return True
+        
+    except Exception as e:
+        logging.error(f"❌ Failed to parse attack logs: {e}")
+        return False
+
+
+def parse_user_behavior_logs(input_file: str, output_file: str):
+    """Parse user behavior logs"""
+    try:
+        parser = ApplicationParser('user_behavior')
+        parsed_count = parser.parse_file(input_file, output_file)
+        
+        if parsed_count > 0:
+            logging.info(f"✅ User behavior logs parsed successfully: {output_file}")
+            return True
+        else:
+            logging.warning(f"⚠️ No data parsed from user behavior logs: {input_file}")
+            return False
+            
+    except Exception as e:
+        logging.error(f"❌ Failed to parse user behavior logs {input_file}: {e}")
+        return False
+
+
+def parse_user_log_line(line: str):
+    """Parse a single user log line"""
+    try:
+        # Extract timestamp if present
+        timestamp_match = re.search(r'(\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d+)?Z?)', line)
+        timestamp = timestamp_match.group(1) if timestamp_match else datetime.now().isoformat() + "Z"
+        
+        # Extract user ID and session ID from headers
+        user_id_match = re.search(r'X-User-ID:\s*([^\s]+)', line)
+        session_id_match = re.search(r'X-Session-ID:\s*([^\s]+)', line)
+        
+        user_id = user_id_match.group(1) if user_id_match else "unknown"
+        session_id = session_id_match.group(1) if session_id_match else "unknown"
+        
+        # Determine event type and action based on content
+        event_type = "user_activity"
+        action = "unknown"
+        resource = "unknown"
+        result = "success"
+        severity = "info"
+        
+        # Parse different types of activities
+        if "🏠 Browsing homepage" in line:
+            action = "browse"
+            resource = "homepage"
+            message = "User browsed homepage"
+        elif "🔍 Searching for:" in line:
+            search_match = re.search(r'Searching for:\s*([^\s]+)', line)
+            search_term = search_match.group(1) if search_match else "unknown"
+            action = "search"
+            resource = f"search:{search_term}"
+            message = f"User searched for: {search_term}"
+        elif "📂 Browsing category:" in line:
+            category_match = re.search(r'Browsing category:\s*([^\s]+)', line)
+            category = category_match.group(1) if category_match else "unknown"
+            action = "browse"
+            resource = f"category:{category}"
+            message = f"User browsed category: {category}"
+        elif "📱 Viewing product:" in line:
+            product_match = re.search(r'Viewing product:\s*([^(]+)', line)
+            product = product_match.group(1).strip() if product_match else "unknown"
+            action = "view"
+            resource = f"product:{product}"
+            message = f"User viewed product: {product}"
+        elif "🛒 Adding product" in line:
+            action = "add_to_cart"
+            resource = "shopping_cart"
+            message = "User added product to cart"
+        elif "🛒 Viewing shopping cart" in line:
+            action = "view"
+            resource = "shopping_cart"
+            message = "User viewed shopping cart"
+        elif "🗑️ Removing product" in line:
+            action = "remove_from_cart"
+            resource = "shopping_cart"
+            message = "User removed product from cart"
+        elif "🔐 Attempting user login" in line:
+            action = "login"
+            resource = "authentication"
+            message = "User attempted login"
+        elif "📝 Attempting user registration" in line:
+            action = "register"
+            resource = "authentication"
+            message = "User attempted registration"
+        elif "📧 Submitting contact form" in line:
+            action = "submit"
+            resource = "contact_form"
+            message = "User submitted contact form"
+        elif "🔌 Making API call:" in line:
+            api_match = re.search(r'Making API call:\s*([^\s]+)', line)
+            api_endpoint = api_match.group(1) if api_match else "unknown"
+            action = "api_call"
+            resource = f"api:{api_endpoint}"
+            message = f"User made API call: {api_endpoint}"
+        elif "✅" in line or "Status:" in line:
+            # HTTP response
+            status_match = re.search(r'Status:\s*(\d+)', line)
+            if status_match:
+                status_code = status_match.group(1)
+                if status_code.startswith('4') or status_code.startswith('5'):
+                    severity = "warning"
+                    result = "error"
+                else:
+                    result = "success"
+            action = "http_request"
+            resource = "web_server"
+            message = "HTTP request completed"
+        elif "❌" in line or "Error:" in line:
+            severity = "error"
+            result = "error"
+            action = "http_request"
+            resource = "web_server"
+            message = "HTTP request failed"
+        else:
+            # Generic activity
+            message = line[:100]  # Truncate long messages
+        
+        return {
+            'timestamp': timestamp,
+            'source_type': 'application',
+            'source_name': 'benign_user',
+            'event_type': event_type,
+            'severity': severity,
+            'message': message,
+            'user_id': user_id,
+            'session_id': session_id,
+            'action': action,
+            'resource': resource,
+            'result': result
+        }
+        
+    except Exception as e:
+        logging.warning(f"Failed to parse user log line: {e}")
+        return None
+
+
+def main():
+    """Main function"""
+    parser = argparse.ArgumentParser(description='Parse log files to CSV format')
+    parser.add_argument('--input-dir', default='logs', help='Input directory containing log files')
+    parser.add_argument('--output-dir', default='output', help='Output directory for CSV files')
+    parser.add_argument('--log-type', choices=['all', 'nginx', 'attack', 'user'], default='all', 
+                       help='Type of logs to parse')
+    
+    args = parser.parse_args()
+    
+    setup_logging()
+    
+    # Create output directory
+    os.makedirs(args.output_dir, exist_ok=True)
+    
+    success_count = 0
+    total_count = 0
+    
+    # Parse nginx logs
+    if args.log_type in ['all', 'nginx']:
+        nginx_files = [
+            ('nginx/detailed.log', 'nginx_detailed.csv'),
+            ('nginx/access.log', 'nginx_access.csv'),
+            ('nginx/error.log', 'nginx_error.csv')
+        ]
+        
+        for input_file, output_file in nginx_files:
+            input_path = os.path.join(args.input_dir, input_file)
+            output_path = os.path.join(args.output_dir, output_file)
+            
+            if os.path.exists(input_path):
+                total_count += 1
+                if parse_nginx_logs(input_path, output_path):
+                    success_count += 1
+    
+    # Parse attack logs
+    if args.log_type in ['all', 'attack']:
+        attack_files = [
+            ('attacker/attack.log', 'attack_log.csv'),
+            ('attacker/attack_script.log', 'attack_script.csv')
+        ]
+        
+        for input_file, output_file in attack_files:
+            input_path = os.path.join(args.input_dir, input_file)
+            output_path = os.path.join(args.output_dir, output_file)
+            
+            if os.path.exists(input_path):
+                total_count += 1
+                if parse_attack_logs(input_path, output_path):
+                    success_count += 1
+    
+    # Parse user behavior logs
+    if args.log_type in ['all', 'user']:
+        user_files = [
+            ('benign_user/user.log', 'user_behavior.csv'),
+            ('benign_user/behavior.log', 'user_behavior_alt.csv'),
+            ('benign_user/application.log', 'user_application.csv')
+        ]
+        
+        for input_file, output_file in user_files:
+            input_path = os.path.join(args.input_dir, input_file)
+            output_path = os.path.join(args.output_dir, output_file)
+            
+            if os.path.exists(input_path):
+                total_count += 1
+                if parse_user_behavior_logs(input_path, output_path):
+                    success_count += 1
+    
+    # Parse PCAP files if they exist
+    pcap_files = list(Path(args.input_dir).glob('*.pcap'))
+    for pcap_file in pcap_files:
+        output_csv = os.path.join(args.output_dir, f"{pcap_file.stem}_traffic.csv")
+        total_count += 1
+        if parse_pcap_file(str(pcap_file), output_csv):
+            success_count += 1
+    
+    # Copy pcap files if they exist (keep original)
+    pcap_files = list(Path(args.input_dir).glob('*.pcap'))
+    for pcap_file in pcap_files:
+        output_pcap = os.path.join(args.output_dir, pcap_file.name)
+        try:
+            import shutil
+            shutil.copy2(pcap_file, output_pcap)
+            logging.info(f"✅ Copied pcap file: {output_pcap}")
+        except Exception as e:
+            logging.error(f"❌ Failed to copy pcap file: {e}")
+    
+    logging.info(f"📊 Parsing completed: {success_count}/{total_count} files processed successfully")
+    
+    if success_count == total_count:
+        logging.info("🎉 All files parsed successfully!")
+        return 0
+    else:
+        logging.warning("⚠️ Some files failed to parse")
+        return 1
+
+
+if __name__ == "__main__":
+    sys.exit(main()) 

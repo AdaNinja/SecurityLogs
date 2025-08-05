@@ -1,0 +1,23 @@
+================================================================================
+GROUND TRUTH LABELING SUMMARY
+================================================================================
+Generated: 2025-07-31 14:57:39
+
+ATTACK INFORMATION:
+--------------------
+Attack IPs: ['172.19.0.4']
+Attack details: 3 attacks
+  - Payload 1: sql_injection at 2025-07-31T14:43:56Z
+  - Payload 2: sql_injection at 2025-07-31T14:43:57Z
+  - Payload 3: sql_injection at 2025-07-31T14:43:58Z
+
+LABEL DISTRIBUTION:
+--------------------
+attack: 3 (5.7%)
+benign: 50 (94.3%)
+
+LABELING RULES USED:
+--------------------
+1. Time + IP matching (±5 seconds): nginx timestamp matches attack.log timestamp and IP matches → attack
+2. IP matching: IP in attack_ips list → attack
+3. Default: all other traffic → benign
