@@ -40,7 +40,6 @@ class ScriptExecutor:
             container = self.client.containers.get(container_id)
             
             # Prepare attack command
-            trigger = attack_config.get('trigger', {})
             interval = attack_config.get('interval', 2)
             duration = attack_config.get('duration', 60)
             
@@ -65,17 +64,16 @@ class ScriptExecutor:
                 end_line = payload_config['lines'][1]
                 script_params.extend(["--start", str(start_line), "--end", str(end_line)])
             
+            # New: Add script arguments (attack type, WAF mode, etc.)
+            if 'script_args' in attack_config:
+                script_params.extend(attack_config['script_args'])
+            
             # Build command
             command = f"bash {script_path} {' '.join(script_params)}"
             
             self.logger.info(f"Attack command: {command}")
             
-            # Handle trigger delay
-            if trigger.get('type') == 'delay':
-                delay = trigger.get('value', 0)
-                if delay > 0:
-                    self.logger.info(f"Waiting {delay} seconds before attack")
-                    time.sleep(delay)
+
             
             # Execute attack script in background
             exec_result = container.exec_run(
@@ -84,8 +82,8 @@ class ScriptExecutor:
                 tty=True,
                 environment={
                     'TARGET_URL': target_url,
-                    'ATTACK_TYPE': 'comprehensive',
-                    'ATTACK_PHASE': 'automated'
+                    'ATTACK_PHASE': 'automated',
+                    'RANDOM_SEED': str(attack_config.get('random_seed', 12345))
                 }
             )
             
@@ -112,7 +110,6 @@ class ScriptExecutor:
             container = self.client.containers.get(container_id)
             
             # Prepare traffic command
-            trigger = traffic_config.get('trigger', {})
             interval = traffic_config.get('interval', 2)
             duration = traffic_config.get('duration', 300)
             
@@ -128,12 +125,7 @@ class ScriptExecutor:
             
             self.logger.info(f"Benign traffic command: {command}")
             
-            # Handle trigger
-            if trigger.get('type') == 'delay':
-                delay = trigger.get('value', 0)
-                if delay > 0:
-                    self.logger.info(f"Waiting {delay} seconds before benign traffic")
-                    time.sleep(delay)
+
             
             # Execute in background
             exec_result = container.exec_run(
@@ -142,7 +134,8 @@ class ScriptExecutor:
                 tty=True,
                 environment={
                     'TARGET_URL': target_url,
-                    'USER_TYPE': 'normal'
+                    'USER_TYPE': 'normal',
+                    'RANDOM_SEED': str(traffic_config.get('random_seed', 12345))
                 }
             )
             
@@ -181,14 +174,23 @@ class ScriptExecutor:
             containers_data = {}
             if 'containers' in context_data:
                 for name, container_info in context_data['containers'].items():
-                    containers_data[name] = {
-                        'id': container_info.id,
-                        'name': container_info.name,
-                        'status': container_info.status,
-                        'ip_address': container_info.ip_address,
-                        'ports': container_info.ports,
-                        'networks': container_info.networks
-                    }
+                    # Handle both ContainerInfo objects and dictionaries
+                    if hasattr(container_info, 'id'):
+                        # ContainerInfo object
+                        containers_data[name] = {
+                            'id': container_info.id,
+                            'name': container_info.name,
+                            'status': container_info.status,
+                            'ip_address': container_info.ip_address,
+                            'ports': container_info.ports,
+                            'networks': container_info.networks
+                        }
+                    elif isinstance(container_info, dict):
+                        # Already a dictionary
+                        containers_data[name] = container_info
+                    else:
+                        # Unknown type, try to convert to string
+                        containers_data[name] = {'id': str(container_info)}
             
             env.update({
                 'CYBERRANGE_CONTEXT': json.dumps(context_data),

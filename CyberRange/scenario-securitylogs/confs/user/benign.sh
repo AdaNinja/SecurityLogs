@@ -53,6 +53,11 @@ import os
 import json
 from datetime import datetime, timedelta
 
+# Set random seed for reproducibility
+random_seed = int(os.environ.get('RANDOM_SEED', 12345))
+random.seed(random_seed)
+print(f"Benign user simulator using random seed: {random_seed}")
+
 # Setup logging with correct path (in container volume)
 log_path = '/logs/user.log'
 os.makedirs(os.path.dirname(log_path), exist_ok=True)

@@ -4,8 +4,14 @@
 # Supports multiple attack tools: sqlmap, xsstrike, gobuster, commix, hydra, nmap
 # Format: type|tool|method|path|data|expected|waf_mode|description
 
-# Redirect all output to log file
-exec > >(tee /logs/attack.log) 2>&1
+# Generate unique log file name at script start
+LOG_TIMESTAMP=$(date +%s)
+LOG_PID=$$
+LOG_FILENAME="attack_${LOG_TIMESTAMP}_${LOG_PID}.log"
+
+# Redirect all output to log file with unique name
+# We'll use a temporary name first, then rename it later
+exec > >(tee /logs/${LOG_FILENAME}) 2>&1
 
 set -e
 
@@ -17,6 +23,16 @@ END_LINE=""
 SUCCESS_COUNT=0
 FAILED_COUNT=0
 EXECUTED_COUNT=0
+ATTACK_TYPE="all"  # New: Attack type parameter
+WAF_MODE="off"     # New: WAF mode parameter
+
+# Note: Attack execution order is deterministic (sequential)
+# Random seed only affects benign traffic for reproducibility
+
+# WAF mode filtering:
+# - WAF_MODE=off: Execute only "block" attacks (normal attacks that should be blocked by WAF)
+# - WAF_MODE=on: Execute only "bypass" attacks (WAF evasion techniques)
+# - WAF_MODE=auto: Execute all attacks (for WAF detection)
 
 # Get container IP for log correlation
 CONTAINER_IP=$(hostname -i | awk '{print $1}')
@@ -81,7 +97,7 @@ generate_attack_headers() {
     local description="$3"
     
     # Generate unique identifiers
-    export HTTP_X_ATTACK_ID="attack_$(date +%s)_${RANDOM}"
+    export HTTP_X_ATTACK_ID="attack_$(date +%s)_${payload_id}"
     export HTTP_X_PAYLOAD_ID="payload_${payload_id}"
     export HTTP_X_ATTACK_TYPE="${attack_type}"
     export HTTP_X_TIMESTAMP="$(date -u +%Y-%m-%dT%H:%M:%S.%3NZ)"
@@ -723,17 +739,42 @@ execute_attacks() {
             continue
         fi
         
+        # Debug: Print parsed fields
+        echo "[DEBUG] Line $line_num: attack_type='$attack_type', waf_mode='$waf_mode', WAF_MODE='$WAF_MODE'"
+        
+        # New: Filter attacks based on ATTACK_TYPE (use command line argument, not environment variable)
+        if [[ "$ATTACK_TYPE" != "all" && "$attack_type" != "$ATTACK_TYPE" ]]; then
+            echo "[DEBUG] Skipping attack: ATTACK_TYPE='$ATTACK_TYPE', attack_type='$attack_type' (type mismatch)"
+            continue
+        fi
+        
+        # New: Filter attacks based on WAF_MODE
+        echo "[DEBUG] WAF filtering: WAF_MODE='$WAF_MODE', waf_mode='$waf_mode'"
+        if [[ "$WAF_MODE" == "on" && "$waf_mode" != "bypass" ]]; then
+            # WAF ON mode: only execute bypass attacks
+            echo "[DEBUG] Skipping attack: WAF_MODE=$WAF_MODE, attack_waf_mode=$waf_mode (not bypass)"
+            continue
+        elif [[ "$WAF_MODE" == "off" && "$waf_mode" != "block" ]]; then
+            # WAF OFF mode: only execute normal attacks (should be blocked by WAF)
+            echo "[DEBUG] Skipping attack: WAF_MODE=$WAF_MODE, attack_waf_mode=$waf_mode (not block)"
+            continue
+        fi
+        echo "[DEBUG] WAF filter passed: WAF_MODE='$WAF_MODE', waf_mode='$waf_mode'"
+        
         # Count this as a valid payload
         payload_count=$((payload_count + 1))
+        echo "[DEBUG] Valid payload found: payload_count=$payload_count, START_LINE=$START_LINE, END_LINE=$END_LINE"
         
         # Check if we're in the specified range (based on payload count, not line number)
         if [[ -n "$START_LINE" && -n "$END_LINE" ]]; then
             if [[ $payload_count -lt $START_LINE ]] || [[ $payload_count -gt $END_LINE ]]; then
+                echo "[DEBUG] Skipping payload $payload_count: outside range [$START_LINE-$END_LINE]"
                 continue
             fi
         fi
         
-        # Print attack start marker
+        # Print attack start marker with WAF mode info
+        echo "[INFO] WAF Mode: $WAF_MODE, Attack WAF Type: $waf_mode"
         log_attack_start "$payload_count" "$attack_type" "$tool" "$description" "$method" "$path" "$data" "$expected" "$waf_mode"
         
         # Execute the attack based on tool
@@ -843,6 +884,14 @@ while [ $# -gt 0 ]; do
       ATTACK_FILE="$2"
       shift 2
       ;;
+    --attack-type)
+      ATTACK_TYPE="$2"
+      shift 2
+      ;;
+    --waf-mode)
+      WAF_MODE="$2"
+      shift 2
+      ;;
     --help)
       echo "Usage: $0 [OPTIONS]"
       echo ""
@@ -851,12 +900,15 @@ while [ $# -gt 0 ]; do
       echo "  --start LINE        Start line number for attack execution"
       echo "  --end LINE          End line number for attack execution"
       echo "  --attack-file FILE  Attack scenarios file (default: /opt/scripts/attacks.txt)"
+      echo "  --attack-type TYPE  Attack type: sql_injection, xss, directory_traversal, all (default: all)"
+      echo "  --waf-mode MODE     WAF mode: on, off, auto (default: off)"
       echo "  --help              Show this help"
       echo ""
       echo "Examples:"
       echo "  $0 --target http://example.com"
       echo "  $0 --start 10 --end 20"
       echo "  $0 --attack-file /path/to/attacks.txt"
+      echo "  $0 --attack-type sql_injection --waf-mode on"
       exit 0
       ;;
     *)
@@ -870,6 +922,10 @@ done
 # Main execution
 echo "[*] Attacking target: $TARGET"
 echo "[*] Attack file: $ATTACK_FILE"
+echo "[*] WAF Mode: $WAF_MODE"
+echo "[*] Attack Type: $ATTACK_TYPE"
+echo "[DEBUG] ATTACK_FILE variable: $ATTACK_FILE"
+echo "[DEBUG] File exists: $(ls -la "$ATTACK_FILE" 2>/dev/null || echo 'File not found')"
 if [[ -n "$START_LINE" && -n "$END_LINE" ]]; then
     echo "[*] Executing attacks from line $START_LINE to $END_LINE"
 else
@@ -880,7 +936,7 @@ fi
 echo "Setting up environment variables..."
 export TARGET_HOST=$(echo "$TARGET" | sed 's|^https*://||' | sed 's|/.*$||')
 export TARGET_PORT=$(echo "$TARGET" | sed 's|^https*://[^/]*:\([0-9]*\).*|\1|' | sed 's|^https*://[^/]*$|80|')
-export ATTACK_TYPE="comprehensive"
+# ATTACK_TYPE is already set from command line arguments
 export ATTACK_PHASE="automated"
 export VARIANT_ID="full_attack_suite"
 
@@ -902,6 +958,31 @@ echo "[*] ========================================"
 echo "[*] ATTACK EXECUTION COMPLETED"
 echo "[*] ========================================"
 echo "[*] All attacks have been executed successfully"
-echo "[*] Check /log/attack.log for detailed results"
+
+# Rename log file with attack type
+if [[ -n "$ATTACK_TYPE" ]]; then
+    # Use the saved log file name
+    current_log_file="/logs/${LOG_FILENAME}"
+    target_log_file="/logs/attack_${ATTACK_TYPE}.log"
+    
+    echo "[*] Attempting to rename log file..."
+    echo "[*] Current: $current_log_file"
+    echo "[*] Target: $target_log_file"
+    
+    # Check if current file exists
+    if [[ -f "$current_log_file" ]]; then
+        echo "[*] Current log file exists, attempting rename..."
+        if mv "$current_log_file" "$target_log_file"; then
+            echo "[*] Successfully renamed to: $target_log_file"
+        else
+            echo "[*] Failed to rename, keeping original name: $current_log_file"
+        fi
+    else
+        echo "[*] Current log file not found: $current_log_file"
+        echo "[*] Check /logs/attack_${ATTACK_TYPE}.log for detailed results"
+    fi
+else
+    echo "[*] Check /logs/${LOG_FILENAME} for detailed results"
+fi
 
 

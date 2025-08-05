@@ -119,6 +119,12 @@ class ScenarioManager:
         try:
             self.logger.info("Starting scenario execution")
             
+            # Set random seed for reproducibility
+            random_seed = self.config.get('scenario', {}).get('random_seed', 12345)
+            import random
+            random.seed(random_seed)
+            self.logger.info(f"Set random seed: {random_seed}")
+            
             # Initialize context
             self.context = ScenarioContext(
                 scenario_name=self.config['scenario']['name'],
@@ -145,7 +151,10 @@ class ScenarioManager:
             # Phase 4: Collect data
             success &= self.collect_data()
             
-            # Phase 5: Post-scenario hooks
+            # Phase 5: Post-collection hooks (parse logs to CSV)
+            success &= self.execute_hooks('post_collection')
+            
+            # Phase 6: Post-scenario hooks
             success &= self.execute_hooks('post_scenario')
             
             # Update context
@@ -180,6 +189,13 @@ class ScenarioManager:
                     self.context.containers[node['name']] = container_info
                 else:
                     raise Exception(f"Failed to start container: {node['name']}")
+            
+            # Start network capture early
+            network_configs = self.config.get('data_collection', {}).get('network', [])
+            for network_config in network_configs:
+                pcap_file = self.log_collector.capture_network(network_config, self.context)
+                if pcap_file:
+                    self.context.log_files['network'] = pcap_file
             
             # Wait for services to be ready
             self.wait_for_services()
@@ -229,6 +245,10 @@ class ScenarioManager:
             # Get payload configuration
             payload_config = attack_config.get('payload_config', {})
             
+            # Add random seed to attack config
+            random_seed = self.config.get('scenario', {}).get('random_seed', 12345)
+            attack_config['random_seed'] = random_seed
+            
             # Execute attack script with payload configuration
             container_id = self.context.containers[node_name].id
             success = self.script_executor.execute_attack(
@@ -250,6 +270,10 @@ class ScenarioManager:
         try:
             node_name = traffic_config['node']
             script_path = traffic_config['script']
+            
+            # Add random seed to traffic config
+            random_seed = self.config.get('scenario', {}).get('random_seed', 12345)
+            traffic_config['random_seed'] = random_seed
             
             container_id = self.context.containers[node_name].id
             success = self.script_executor.execute_benign_traffic(
@@ -292,12 +316,12 @@ class ScenarioManager:
                 if log_file:
                     self.context.log_files[log_config['source']] = log_file
             
-            # Collect network data
-            network_configs = self.config.get('data_collection', {}).get('network', [])
-            for network_config in network_configs:
-                pcap_file = self.log_collector.capture_network(network_config, self.context)
-                if pcap_file:
-                    self.context.log_files['network'] = pcap_file
+            # Network capture is already started in start_infrastructure()
+            # Just ensure the pcap file exists
+            if 'network' in self.context.log_files:
+                pcap_file = self.context.log_files['network']
+                if not os.path.exists(pcap_file):
+                    self.logger.warning(f"Network capture file not found: {pcap_file}")
             
             # Execute post-collection hooks
             self.execute_hooks('post_collection')

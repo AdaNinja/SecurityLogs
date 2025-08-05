@@ -21,11 +21,14 @@ def verify_juice_shop():
         containers = json.loads(containers_json)
         if 'juice-shop' in containers:
             container_info = containers['juice-shop']
-            # Use dictionary access instead of object attributes
-            container_id = container_info.get('id', 'unknown')
+            # Handle both dictionary and object access
+            if isinstance(container_info, dict):
+                container_id = container_info.get('id', 'unknown')
+            else:
+                container_id = getattr(container_info, 'id', 'unknown')
             print(f"Found juice-shop container: {container_id}")
-    except json.JSONDecodeError:
-        print("Could not parse container information")
+    except (json.JSONDecodeError, AttributeError) as e:
+        print(f"Could not parse container information: {e}")
     
     print(f"Verifying Juice Shop at: {target_url}")
     

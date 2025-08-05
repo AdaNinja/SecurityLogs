@@ -135,25 +135,42 @@ class LogCollector:
             if filter_expr:
                 # Try to use the full filter expression
                 try:
-                    # Test if the filter is valid by running tcpdump with -d flag
-                    test_cmd = ['tcpdump', '-d', filter_expr]
+                    # Test if the filter is valid by running tcpdump with -d flag (with sudo)
+                    test_cmd = ['sudo', 'tcpdump', '-d', filter_expr]
                     result = subprocess.run(test_cmd, capture_output=True, text=True, timeout=5)
                     
                     if result.returncode == 0:
                         # Filter is valid, use it
                         cmd.append(filter_expr)
+                        self.logger.info(f"Using network filter: {filter_expr}")
                     else:
                         # Filter is invalid, try to extract simple parts
-                        if 'host' in filter_expr:
+                        if 'net' in filter_expr:
+                            import re
+                            net_matches = re.findall(r'net\s+([^\s/]+)', filter_expr)
+                            if net_matches:
+                                # Use the first network found
+                                simple_filter = f"net {net_matches[0]}"
+                                cmd.append(simple_filter)
+                                self.logger.info(f"Using simplified network filter: {simple_filter}")
+                        elif 'host' in filter_expr:
                             import re
                             host_matches = re.findall(r'host\s+([^\s/]+)', filter_expr)
                             if host_matches:
                                 # Use the first host found
                                 simple_filter = f"host {host_matches[0]}"
                                 cmd.append(simple_filter)
-                except:
+                                self.logger.info(f"Using simplified host filter: {simple_filter}")
+                        else:
+                            # If no recognizable pattern, don't use filter
+                            self.logger.warning(f"Could not parse network filter: {filter_expr}")
+                except Exception as e:
                     # If filter parsing fails, don't use any filter
+                    self.logger.warning(f"Filter parsing failed: {e}")
+                    # Try without filter
                     pass
+            else:
+                self.logger.info("No network filter specified, capturing all traffic")
             
             # Start tcpdump in background
             try:
@@ -218,6 +235,11 @@ class LogCollector:
                 else:
                     collected_logs[log_config['source']] = log_file  # Fallback to raw log
         
+        # Special handling for attacker logs - collect all attack_*.log files
+        attacker_logs = self.collect_attacker_logs(context)
+        if attacker_logs:
+            collected_logs['attacker'] = attacker_logs
+        
         # Collect network data
         network_configs = context.config.get('data_collection', {}).get('network', [])
         for network_config in network_configs:
@@ -226,6 +248,85 @@ class LogCollector:
                 collected_logs['network'] = pcap_file
         
         return collected_logs
+    
+    def collect_attacker_logs(self, context) -> Optional[str]:
+        """
+        Collect all attack log files from attacker container
+        
+        Args:
+            context: Scenario context
+            
+        Returns:
+            str: Path to combined attack log file or None if failed
+        """
+        try:
+            # Find attacker container
+            attacker_container = None
+            for container in context.containers:
+                if container.get('name') == 'attacker':
+                    attacker_container = container
+                    break
+            
+            if not attacker_container:
+                self.logger.warning("Attacker container not found")
+                return None
+            
+            # Get container ID
+            container_id = attacker_container.get('id')
+            if not container_id:
+                self.logger.warning("Attacker container ID not found")
+                return None
+            
+            # List all attack log files in the container
+            result = context.docker_client.containers.get(container_id).exec_run(
+                'ls -la /logs/attack_*.log 2>/dev/null || echo "No attack logs found"'
+            )
+            
+            if result.exit_code != 0:
+                self.logger.warning("Failed to list attack log files")
+                return None
+            
+            log_files = result.output.decode('utf-8').strip().split('\n')
+            if not log_files or log_files[0] == "No attack logs found":
+                self.logger.warning("No attack log files found")
+                return None
+            
+            # Create output directory
+            output_dir = "logs/attacker"
+            os.makedirs(output_dir, exist_ok=True)
+            
+            # Combine all attack logs into one file
+            combined_log_path = os.path.join(output_dir, "attack_combined.log")
+            
+            with open(combined_log_path, 'w') as combined_file:
+                for log_file in log_files:
+                    if log_file and not log_file.startswith("No attack logs found"):
+                        # Extract filename from ls output
+                        filename = log_file.split()[-1] if log_file.split() else None
+                        if filename and filename.startswith('attack_'):
+                            # Copy log file from container
+                            try:
+                                result = context.docker_client.containers.get(container_id).exec_run(
+                                    f'cat {filename}'
+                                )
+                                if result.exit_code == 0:
+                                    combined_file.write(f"=== {filename} ===\n")
+                                    combined_file.write(result.output.decode('utf-8'))
+                                    combined_file.write("\n\n")
+                                    self.logger.info(f"Collected attack log: {filename}")
+                            except Exception as e:
+                                self.logger.warning(f"Failed to collect {filename}: {str(e)}")
+            
+            if os.path.getsize(combined_log_path) > 0:
+                self.logger.info(f"Combined attack logs: {combined_log_path}")
+                return combined_log_path
+            else:
+                self.logger.warning("No attack log content collected")
+                return None
+                
+        except Exception as e:
+            self.logger.error(f"Failed to collect attacker logs: {str(e)}")
+            return None
     
     def parse_log_to_csv(self, log_file: str, log_config: Dict, context) -> Optional[str]:
         """

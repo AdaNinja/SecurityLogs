@@ -21,9 +21,13 @@ import json, sys
 try:
     containers = json.load(sys.stdin)
     for name, info in containers.items():
-        print(f'Container {name}: {info.get(\"id\", \"unknown\")}')
-except:
-    print('Could not parse container information')
+        if isinstance(info, dict):
+            container_id = info.get('id', 'unknown')
+        else:
+            container_id = getattr(info, 'id', 'unknown') if hasattr(info, 'id') else 'unknown'
+        print(f'Container {name}: {container_id}')
+except Exception as e:
+    print(f'Could not parse container information: {e}')
 " 2>/dev/null || echo "Container info parsing failed"
 else
     echo "$(date): No container information available"

@@ -1,13 +1,12 @@
 # Logs
-logs/
 *.log
 cyberrange.log
 scenario.log
 
-# Output files
-output/
-*.pcap
-*.csv
+# Output files - Keep important data files
+# output/
+# *.pcap
+# *.csv
 
 # Python
 __pycache__/

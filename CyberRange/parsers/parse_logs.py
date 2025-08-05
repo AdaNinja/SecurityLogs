@@ -307,19 +307,38 @@ def main():
     
     # Parse attack logs
     if args.log_type in ['all', 'attack']:
-        attack_files = [
-            ('attacker/attack.log', 'attack_log.csv'),
-            ('attacker/attack_script.log', 'attack_script.csv')
-        ]
+        # Look for attack log files with pattern attack_*.log
+        import glob
+        attack_log_pattern = os.path.join(args.input_dir, 'attacker', 'attack_*.log')
+        attack_files = glob.glob(attack_log_pattern)
         
-        for input_file, output_file in attack_files:
-            input_path = os.path.join(args.input_dir, input_file)
-            output_path = os.path.join(args.output_dir, output_file)
-            
-            if os.path.exists(input_path):
+        if attack_files:
+            # Parse each attack log file
+            for attack_file in attack_files:
+                # Extract attack type from filename if possible
+                filename = os.path.basename(attack_file)
+                attack_type = filename.replace('attack_', '').replace('.log', '')
+                output_file = f'attack_{attack_type}.csv'
+                output_path = os.path.join(args.output_dir, output_file)
+                
                 total_count += 1
-                if parse_attack_logs(input_path, output_path):
+                if parse_attack_logs(attack_file, output_path):
                     success_count += 1
+        else:
+            # Fallback to old pattern
+            attack_files = [
+                ('attacker/attack.log', 'attack_log.csv'),
+                ('attacker/attack_script.log', 'attack_script.csv')
+            ]
+            
+            for input_file, output_file in attack_files:
+                input_path = os.path.join(args.input_dir, input_file)
+                output_path = os.path.join(args.output_dir, output_file)
+                
+                if os.path.exists(input_path):
+                    total_count += 1
+                    if parse_attack_logs(input_path, output_path):
+                        success_count += 1
     
     # Parse user behavior logs
     if args.log_type in ['all', 'user']:

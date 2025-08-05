@@ -1,34 +1,30 @@
-# CyberRange 自动化脚本
+# CyberRange Automation Scripts
 
-## 快速使用
+## Quick Start
 
-### 1. 一键清理
+### 1. Clean Environment
 ```bash
 ./scripts/clean.sh
 ```
-清除所有日志、数据和容器
+Clear all logs, data, and containers
 
-### 2. 一键运行完整实验
+### 2. Run Experiments
 ```bash
-./scripts/run_experiment.sh scenarios/modular_demo_detailed.yaml
+python3 run_scenario.py --config scenarios/waf_off_demo.yaml
 ```
-自动执行：清理 → 运行实验 → 解析转换
+Run WAF OFF mode experiment
 
-### 3. 一键解析数据
 ```bash
-./scripts/parse_data.sh
+python3 run_scenario.py --config scenarios/waf_on_demo.yaml
 ```
-将最新实验数据转换为CSV格式
+Run WAF ON mode experiment
 
-### 4. 检查系统状态
+### 3. Parse Data
 ```bash
-./scripts/status.sh
+python3 parsers/parse_logs.py --input-dir logs --output-dir output --log-type all
 ```
-查看容器、日志和数据状态
+Convert experiment data to CSV format
 
-## 脚本说明
+## Script Descriptions
 
-- `clean.sh` - 清理环境
-- `run_experiment.sh` - 完整实验流程
-- `parse_data.sh` - 数据解析转换
-- `status.sh` - 系统状态检查 
+- `clean.sh` - Clean environment, use before running new experiments 

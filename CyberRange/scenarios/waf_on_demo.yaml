@@ -1,54 +1,57 @@
+# WAF ON Demo Configuration
+# Tests WAF bypass attacks that should evade WAF protection
+
+scenario:
+  name: "waf-on-demo"
+  description: "WAF ON mode - WAF bypass attacks that should evade WAF protection"
+  duration: 60
+  random_seed: 12345
+  attack_types: ["sql_injection", "xss"]
+  waf_mode: "on"  # WAF is ON - execute bypass attacks
+
 behaviors:
   attacks:
-  - duration: 60
-    interval: 2
-    name: sql_injector
+  - name: sql_injector
     node: attacker
+    duration: 20
+    interval: 1
     payload_config:
       files:
-      - /scripts/attack_scripts/attacks.txt
+      - /scripts/attacks/sql_inj.txt
       lines:
       - 1
-      - 10
-      strategy: sequential
+      - 3
     script: /scripts/attack.sh
-    trigger:
-      type: immediate
-      value: 0
-  - duration: 60
-    interval: 2
-    name: xss_attack
+    script_args: ["--attack-type", "sql_injection", "--waf-mode", "on"]
+    
+  - name: xss_attack
     node: attacker
+    duration: 20
+    interval: 1
     payload_config:
       files:
-      - /scripts/attack_scripts/attacks.txt
+      - /scripts/attacks/xss.txt
       lines:
-      - 11
-      - 20
-      strategy: sequential
+      - 1
+      - 3
     script: /scripts/attack.sh
-    trigger:
-      type: delay
-      value: 15
+    script_args: ["--attack-type", "xss", "--waf-mode", "on"]
+    
   benign_traffic:
-  - duration: 300
-    interval: 5
-    name: normal_browsing
+  - name: normal_browsing
     node: benign_user
+    duration: 60
+    interval: 2
     script: /scripts/benign.sh
-    script_args: ["--target", "http://nginx:80", "--duration", "5"]
-    trigger:
-      type: delay
-      value: 10
-  - duration: 300
-    interval: 5
-    name: login_and_shopping
+    script_args: ["--target", "http://nginx:80", "--duration", "1"]
+    
+  - name: login_and_shopping
     node: benign_user
+    duration: 60
+    interval: 2
     script: /scripts/benign.sh
-    script_args: ["--target", "http://nginx:80", "--duration", "5"]
-    trigger:
-      type: delay
-      value: 30
+    script_args: ["--target", "http://nginx:80", "--duration", "1"]
+
 data_collection:
   logs:
   - output: nginx_detailed.csv
@@ -72,21 +75,20 @@ data_collection:
     output: network_traffic.pcap
     capture_size: 100MB
   system: []
+
 hooks:
   post_collection:
-  - context:
-    - all_log_files
-    - scenario_name
-    name: hook_0
+  - name: auto_parse_logs
+    script: ./hooks/auto_parse_logs.py
+    timeout: 300
+  - name: setup_basic
     script: ./hooks/setup_basic.sh
     timeout: 60
   post_node_start:
-  - context:
-    - nodes
-    - health_check
-    name: verify_0
+  - name: verify_juice_shop
     script: ./hooks/verify_juice_shop.py
     timeout: 30
+
 infrastructure:
   networks:
   - driver: bridge
@@ -145,6 +147,7 @@ infrastructure:
     volumes:
     - /home/jiayi/SecurityLogs/CyberRange/scenario-securitylogs/confs/user:/scripts
     - /home/jiayi/SecurityLogs/CyberRange/logs/benign_user:/logs
+
 monitoring:
   alerts:
   - action: restart_container
@@ -157,18 +160,13 @@ monitoring:
   - alert_threshold: 0.5
     interval: 60
     name: attack_success_rate
+
 output:
-  base_dir: data/modular_demo
+  base_dir: data/waf_on_demo
   compression: false
   formats:
   - csv
   - json
   retention:
     days: 7
-    max_size: 5GB
-scenario:
-  description: 'Modular scenario: web-attack-demo1'
-  duration: 60
-  name: web-attack-demo1
-  random_seed: 1234
-  version: '1.0'
+    max_size: 5GB 
