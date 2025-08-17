@@ -1,53 +1,41 @@
-# Logs
-*.log
-cyberrange.log
-scenario.log
+# CyberRange Git Ignore File
 
-# Output files - Keep important data files
-# output/
-# *.pcap
-# *.csv
+# Large binary files
+*.pcap
+*.pcapng
 
-# Python
+# Log files
+logs/*.pcap
+logs/*/network_traffic.pcap
+output/*.pcap
+
+# Experiment data (keep structure, ignore content)
+logs/*/
+!logs/*/.gitkeep
+
+# Python cache
 __pycache__/
-*.py[cod]
-*$py.class
-*.so
+*.pyc
+*.pyo
+*.pyd
 .Python
-build/
-develop-eggs/
-dist/
-downloads/
-eggs/
-.eggs/
-lib/
-lib64/
-parts/
-sdist/
-var/
-wheels/
-*.egg-info/
-.installed.cfg
-*.egg
+*.so
 
-# Virtual environments
-venv/
-env/
-ENV/
-
-# IDE
+# IDE files
 .vscode/
 .idea/
 *.swp
 *.swo
 
-# OS
+# OS files
 .DS_Store
 Thumbs.db
 
-# Docker
-.dockerignore
-
 # Temporary files
 *.tmp
-*.temp 
+*.temp
+*.log
+scenario.log
+
+# Docker
+.dockerignore 
