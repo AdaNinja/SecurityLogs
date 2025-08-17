@@ -25,6 +25,7 @@ FAILED_COUNT=0
 EXECUTED_COUNT=0
 ATTACK_TYPE="all"  # New: Attack type parameter
 WAF_MODE="off"     # New: WAF mode parameter
+DURATION=""        # Duration in seconds for repeated attacks
 
 # Note: Attack execution order is deterministic (sequential)
 # Random seed only affects benign traffic for reproducibility
@@ -706,7 +707,7 @@ run_nmap() {
 }
 
 # Main attack execution function
-execute_attacks() {
+execute_attacks_once() {
     echo "[*] ========================================"
     echo "[*] COMPREHENSIVE ATTACK EXECUTION"
     echo "[*] ========================================"
@@ -892,6 +893,10 @@ while [ $# -gt 0 ]; do
       WAF_MODE="$2"
       shift 2
       ;;
+    --duration)
+      DURATION="$2"
+      shift 2
+      ;;
     --help)
       echo "Usage: $0 [OPTIONS]"
       echo ""
@@ -950,6 +955,46 @@ echo "  VARIANT_ID: $VARIANT_ID"
 echo "Starting Comprehensive Attack Script..."
 echo "Sleeping for 30 seconds before starting the attack..."
 sleep 30
+
+# Duration-aware attack execution function
+execute_attacks() {
+    if [[ -n "$DURATION" && "$DURATION" -gt 0 ]]; then
+        echo "[*] Running attacks for $DURATION seconds with repeated execution"
+        start_time=$(date +%s)
+        end_time=$((start_time + DURATION))
+        round=1
+        
+        while [ $(date +%s) -lt $end_time ]; do
+            echo "[*] Attack round $round ($(date))"
+            
+            # Reset counters for this round
+            SUCCESS_COUNT=0
+            FAILED_COUNT=0
+            EXECUTED_COUNT=0
+            
+            execute_attacks_once
+            
+            # Check if we should continue
+            current_time=$(date +%s)
+            remaining_time=$((end_time - current_time))
+            
+            if [ $remaining_time -gt 5 ]; then
+                echo "[*] Round $round completed. Waiting 5 seconds before next round..."
+                sleep 5
+            elif [ $remaining_time -gt 0 ]; then
+                echo "[*] Round $round completed. Waiting $remaining_time seconds..."
+                sleep $remaining_time
+            fi
+            
+            round=$((round + 1))
+        done
+        
+        echo "[*] Duration-based attack execution completed after $DURATION seconds"
+    else
+        echo "[*] Running attacks once (no duration specified)"
+        execute_attacks_once
+    fi
+}
 
 # Execute attacks
 execute_attacks

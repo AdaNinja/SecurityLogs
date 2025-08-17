@@ -116,11 +116,11 @@ class LogCollector:
             output_name = network_config['output']
             capture_size = network_config.get('capture_size', '100MB')
             
-            # Create output directory in logs folder
-            output_dir = "logs"
-            os.makedirs(output_dir, exist_ok=True)
+            # Use output_name directly (already includes experiment directory path)
+            output_path = output_name
             
-            output_path = os.path.join(output_dir, output_name)
+            # Ensure parent directory exists
+            os.makedirs(os.path.dirname(output_path), exist_ok=True)
             
             # Build tcpdump command with sudo - run in background
             cmd = [

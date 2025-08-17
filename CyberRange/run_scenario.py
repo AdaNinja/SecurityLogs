@@ -19,6 +19,48 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from orchestrator import ScenarioManager, ErrorHandler
 
 
+def resolve_config_path(config_path: str) -> Optional[str]:
+    """
+    Resolve configuration file path by trying multiple locations
+    
+    Args:
+        config_path: Input configuration path (can be relative, absolute, or just filename)
+        
+    Returns:
+        str: Resolved absolute path or None if not found
+    """
+    # Get the project root directory (where this script is located)
+    project_root = os.path.dirname(os.path.abspath(__file__))
+    
+    # List of paths to try, in order of preference
+    paths_to_try = []
+    
+    # If it's already an absolute path, try it first
+    if os.path.isabs(config_path):
+        paths_to_try.append(config_path)
+    else:
+        # Try relative to current directory
+        paths_to_try.append(os.path.abspath(config_path))
+        
+        # Try relative to project root
+        paths_to_try.append(os.path.join(project_root, config_path))
+        
+        # If it's just a filename, try in scenarios directory
+        if not os.path.dirname(config_path):
+            paths_to_try.append(os.path.join(project_root, 'scenarios', config_path))
+        
+        # Also try adding .yaml extension if not present
+        if not config_path.endswith('.yaml') and not config_path.endswith('.yml'):
+            paths_to_try.append(os.path.join(project_root, 'scenarios', config_path + '.yaml'))
+    
+    # Try each path and return the first one that exists
+    for path in paths_to_try:
+        if os.path.exists(path):
+            return os.path.abspath(path)
+    
+    return None
+
+
 def setup_logging(log_level: str = "INFO") -> logging.Logger:
     """Setup logging configuration"""
     level = getattr(logging, log_level.upper(), logging.INFO)
@@ -78,14 +120,23 @@ def load_config(config_path: str) -> Optional[Dict]:
     """Load and validate configuration file with modular adapter support"""
     logger = logging.getLogger(__name__)
     
-    if not os.path.exists(config_path):
-        logger.error(f"Configuration file not found: {config_path}")
+    # Try to find the configuration file in multiple locations
+    resolved_path = resolve_config_path(config_path)
+    if not resolved_path:
+        logger.error(f"Configuration file not found in any of the expected locations")
+        logger.error(f"Searched for: {config_path}")
+        logger.error(f"Try using one of these formats:")
+        logger.error(f"  - Absolute path: /full/path/to/config.yaml")
+        logger.error(f"  - Relative to project: scenarios/config.yaml")
+        logger.error(f"  - Just filename: config.yaml (will search in scenarios/)")
         return None
+    
+    config_path = resolved_path
     
     try:
         # Try to use modular adapter first
         try:
-            from modular_adapter import load_config_with_adapter
+            from orchestrator.modular_adapter import load_config_with_adapter
             config = load_config_with_adapter(config_path)
             if config:
                 logger.info(f"Loaded configuration from: {config_path} (modular format)")
@@ -193,9 +244,10 @@ def run_scenario(config_path: str, dry_run_mode: bool = False) -> bool:
         return dry_run(config)
     
     try:
-        # Initialize scenario manager
+        # Initialize scenario manager with pre-loaded config
         logger.info("Initializing scenario manager...")
-        scenario_manager = ScenarioManager(config_path)
+        resolved_config_path = resolve_config_path(config_path)
+        scenario_manager = ScenarioManager(resolved_config_path, config)
         
         # Run the scenario
         logger.info("Starting scenario execution...")

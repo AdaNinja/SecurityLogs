@@ -41,7 +41,8 @@ class ScriptExecutor:
             
             # Prepare attack command
             interval = attack_config.get('interval', 2)
-            duration = attack_config.get('duration', 60)
+            # Use attack-specific duration if provided, otherwise use a reasonable default for attacks
+            duration = attack_config.get('duration', 20)  # Default 20 seconds for individual attacks
             
             # Get target URL from container environment
             target_url = self._get_target_url(container)
@@ -63,6 +64,10 @@ class ScriptExecutor:
                 start_line = payload_config['lines'][0]
                 end_line = payload_config['lines'][1]
                 script_params.extend(["--start", str(start_line), "--end", str(end_line)])
+            
+            # Add duration parameter if available
+            if duration > 0:
+                script_params.extend(["--duration", str(duration)])
             
             # New: Add script arguments (attack type, WAF mode, etc.)
             if 'script_args' in attack_config:
@@ -92,6 +97,134 @@ class ScriptExecutor:
             
         except Exception as e:
             self.logger.error(f"Failed to execute attack in container {container_id}: {str(e)}")
+            return False
+    
+    def execute_single_attack(self, container_id: str, script_path: str, payload_config: Dict, attack_config: Dict) -> bool:
+        """
+        Execute a single attack without duration (for scheduled attacks)
+        
+        Args:
+            container_id: Container ID
+            script_path: Path to attack script in container
+            payload_config: Payload configuration with files and lines
+            attack_config: Attack configuration
+            
+        Returns:
+            bool: True if attack executed successfully
+        """
+        try:
+            container = self.client.containers.get(container_id)
+            
+            # Get target URL from container environment
+            target_url = self._get_target_url(container)
+            
+            # Prepare attack script parameters for single execution
+            script_params = []
+            
+            # Add target URL
+            if target_url:
+                script_params.extend(["--target", target_url])
+            
+            # Add attack file if specified
+            if payload_config and 'files' in payload_config:
+                attack_file = payload_config['files'][0]  # Use first file
+                script_params.extend(["--attack-file", attack_file])
+            
+            # Add line range if specified
+            if payload_config and 'lines' in payload_config:
+                start_line = payload_config['lines'][0]
+                end_line = payload_config['lines'][1]
+                script_params.extend(["--start", str(start_line), "--end", str(end_line)])
+            
+            # For single attacks, don't add duration (execute once)
+            
+            # Add script arguments (attack type, WAF mode, etc.)
+            if 'script_args' in attack_config:
+                script_params.extend(attack_config['script_args'])
+            
+            # Build command
+            command = f"bash {script_path} {' '.join(script_params)}"
+            
+            self.logger.debug(f"Single attack command: {command}")
+            
+            # Execute attack script once (not in background)
+            exec_result = container.exec_run(
+                command,
+                detach=False,  # Wait for completion
+                tty=False,
+                environment={
+                    'TARGET_URL': target_url,
+                    'ATTACK_PHASE': 'scheduled',
+                    'RANDOM_SEED': str(attack_config.get('random_seed', 12345))
+                }
+            )
+            
+            if exec_result.exit_code == 0:
+                self.logger.debug(f"Single attack completed successfully in container {container_id}")
+                return True
+            else:
+                self.logger.warning(f"Single attack failed in container {container_id} with exit code {exec_result.exit_code}")
+                return False
+            
+        except Exception as e:
+            self.logger.error(f"Single attack execution failed: {str(e)}")
+            return False
+    
+    def execute_single_benign_traffic(self, container_id: str, script_path: str, traffic_config: Dict) -> bool:
+        """
+        Execute a single benign traffic event (for scheduled traffic)
+        
+        Args:
+            container_id: Container ID
+            script_path: Path to benign script in container
+            traffic_config: Traffic configuration
+            
+        Returns:
+            bool: True if traffic executed successfully
+        """
+        try:
+            container = self.client.containers.get(container_id)
+            
+            # Get target URL from container environment
+            target_url = self._get_target_url(container)
+            
+            # Prepare traffic script parameters for single execution
+            script_params = []
+            
+            # Add script arguments (which already include --target from YAML)
+            if 'script_args' in traffic_config:
+                script_params.extend(traffic_config['script_args'])
+            else:
+                # Fallback: Add target URL if no script args provided
+                if target_url:
+                    script_params.extend(["--target", target_url])
+            
+            # Build command
+            command = f"bash {script_path} {' '.join(script_params)}"
+            
+            self.logger.debug(f"Single benign traffic command: {command}")
+            
+            # Execute benign traffic script once
+            exec_result = container.exec_run(
+                command,
+                detach=False,  # Wait for completion
+                tty=False,
+                environment={
+                    'TARGET_URL': target_url,
+                    'USER_PHASE': 'scheduled',
+                    'RANDOM_SEED': str(traffic_config.get('random_seed', 12345))
+                }
+            )
+            
+            if exec_result.exit_code == 0:
+                self.logger.debug(f"Single benign traffic completed successfully in container {container_id}")
+                return True
+            else:
+                self.logger.warning(f"Single benign traffic failed in container {container_id} with exit code {exec_result.exit_code}")
+                return False
+            
+        except Exception as e:
+            self.logger.error(f"Single benign traffic execution failed: {str(e)}")
             return False
     
     def execute_benign_traffic(self, container_id: str, script_path: str, traffic_config: Dict) -> bool:

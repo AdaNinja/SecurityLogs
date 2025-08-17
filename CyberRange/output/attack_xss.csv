@@ -1,7 +1,0 @@
-timestamp,source_type,source_name,event_type,severity,message,ip_src,ip_dst,port_src,port_dst,protocol,user_agent,request_method,request_path,response_code,payload,label
-2025-08-05T23:40:09.116000Z,attack,attacker,attack_start,info,"Attack started",172.27.0.4,,,,,"",GET,/rest/products/search,,"Case-mixed XSS",0
-2025-08-05T23:40:09.391000Z,attack,attacker,attack_end,error,"Attack completed",172.27.0.4,,,,,"",,,200,"",0
-2025-08-05T23:40:10.395000Z,attack,attacker,attack_start,info,"Attack started",172.27.0.4,,,,,"",GET,/rest/products/search,,"URL-encoded XSS",0
-2025-08-05T23:40:10.599000Z,attack,attacker,attack_end,error,"Attack completed",172.27.0.4,,,,,"",,,200,"",0
-2025-08-05T23:40:11.603000Z,attack,attacker,attack_start,info,"Attack started",172.27.0.4,,,,,"",GET,/rest/products/search,,"Comment-obfuscated XSS",0
-2025-08-05T23:40:11.807000Z,attack,attacker,attack_end,error,"Attack completed",172.27.0.4,,,,,"",,,200,"",0

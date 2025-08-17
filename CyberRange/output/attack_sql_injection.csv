@@ -1,4 +1,0 @@
-timestamp,source_type,source_name,event_type,severity,message,ip_src,ip_dst,port_src,port_dst,protocol,user_agent,request_method,request_path,response_code,payload,label
-2025-08-05T23:40:09.169000Z,attack,attacker,attack_end,error,"Attack completed",172.27.0.4,,,,,"",,,401,"",0
-2025-08-05T23:40:10.232000Z,attack,attacker,attack_end,info,"Attack completed",172.27.0.4,,,,,"",,,500,"",0
-2025-08-05T23:40:11.290000Z,attack,attacker,attack_end,info,"Attack completed",172.27.0.4,,,,,"",,,500,"",0

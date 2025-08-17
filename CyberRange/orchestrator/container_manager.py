@@ -28,6 +28,7 @@ class ContainerManager:
         try:
             self.client = docker.from_env()
             self.logger = logging.getLogger(__name__)
+            self.project_root = self._get_project_root()
             self.logger.info("Docker client initialized successfully")
         except Exception as e:
             self.logger.error(f"Failed to initialize Docker client: {str(e)}")
@@ -98,7 +99,9 @@ class ContainerManager:
             image = node_config['image']
             
             # Create necessary directories for volumes
-            self._create_volume_directories(node_config)
+            if not self._create_volume_directories(node_config):
+                self.logger.error(f"Failed to create volume directories for {container_name}")
+                return None
             
             # Check if container already exists and remove it
             try:
@@ -135,10 +138,32 @@ class ContainerManager:
             for network_name in additional_networks:
                 try:
                     network = self.client.networks.get(network_name)
-                    network.connect(container.id)
-                    self.logger.info(f"Connected {container_name} to network: {network_name}")
+                    
+                    # Check if there are aliases for this network
+                    aliases = None
+                    if 'network_aliases' in node_config and network_name in node_config['network_aliases']:
+                        aliases = node_config['network_aliases'][network_name]
+                    
+                    if aliases:
+                        network.connect(container.id, aliases=aliases)
+                        self.logger.info(f"Connected {container_name} to network: {network_name} with aliases: {aliases}")
+                    else:
+                        network.connect(container.id)
+                        self.logger.info(f"Connected {container_name} to network: {network_name}")
                 except Exception as e:
                     self.logger.warning(f"Failed to connect {container_name} to network {network_name}: {e}")
+            
+            # Set network aliases for primary network if specified
+            if 'network_aliases' in node_config and container_config['network'] in node_config['network_aliases']:
+                try:
+                    primary_network = self.client.networks.get(container_config['network'])
+                    aliases = node_config['network_aliases'][container_config['network']]
+                    # Disconnect and reconnect with aliases
+                    primary_network.disconnect(container.id, force=True)
+                    primary_network.connect(container.id, aliases=aliases)
+                    self.logger.info(f"Set aliases {aliases} for {container_name} on primary network {container_config['network']}")
+                except Exception as e:
+                    self.logger.warning(f"Failed to set network aliases for {container_name}: {e}")
             
             # Get container information
             container_info = self._get_container_info(container)
@@ -190,7 +215,7 @@ class ContainerManager:
                     if len(parts) < 2 or len(parts) > 3:
                         self.logger.warning(f"Invalid volume mapping format: {volume_mapping}")
                         continue
-                    host_path = parts[0]
+                    host_path = self._resolve_host_path(parts[0])
                     container_path = parts[1]
                     mode = 'ro' if len(parts) == 3 and parts[2] == 'ro' else 'rw'
                     config['volumes'][host_path] = {'bind': container_path, 'mode': mode}
@@ -198,6 +223,14 @@ class ContainerManager:
         # Environment variables
         if 'environment' in node_config:
             config['environment'] = node_config['environment']
+        
+        # Extra hosts for domain name resolution
+        if 'extra_hosts' in node_config:
+            config['extra_hosts'] = {}
+            for host_mapping in node_config['extra_hosts']:
+                if ':' in host_mapping:
+                    host, ip = host_mapping.split(':', 1)
+                    config['extra_hosts'][host] = ip
         
         # Command
         if 'command' in node_config:
@@ -227,39 +260,57 @@ class ContainerManager:
         
         return config
     
-    def _create_volume_directories(self, node_config: Dict):
-        """Create necessary directories for volume mounts"""
+    def _create_volume_directories(self, node_config: Dict) -> bool:
+        """
+        Create necessary directories for volume mounts
+        
+        Returns:
+            bool: True if all directories created successfully, False otherwise
+        """
         import os
         
-        if 'volumes' in node_config:
-            self.logger.info(f"Processing volumes: {node_config['volumes']}")
-            for volume_mapping in node_config['volumes']:
-                try:
-                    if isinstance(volume_mapping, str):
-                        # Format: "host_path:container_path" or "host_path:container_path:ro"
-                        parts = volume_mapping.split(':')
-                        if len(parts) < 2 or len(parts) > 3:
-                            self.logger.warning(f"Invalid volume mapping format: {volume_mapping}")
-                            continue
-                        host_path = parts[0]
-                        container_path = parts[1]
-                        # mode (ro/rw) is handled in _prepare_container_config
-                        # Create directory if it doesn't exist
-                        if not os.path.exists(host_path):
-                            os.makedirs(host_path, exist_ok=True)
-                            self.logger.info(f"Created directory: {host_path}")
+        if 'volumes' not in node_config:
+            self.logger.debug("No volumes configured for this node")
+            return True
+            
+        success = True
+        self.logger.info(f"Processing volumes: {node_config['volumes']}")
+        
+        for volume_mapping in node_config['volumes']:
+            try:
+                if isinstance(volume_mapping, str):
+                    # Format: "host_path:container_path" or "host_path:container_path:ro"
+                    parts = volume_mapping.split(':')
+                    if len(parts) < 2 or len(parts) > 3:
+                        self.logger.warning(f"Invalid volume mapping format: {volume_mapping}")
+                        continue
+                    host_path = self._resolve_host_path(parts[0])
+                    
+                    # Create directory if it doesn't exist
+                    if not os.path.exists(host_path):
+                        os.makedirs(host_path, exist_ok=True)
+                        self.logger.info(f"Created directory: {host_path}")
                     else:
-                        # Format: [host_path, container_path]
-                        if len(volume_mapping) < 1:
-                            self.logger.warning(f"Invalid volume mapping format: {volume_mapping}")
-                            continue
-                        host_path = volume_mapping[0]
-                        if not os.path.exists(host_path):
-                            os.makedirs(host_path, exist_ok=True)
-                            self.logger.info(f"Created directory: {host_path}")
-                except Exception as e:
-                    self.logger.warning(f"Error processing volume mapping {volume_mapping}: {e}")
-                    continue
+                        self.logger.debug(f"Directory already exists: {host_path}")
+                        
+                else:
+                    # Format: [host_path, container_path]
+                    if len(volume_mapping) < 1:
+                        self.logger.warning(f"Invalid volume mapping format: {volume_mapping}")
+                        continue
+                    host_path = self._resolve_host_path(volume_mapping[0])
+                    
+                    if not os.path.exists(host_path):
+                        os.makedirs(host_path, exist_ok=True)
+                        self.logger.info(f"Created directory: {host_path}")
+                    else:
+                        self.logger.debug(f"Directory already exists: {host_path}")
+                        
+            except Exception as e:
+                self.logger.error(f"Failed to create volume directory for {volume_mapping}: {str(e)}")
+                success = False
+                
+        return success
     
     def _get_container_info(self, container) -> ContainerInfo:
         """Extract container information from Docker container object"""
@@ -445,6 +496,32 @@ class ContainerManager:
             self.logger.error(f"Failed to list networks: {str(e)}")
         
         return networks
+    
+    def _get_project_root(self) -> str:
+        """Get the project root directory"""
+        # Go up from orchestrator to project root
+        from pathlib import Path
+        return str(Path(__file__).parent.parent.absolute())
+    
+    def _resolve_host_path(self, path: str) -> str:
+        """
+        Resolve host path to absolute path
+        
+        Args:
+            path: Input path (can be relative or absolute)
+            
+        Returns:
+            str: Resolved absolute path
+        """
+        import os
+        
+        # If already absolute, return as is
+        if os.path.isabs(path):
+            return path
+        
+        # If relative, make it relative to project root
+        resolved_path = os.path.join(self.project_root, path)
+        return os.path.abspath(resolved_path)
 
 
 def main():

@@ -43,9 +43,12 @@ def auto_parse_logs():
     try:
         # Run the parse_logs.py script with explicit arguments
         logger.info("Executing parse_logs.py...")
+        # Get experiment directory from environment
+        experiment_dir = os.environ.get('EXPERIMENT_DIR', 'logs')
+        
         cmd = [
             sys.executable, str(parse_script),
-            '--input-dir', 'logs',
+            '--input-dir', experiment_dir,
             '--output-dir', 'output',
             '--log-type', 'all'
         ]

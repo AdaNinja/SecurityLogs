@@ -16,6 +16,7 @@ from .container_manager import ContainerManager
 from .script_executor import ScriptExecutor
 from .log_collector import LogCollector
 from .error_handler import ErrorHandler
+from .traffic_scheduler import create_parallel_behaviors, ParallelTrafficExecutor
 
 
 @dataclass
@@ -39,12 +40,13 @@ class ScenarioContext:
 
 
 class ScenarioManager:
-    def __init__(self, config_path: str = "scenarios/config.yaml"):
+    def __init__(self, config_path: str = "scenarios/config.yaml", config: Dict = None):
         """
         Initialize ScenarioManager
         
         Args:
-            config_path: Path to scenario configuration file
+            config_path: Path to scenario configuration file (used only if config is None)
+            config: Pre-loaded configuration dictionary (takes precedence over config_path)
         """
         self.config_path = config_path
         
@@ -52,7 +54,11 @@ class ScenarioManager:
         self.setup_logging()
         
         # Load configuration after logging is setup
-        self.config = self.load_config()
+        if config is not None:
+            self.config = config
+            self.logger.info(f"Using pre-loaded configuration: {config.get('scenario', {}).get('name', 'Unknown')}")
+        else:
+            self.config = self.load_config()
         self.context = None
         
         # Create output directories
@@ -77,26 +83,81 @@ class ScenarioManager:
         self.logger = logging.getLogger(__name__)
     
     def _create_output_directories(self):
-        """Create necessary output directories"""
+        """Create necessary output directories with timestamp"""
         import os
+        from datetime import datetime
         
         # Create base directories
-        directories = [
-            'logs',
-            'output'
+        os.makedirs('logs', exist_ok=True)
+        os.makedirs('output', exist_ok=True)
+        
+        # Generate timestamp subfolder
+        scenario_name = self.config.get('scenario', {}).get('name', 'unknown')
+        timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+        self.experiment_dir = f"logs/{scenario_name}_{timestamp}"
+        
+        # Create experiment-specific directory structure
+        experiment_subdirs = [
+            self.experiment_dir,
+            f"{self.experiment_dir}/nginx",
+            f"{self.experiment_dir}/attacker", 
+            f"{self.experiment_dir}/benign_user"
         ]
         
-        # Create subdirectories for logs
-        log_subdirs = [
-            'logs/nginx',
-            'logs/attacker',
-            'logs/benign_user'
-        ]
+        for directory in experiment_subdirs:
+            os.makedirs(directory, exist_ok=True)
+            self.logger.info(f"Created experiment directory: {directory}")
         
-        for directory in directories + log_subdirs:
-            if not os.path.exists(directory):
-                os.makedirs(directory, exist_ok=True)
-                self.logger.info(f"Created directory: {directory}")
+        # Update log paths in configuration for this experiment
+        self._update_log_paths_for_experiment()
+    
+    def _update_log_paths_for_experiment(self):
+        """Update container volume paths to use experiment directory"""
+        # Update nginx log volume
+        if 'infrastructure' in self.config and 'nodes' in self.config['infrastructure']:
+            for node in self.config['infrastructure']['nodes']:
+                if node['name'] == 'nginx' and 'volumes' in node:
+                    # Update nginx log volume path
+                    for i, volume in enumerate(node['volumes']):
+                        if '/var/log/nginx' in volume:
+                            host_path, container_path = volume.split(':', 1)
+                            if host_path == './logs/nginx':
+                                node['volumes'][i] = f"./{self.experiment_dir}/nginx:{container_path}"
+                                self.logger.info(f"Updated nginx log path: {node['volumes'][i]}")
+                
+                elif node['name'] == 'attacker' and 'volumes' in node:
+                    # Update attacker log volume path
+                    for i, volume in enumerate(node['volumes']):
+                        if '/logs' in volume and not '/scripts' in volume:
+                            host_path, container_path = volume.split(':', 1)
+                            if host_path == './logs/attacker':
+                                node['volumes'][i] = f"./{self.experiment_dir}/attacker:{container_path}"
+                                self.logger.info(f"Updated attacker log path: {node['volumes'][i]}")
+                
+                elif node['name'] == 'benign_user' and 'volumes' in node:
+                    # Update benign user log volume path
+                    for i, volume in enumerate(node['volumes']):
+                        if '/logs' in volume and not '/scripts' in volume:
+                            host_path, container_path = volume.split(':', 1)
+                            if host_path == './logs/benign_user':
+                                node['volumes'][i] = f"./{self.experiment_dir}/benign_user:{container_path}"
+                                self.logger.info(f"Updated benign_user log path: {node['volumes'][i]}")
+        
+        # Update data collection paths
+        if 'data_collection' in self.config and 'logs' in self.config['data_collection']:
+            for log_config in self.config['data_collection']['logs']:
+                if log_config['source'] == 'nginx':
+                    log_config['path'] = f"/{self.experiment_dir}/nginx/detailed.log"
+                elif log_config['source'] == 'attacker':
+                    log_config['path'] = f"/{self.experiment_dir}/attacker/attack.log"
+                elif log_config['source'] == 'benign_user':
+                    log_config['path'] = f"/{self.experiment_dir}/benign_user/user.log"
+        
+        # Update network capture path
+        if 'data_collection' in self.config and 'network' in self.config['data_collection']:
+            for network_config in self.config['data_collection']['network']:
+                if 'output' in network_config:
+                    network_config['output'] = f"{self.experiment_dir}/network_traffic.pcap"
     
     def load_config(self) -> Dict:
         """Load scenario configuration from YAML file"""
@@ -140,13 +201,24 @@ class ScenarioManager:
             # Phase 2: Start infrastructure
             success &= self.start_infrastructure()
             
-            # Phase 3: Execute behaviors
-            success &= self.execute_behaviors()
-            
-            # Phase 3.5: Wait for scenario duration
+            # Phase 3: Execute realistic traffic schedule
             scenario_duration = self.config.get('scenario', {}).get('duration', 300)
-            self.logger.info(f"Waiting for scenario duration: {scenario_duration} seconds")
-            time.sleep(scenario_duration)
+            self.logger.info(f"Starting realistic traffic simulation for {scenario_duration} seconds")
+            
+            # Check if this is a percentage-based traffic configuration
+            has_percentage_config = self._has_percentage_based_traffic()
+
+            if has_percentage_config:
+                self.logger.info("Using parallel traffic execution")
+                success &= self.execute_parallel_traffic()
+            else:
+                self.logger.info("Using traditional behavior execution")
+                # Start behaviors in background
+                success &= self.execute_behaviors()
+
+                # Wait for scenario duration while behaviors run
+                self.logger.info(f"Waiting for scenario duration: {scenario_duration} seconds")
+                time.sleep(scenario_duration)
             
             # Phase 4: Collect data
             success &= self.collect_data()
@@ -183,11 +255,15 @@ class ScenarioManager:
             
             # Start containers
             nodes = self.config.get('infrastructure', {}).get('nodes', [])
+            self.logger.info(f"Found {len(nodes)} nodes to start")
             for node in nodes:
+                self.logger.info(f"Starting container: {node['name']} ({node['image']})")
                 container_info = self.container_manager.start_container(node)
                 if container_info:
                     self.context.containers[node['name']] = container_info
+                    self.logger.info(f"Successfully started container: {node['name']}")
                 else:
+                    self.logger.error(f"Failed to start container: {node['name']}")
                     raise Exception(f"Failed to start container: {node['name']}")
             
             # Start network capture early
@@ -286,6 +362,157 @@ class ScenarioManager:
             self.logger.error(f"Benign traffic execution failed: {str(e)}")
             return False
     
+    def _has_percentage_based_traffic(self) -> bool:
+        """Check if configuration uses percentage-based traffic"""
+        attacks = self.config.get('behaviors', {}).get('attacks', [])
+        benign_traffic = self.config.get('behaviors', {}).get('benign_traffic', [])
+        
+        # Check if any behavior has percentage configuration
+        for attack in attacks:
+            if 'percentage' in attack:
+                return True
+        
+        for benign in benign_traffic:
+            if 'percentage' in benign:
+                return True
+                
+        return False
+    
+    def execute_scheduled_traffic(self) -> bool:
+        """Execute traffic based on percentage scheduling"""
+        try:
+            self.logger.info("Creating traffic schedule...")
+            events = create_traffic_schedule(self.config)
+            
+            if not events:
+                self.logger.warning("No traffic events scheduled")
+                return True
+            
+            self.logger.info(f"Executing {len(events)} scheduled traffic events...")
+            
+            start_time = time.time()
+            current_time = start_time
+            
+            for event in events:
+                # Wait until it's time for this event
+                wait_time = event.timestamp - current_time
+                if wait_time > 0:
+                    time.sleep(wait_time)
+                
+                current_time = time.time()
+                
+                # Execute the event
+                try:
+                    self.logger.debug(f"Executing {event.behavior_type} event: {event.behavior_name}")
+                    
+                    if event.behavior_type == 'attack':
+                        attack_config = {
+                            'name': event.behavior_name,
+                            'node': event.node,
+                            'script': event.script,
+                            'script_args': event.script_args,
+                            'payload_config': event.payload_config
+                        }
+                        self.execute_single_attack(attack_config)
+                    else:  # benign traffic
+                        benign_config = {
+                            'name': event.behavior_name,
+                            'node': event.node,
+                            'script': event.script,
+                            'script_args': event.script_args
+                        }
+                        self.execute_single_benign_traffic(benign_config)
+                        
+                except Exception as e:
+                    self.logger.warning(f"Failed to execute event {event.behavior_name}: {str(e)}")
+            
+            self.logger.info("Scheduled traffic execution completed")
+            return True
+            
+        except Exception as e:
+            self.logger.error(f"Scheduled traffic execution failed: {str(e)}")
+            return False
+    
+    def execute_single_attack(self, attack_config: Dict) -> bool:
+        """Execute a single attack event"""
+        try:
+            node_name = attack_config['node']
+            script_path = attack_config['script']
+            
+            # Get payload configuration
+            payload_config = attack_config.get('payload_config', {})
+            
+            # Add random seed to attack config
+            random_seed = self.config.get('scenario', {}).get('random_seed', 12345)
+            attack_config['random_seed'] = random_seed
+            
+            # Execute attack script with payload configuration
+            container_id = self.context.containers[node_name].id
+            
+            # For scheduled attacks, we execute once without duration
+            success = self.script_executor.execute_single_attack(
+                container_id, script_path, payload_config, attack_config
+            )
+            
+            return success
+            
+        except Exception as e:
+            self.logger.error(f"Single attack execution failed: {str(e)}")
+            return False
+    
+    def execute_single_benign_traffic(self, traffic_config: Dict) -> bool:
+        """Execute a single benign traffic event"""
+        try:
+            node_name = traffic_config['node']
+            script_path = traffic_config['script']
+            
+            # Add random seed to traffic config
+            random_seed = self.config.get('scenario', {}).get('random_seed', 12345)
+            traffic_config['random_seed'] = random_seed
+            
+            container_id = self.context.containers[node_name].id
+            
+            # For scheduled benign traffic, we execute once
+            success = self.script_executor.execute_single_benign_traffic(
+                container_id, script_path, traffic_config
+            )
+            
+            return success
+            
+        except Exception as e:
+            self.logger.error(f"Single benign traffic execution failed: {str(e)}")
+            return False
+    
+    def execute_parallel_traffic(self) -> bool:
+        """Execute traffic behaviors in parallel threads"""
+        try:
+            scenario_duration = self.config.get('scenario', {}).get('duration', 300)
+            
+            # Create parallel behaviors
+            self.logger.info("Creating parallel traffic behaviors...")
+            behaviors = create_parallel_behaviors(self.config)
+            
+            if not behaviors:
+                self.logger.warning("No parallel behaviors created")
+                return True
+            
+            # Create and start parallel executor
+            executor = ParallelTrafficExecutor(scenario_duration)
+            
+            # Execute behaviors in parallel
+            success = executor.execute_behaviors(
+                behaviors=behaviors,
+                attack_executor=self.execute_single_attack,
+                benign_executor=self.execute_single_benign_traffic
+            )
+            
+            self.logger.info("Parallel traffic execution completed")
+            return success
+            
+        except Exception as e:
+            self.logger.error(f"Parallel traffic execution failed: {str(e)}")
+            return False
+    
     def get_payloads(self, payload_config: Dict) -> List[str]:
         """Get payloads based on configuration"""
         try:
@@ -346,6 +573,9 @@ class ScenarioManager:
                 
                 # Prepare context data
                 context_data = self.prepare_hook_context(hook_context, context)
+                
+                # Add experiment directory to context
+                context_data['EXPERIMENT_DIR'] = self.experiment_dir
                 
                 # Execute hook
                 success = self.script_executor.execute_hook(

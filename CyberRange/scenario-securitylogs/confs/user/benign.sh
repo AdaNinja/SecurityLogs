@@ -9,6 +9,7 @@ exec > >(tee /logs/user.log) 2>&1
 # Parse command line arguments
 TARGET="http://fancystore.com"  # Default target
 DURATION=5  # Default duration in minutes
+BEHAVIOR=""  # Behavior type (browse, shop, etc.)
 
 while [ $# -gt 0 ]; do
   case $1 in
@@ -18,6 +19,10 @@ while [ $# -gt 0 ]; do
       ;;
     --duration)
       DURATION="$2"
+      shift 2
+      ;;
+    --behavior)
+      BEHAVIOR="$2"
       shift 2
       ;;
     *)
@@ -164,6 +169,15 @@ class BenignUserSimulator:
         url = f'{self.target_url}{path}'
         timestamp = datetime.utcnow().isoformat() + 'Z'
         
+        # Check if target is reachable (quick DNS check)
+        try:
+            from urllib.parse import urlparse
+            parsed = urlparse(url)
+            socket.gethostbyname(parsed.hostname)
+        except Exception as e:
+            log_warning(f'DNS resolution failed for {parsed.hostname}: {e}')
+            return 0
+        
         if headers is None:
             headers = {}
         
@@ -193,7 +207,7 @@ class BenignUserSimulator:
                     data_bytes = b''
                 req = urllib.request.Request(url, data=data_bytes, headers=headers, method=method)
             
-            with urllib.request.urlopen(req, timeout=10) as response:
+            with urllib.request.urlopen(req, timeout=3) as response:
                 status_code = response.getcode()
                 
                 # Log with detailed information in JSON format
@@ -386,19 +400,42 @@ class BenignUserSimulator:
             time.sleep(random.uniform(2, 8))
         
         log_info('Benign user simulation completed')
+    
+    def execute_single_action(self, behavior='browse'):
+        """Execute a single benign action for scheduled traffic"""
+        log_info(f'Executing single {behavior} action')
+        
+        # Select action based on behavior
+        if behavior == 'browse':
+            actions = [self.browse_homepage, self.view_product, self.browse_category]
+        elif behavior == 'shop':
+            actions = [self.add_to_cart, self.view_cart, self.user_login]
+        else:
+            actions = [self.browse_homepage, self.search_products]
+        
+        # Execute one random action
+        action = random.choice(actions)
+        try:
+            action()
+            log_info(f'Single {behavior} action completed successfully')
+        except Exception as e:
+            log_warning(f'Single action failed: {str(e)}')
 
 if __name__ == '__main__':
     import sys
     target = sys.argv[1] if len(sys.argv) > 1 else 'http://fancystore.com'
-    duration = int(sys.argv[2]) if len(sys.argv) > 2 else 5
+    behavior = sys.argv[2] if len(sys.argv) > 2 else 'browse'
     
-    # Create simulator and run
+    # Create simulator
     simulator = BenignUserSimulator(target)
-    simulator.run_simulation(duration)
+    
+    # Always execute single action for scheduled traffic
+    log_info(f'Single action mode: target={target}, behavior={behavior}')
+    simulator.execute_single_action(behavior)
 EOF
 
     # Run the Python script with proper arguments
-    python3 /tmp/benign_simulator.py "$TARGET" "$DURATION"
+    python3 /tmp/benign_simulator.py "$TARGET" "$BEHAVIOR"
     
     # Clean up
     rm -f /tmp/benign_simulator.py
