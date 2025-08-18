@@ -1,0 +1,186 @@
+# Test Configuration for 2-Day Dataset Structure
+# 5-minute test to validate the 2-day dataset configuration structure
+
+scenario:
+  name: "test-2day-config"
+  description: "5-minute test of 2-day dataset configuration structure"
+  duration: 300  # 5 minutes for testing
+  random_seed: 20240101
+  attack_types: ["sql_injection", "xss", "directory_traversal", "command_injection", "authentication_bypass", "file_discovery", "http_method_enum"]
+  waf_mode: "off"
+
+# Realistic 1:9 ratio traffic distribution (10% attacks, 90% benign)
+behaviors:
+  attacks:
+  - name: sql_injection_test
+    node: attacker
+    percentage: 0.3  # 0.3% of total traffic
+    payload_config:
+      files:
+      - /scripts/attacks/sql_inj.txt
+      lines: [1, 3]  # First 3 payloads for better test coverage
+    script: /scripts/attack.sh
+    script_args: ["--attack-type", "sql_injection", "--waf-mode", "off", "--interval", "3", "--max-payloads", "5"]
+    
+  - name: xss_test
+    node: attacker
+    percentage: 0.2  # 0.2% of total traffic
+    payload_config:
+      files:
+      - /scripts/attacks/xss.txt
+      lines: [1, 3]
+    script: /scripts/attack.sh
+    script_args: ["--attack-type", "xss", "--waf-mode", "off", "--interval", "4", "--max-payloads", "4"]
+    
+  - name: authentication_bypass_test
+    node: attacker
+    percentage: 0.2  # 0.2% of total traffic
+    payload_config:
+      files:
+      - /scripts/attacks/auth_bypass.txt
+      lines: [1, 3]
+    script: /scripts/attack.sh
+    script_args: ["--attack-type", "authentication_bypass", "--waf-mode", "off", "--interval", "5", "--max-payloads", "3"]
+    
+  - name: directory_traversal_test
+    node: attacker
+    percentage: 0.2  # 0.2% of total traffic
+    payload_config:
+      files:
+      - /scripts/attacks/directory_traversal.txt
+      lines: [1, 3]
+    script: /scripts/attack.sh
+    script_args: ["--attack-type", "directory_traversal", "--waf-mode", "off", "--interval", "6", "--max-payloads", "3"]
+    
+  - name: command_injection_test
+    node: attacker
+    percentage: 0.2  # 0.2% of total traffic
+    payload_config:
+      files:
+      - /scripts/attacks/command_inj.txt
+      lines: [1, 3]
+    script: /scripts/attack.sh
+    script_args: ["--attack-type", "command_injection", "--waf-mode", "off", "--interval", "4", "--max-payloads", "3"]
+    
+  - name: file_discovery_test
+    node: attacker
+    percentage: 0.1  # 0.1% of total traffic
+    payload_config:
+      files:
+      - /scripts/attacks/file_discovery.txt
+      lines: [1, 4]
+    script: /scripts/attack.sh
+    script_args: ["--attack-type", "file_discovery", "--waf-mode", "off", "--interval", "5", "--max-payloads", "4"]
+    
+  - name: http_method_enum_test
+    node: attacker
+    percentage: 0.1  # 0.1% of total traffic
+    payload_config:
+      files:
+      - /scripts/attacks/method_enum.txt
+      lines: [1, 3]
+    script: /scripts/attack.sh
+    script_args: ["--attack-type", "http_method_enum", "--waf-mode", "off", "--interval", "8", "--max-payloads", "3"]
+    
+  benign_traffic:
+  - name: test_business_operations
+    node: benign_user
+    percentage: 80  # 80% of total traffic
+    script: /scripts/benign.sh
+    script_args: ["--target", "http://fancystore.com", "--behavior", "browse", "--frequency", "normal"]
+    
+  - name: test_api_traffic
+    node: benign_user
+    percentage: 15  # 15% of total traffic
+    script: /scripts/benign.sh
+    script_args: ["--target", "http://fancystore.com", "--behavior", "shop", "--frequency", "high"]
+    
+  - name: test_mobile_access
+    node: benign_user
+    percentage: 3.7  # 3.7% of total traffic
+    script: /scripts/benign.sh
+    script_args: ["--target", "http://fancystore.com", "--behavior", "browse", "--frequency", "low"]
+
+infrastructure:
+  networks:
+  - name: internal-net
+    driver: bridge
+  - name: external-net
+    driver: bridge
+    
+  nodes:
+  - name: juice-shop
+    role: target
+    image: bkimminich/juice-shop
+    networks: ['internal-net']
+    ports: ['3000:3000']
+    environment: ['NODE_ENV=production']
+    
+  - name: nginx
+    role: proxy
+    networks: ['internal-net', 'external-net']
+    network_aliases:
+      internal-net: ['fancystore.com']
+      external-net: ['fancystore.com']
+    ports: ['80:80']
+    volumes:
+    - ./scenario-securitylogs/confs/nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+    - ./logs/nginx:/var/log/nginx
+    
+  - name: attacker
+    role: attacker
+    image: ras-attacker:latest
+    networks: ['internal-net']
+    environment:
+    - TARGET_URL=http://fancystore.com
+    - TARGET_HOST=fancystore.com
+    - TARGET_PORT=80
+    volumes:
+    - ./scenario-securitylogs/confs/attacker:/scripts
+    - ./logs/attacker:/logs
+    
+  - name: benign_user
+    role: user
+    image: python:3.9-slim
+    command: tail -f /dev/null
+    networks: ['internal-net']
+    environment:
+    - TARGET_URL=http://fancystore.com
+    - USER_TYPE=test_user
+    volumes:
+    - ./scenario-securitylogs/confs/user:/scripts
+    - ./logs/benign_user:/logs
+
+data_collection:
+  logs:
+  - source: nginx
+    path: /var/log/nginx/detailed.log
+    output: test_2day_nginx_detailed.csv
+    parser: nginx_parser
+    real_time: true
+  - source: attacker
+    path: /logs/attack.log
+    output: test_2day_attack_log.csv
+    parser: attacker_parser
+    real_time: true
+  - source: benign_user
+    path: /logs/user.log
+    output: test_2day_user_behavior.csv
+    parser: user_parser
+    real_time: true
+  network:
+  - interface: any
+    filter: net 172.27.0.0/16 or net 172.28.0.0/16
+    output: test_2day_network_traffic.pcap
+    capture_size: 500MB
+
+hooks:
+  post_node_start:
+  - name: verify_juice_shop
+    script: ./hooks/verify_juice_shop.py
+    timeout: 60
+    
+  post_collection:
+  - name: auto_parse_logs
+    script: ./hooks/auto_parse_logs.py
+    timeout: 600

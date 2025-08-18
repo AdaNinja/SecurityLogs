@@ -26,6 +26,8 @@ EXECUTED_COUNT=0
 ATTACK_TYPE="all"  # New: Attack type parameter
 WAF_MODE="off"     # New: WAF mode parameter
 DURATION=""        # Duration in seconds for repeated attacks
+INTERVAL=0         # New: Interval between attacks in seconds (default: 0)
+MAX_PAYLOADS=0     # New: Maximum number of payloads to execute (default: 0 = unlimited)
 
 # Note: Attack execution order is deterministic (sequential)
 # Random seed only affects benign traffic for reproducibility
@@ -773,6 +775,12 @@ execute_attacks_once() {
         payload_count=$((payload_count + 1))
         echo "[DEBUG] Valid payload found: payload_count=$payload_count, START_LINE=$START_LINE, END_LINE=$END_LINE"
         
+        # Check max-payloads limit
+        if [[ $MAX_PAYLOADS -gt 0 && $payload_count -gt $MAX_PAYLOADS ]]; then
+            echo "[INFO] Reached maximum payload limit: $MAX_PAYLOADS"
+            break
+        fi
+        
         # Check if we're in the specified range (based on payload count, not line number)
         # If no range is specified, execute all payloads
         if [[ -n "$START_LINE" && -n "$END_LINE" ]]; then
@@ -867,8 +875,14 @@ execute_attacks_once() {
         # Add attack end marker for structured parsing
         log_attack_end "$payload_count" "$result" "$http_code"
         
-        # Small delay between attacks
-        sleep 1
+        # Configurable delay between attacks
+        if [[ $INTERVAL -gt 0 ]]; then
+            echo "[INFO] Waiting $INTERVAL seconds before next attack..."
+            sleep $INTERVAL
+        else
+            # Default small delay
+            sleep 1
+        fi
         
     done < "$ATTACK_FILE"
     
@@ -908,6 +922,14 @@ while [ $# -gt 0 ]; do
       DURATION="$2"
       shift 2
       ;;
+    --interval)
+      INTERVAL="$2"
+      shift 2
+      ;;
+    --max-payloads)
+      MAX_PAYLOADS="$2"
+      shift 2
+      ;;
     --help)
       echo "Usage: $0 [OPTIONS]"
       echo ""
@@ -918,6 +940,8 @@ while [ $# -gt 0 ]; do
       echo "  --attack-file FILE  Attack scenarios file (default: /opt/scripts/attacks.txt)"
       echo "  --attack-type TYPE  Attack type: sql_injection, xss, directory_traversal, all (default: all)"
       echo "  --waf-mode MODE     WAF mode: on, off, auto (default: off)"
+      echo "  --interval SECONDS  Interval between attacks in seconds (default: 0)"
+      echo "  --max-payloads NUM  Maximum number of payloads to execute (default: 0 = unlimited)"
       echo "  --help              Show this help"
       echo ""
       echo "Examples:"
@@ -925,6 +949,7 @@ while [ $# -gt 0 ]; do
       echo "  $0 --start 10 --end 20"
       echo "  $0 --attack-file /path/to/attacks.txt"
       echo "  $0 --attack-type sql_injection --waf-mode on"
+      echo "  $0 --interval 5 --max-payloads 100"
       exit 0
       ;;
     *)

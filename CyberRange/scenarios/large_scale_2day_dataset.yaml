@@ -1,0 +1,198 @@
+# Large Scale Dataset Generation - Optimized for Current CyberRange
+# Updated to use only supported parameters with new interval/max-payloads controls
+# Fast test version: 10 minutes instead of 48 hours
+# Target: Generate quality samples for security research
+
+scenario:
+  name: "large-scale-dataset-test"
+  description: "Large-scale dataset generation using supported parameters with new timing controls"
+  duration: 172800  # 10 minutes for testing (change to 172800 for full 48 hours)
+  random_seed: 20240101
+  attack_types: ["sql_injection", "xss", "directory_traversal", "command_injection", "authentication_bypass", "file_discovery", "http_method_enum"]
+  waf_mode: "off"  # Pure data collection without defensive interference
+
+# Realistic traffic distribution (20% attacks, 80% benign) with optimized timing
+# Using new interval and max-payloads parameters for better control
+behaviors:
+  attacks:
+  # High-frequency, high-value attacks (8% total)
+  - name: sql_injection_continuous
+    node: attacker
+    percentage: 4.0  # 4% of total traffic - every 25 seconds
+    payload_config:
+      files:
+      - /scripts/attacks/sql_inj.txt
+      lines: "all"  # All 14 payloads, repeated continuously
+    script: /scripts/attack.sh
+    script_args: ["--attack-type", "sql_injection", "--waf-mode", "off", "--interval", "3", "--max-payloads", "20"]
+    
+  - name: xss_continuous
+    node: attacker
+    percentage: 2.5  # 2.5% of total traffic - every 40 seconds
+    payload_config:
+      files:
+      - /scripts/attacks/xss.txt
+      lines: "all"  # All 12 payloads, repeated continuously
+    script: /scripts/attack.sh
+    script_args: ["--attack-type", "xss", "--waf-mode", "off", "--interval", "4", "--max-payloads", "15"]
+    
+  - name: authentication_bypass_continuous
+    node: attacker
+    percentage: 1.5  # 1.5% of total traffic - every 67 seconds
+    payload_config:
+      files:
+      - /scripts/attacks/auth_bypass.txt
+      lines: "all"  # All 12 payloads, repeated continuously
+    script: /scripts/attack.sh
+    script_args: ["--attack-type", "authentication_bypass", "--waf-mode", "off", "--interval", "5", "--max-payloads", "12"]
+    
+  # Medium-frequency attacks (7% total)
+  - name: directory_traversal_continuous
+    node: attacker
+    percentage: 2.0  # 2% of total traffic - every 50 seconds
+    payload_config:
+      files:
+      - /scripts/attacks/directory_traversal.txt
+      lines: "all"  # All 6 payloads, repeated continuously
+    script: /scripts/attack.sh
+    script_args: ["--attack-type", "directory_traversal", "--waf-mode", "off", "--interval", "6", "--max-payloads", "10"]
+    
+  - name: command_injection_continuous
+    node: attacker
+    percentage: 2.0  # 2% of total traffic - every 50 seconds
+    payload_config:
+      files:
+      - /scripts/attacks/command_inj.txt
+      lines: "all"  # All 6 payloads, repeated continuously
+    script: /scripts/attack.sh
+    script_args: ["--attack-type", "command_injection", "--waf-mode", "off", "--interval", "4", "--max-payloads", "8"]
+    
+  - name: file_discovery_continuous
+    node: attacker
+    percentage: 2.0  # 2% of total traffic - every 50 seconds
+    payload_config:
+      files:
+      - /scripts/attacks/file_discovery.txt
+      lines: "all"  # All 12 payloads, repeated continuously
+    script: /scripts/attack.sh
+    script_args: ["--attack-type", "file_discovery", "--waf-mode", "off", "--interval", "5", "--max-payloads", "12"]
+    
+  - name: http_method_enum_continuous
+    node: attacker
+    percentage: 1.0  # 1% of total traffic - every 100 seconds
+    payload_config:
+      files:
+      - /scripts/attacks/method_enum.txt
+      lines: "all"  # All 6 payloads, repeated continuously
+    script: /scripts/attack.sh
+    script_args: ["--attack-type", "http_method_enum", "--waf-mode", "off", "--interval", "8", "--max-payloads", "6"]
+    
+  # Large-scale realistic benign traffic (80% total) with frequency controls
+  benign_traffic:
+  - name: enterprise_business_traffic
+    node: benign_user
+    percentage: 50  # 50% core business operations - every 2 seconds
+    script: /scripts/benign.sh
+    script_args: ["--target", "http://fancystore.com", "--behavior", "browse", "--frequency", "high"]
+    
+  - name: automated_systems_traffic
+    node: benign_user
+    percentage: 20  # 20% automated systems and APIs - every 5 seconds
+    script: /scripts/benign.sh
+    script_args: ["--target", "http://fancystore.com", "--behavior", "shop", "--frequency", "normal"]
+    
+  - name: mobile_app_traffic
+    node: benign_user
+    percentage: 10  # 10% mobile application traffic - every 10 seconds
+    script: /scripts/benign.sh
+    script_args: ["--target", "http://fancystore.com", "--behavior", "browse", "--frequency", "low"]
+
+# Optimized infrastructure using only supported parameters
+infrastructure:
+  networks:
+  - name: internal-net
+    driver: bridge
+  - name: external-net
+    driver: bridge
+    
+  nodes:
+  - name: juice-shop
+    role: target
+    image: bkimminich/juice-shop
+    networks: ['internal-net']
+    ports: ['3000:3000']
+    environment: ['NODE_ENV=production']
+    
+  - name: nginx
+    role: proxy
+    networks: ['internal-net', 'external-net']
+    network_aliases:
+      internal-net: ['fancystore.com']
+      external-net: ['fancystore.com']
+    ports: ['80:80']
+    volumes:
+    - ./scenario-securitylogs/confs/nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+    - ./logs/nginx:/var/log/nginx
+    
+  - name: attacker
+    role: attacker
+    image: ras-attacker:latest
+    networks: ['internal-net']
+    environment:
+    - TARGET_URL=http://fancystore.com
+    - TARGET_HOST=fancystore.com
+    - TARGET_PORT=80
+    - LARGE_SCALE_MODE=true
+    - CONTINUOUS_OPERATION=true
+    volumes:
+    - ./scenario-securitylogs/confs/attacker:/scripts
+    - ./logs/attacker:/logs
+    
+  - name: benign_user
+    role: user
+    image: python:3.9-slim
+    command: tail -f /dev/null
+    networks: ['internal-net']
+    environment:
+    - TARGET_URL=http://fancystore.com
+    - USER_TYPE=enterprise_mixed
+    - LARGE_SCALE_MODE=true
+    volumes:
+    - ./scenario-securitylogs/confs/user:/scripts
+    - ./logs/benign_user:/logs
+
+# Optimized data collection using supported parameters
+data_collection:
+  logs:
+  - source: nginx
+    path: /var/log/nginx/detailed.log
+    output: large_scale_nginx_detailed.csv
+    parser: nginx_parser
+    real_time: true
+  - source: attacker
+    path: /logs/attack.log
+    output: large_scale_attack_log.csv
+    parser: attacker_parser
+    real_time: true
+  - source: benign_user
+    path: /logs/user.log
+    output: large_scale_user_behavior.csv
+    parser: user_parser
+    real_time: true
+  network:
+  - interface: any
+    filter: net 172.27.0.0/16 or net 172.28.0.0/16
+    output: large_scale_network_traffic.pcap
+    capture_size: 2GB  # 2GB for 10-minute test (change to 20GB for full run)
+
+# Standard hooks using supported parameters
+hooks:
+  post_node_start:
+  - name: verify_juice_shop
+    script: ./hooks/verify_juice_shop.py
+    timeout: 60
+    
+  post_collection:
+  - name: auto_parse_logs
+    script: ./hooks/auto_parse_logs.py
+    timeout: 600  # 10 minutes for parsing

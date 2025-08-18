@@ -61,9 +61,17 @@ class ScriptExecutor:
             
             # Add line range if specified
             if payload_config and 'lines' in payload_config:
-                start_line = payload_config['lines'][0]
-                end_line = payload_config['lines'][1]
-                script_params.extend(["--start", str(start_line), "--end", str(end_line)])
+                lines = payload_config['lines']
+                if lines == "all":
+                    # Don't add --start/--end for "all" - let script execute all payloads
+                    pass
+                elif isinstance(lines, list) and len(lines) >= 2:
+                    start_line = lines[0]
+                    end_line = lines[1]
+                    script_params.extend(["--start", str(start_line), "--end", str(end_line)])
+                elif isinstance(lines, list) and len(lines) == 1:
+                    # Single line - execute just that one
+                    script_params.extend(["--start", str(lines[0]), "--end", str(lines[0])])
             
             # Add duration parameter if available
             if duration > 0:
@@ -332,7 +340,8 @@ class ScriptExecutor:
                 'CONTAINERS': json.dumps(containers_data),
                 'LOG_FILES': json.dumps(context_data.get('log_files', {})),
                 'scenario_name': context_data.get('scenario_name', ''),
-                'duration': str(context_data.get('duration', 300))
+                'duration': str(context_data.get('duration', 300)),
+                'EXPERIMENT_DIR': context_data.get('EXPERIMENT_DIR', 'logs')
             })
             
             # Execute hook script

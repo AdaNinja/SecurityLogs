@@ -10,6 +10,7 @@ exec > >(tee /logs/user.log) 2>&1
 TARGET="http://fancystore.com"  # Default target
 DURATION=5  # Default duration in minutes
 BEHAVIOR=""  # Behavior type (browse, shop, etc.)
+FREQUENCY="normal"  # Frequency level: low, normal, high
 
 while [ $# -gt 0 ]; do
   case $1 in
@@ -25,6 +26,10 @@ while [ $# -gt 0 ]; do
       BEHAVIOR="$2"
       shift 2
       ;;
+    --frequency)
+      FREQUENCY="$2"
+      shift 2
+      ;;
     *)
       echo "Unknown option $1"
       exit 1
@@ -35,6 +40,7 @@ done
 echo "Starting enhanced benign user activity simulation"
 echo "Target: $TARGET"
 echo "Duration: $DURATION minutes"
+echo "Frequency: $FREQUENCY"
 
 # Get container IP for log correlation
 CONTAINER_IP=$(hostname -i | awk '{print $1}')
@@ -425,17 +431,26 @@ if __name__ == '__main__':
     import sys
     target = sys.argv[1] if len(sys.argv) > 1 else 'http://fancystore.com'
     behavior = sys.argv[2] if len(sys.argv) > 2 else 'browse'
+    frequency = sys.argv[3] if len(sys.argv) > 3 else 'normal'
     
     # Create simulator
     simulator = BenignUserSimulator(target)
     
+    # Adjust timing based on frequency
+    frequency_multipliers = {
+        'low': 0.5,      # 50% slower (longer delays)
+        'normal': 1.0,   # Normal speed
+        'high': 2.0      # 2x faster (shorter delays)
+    }
+    multiplier = frequency_multipliers.get(frequency, 1.0)
+    
     # Always execute single action for scheduled traffic
-    log_info(f'Single action mode: target={target}, behavior={behavior}')
+    log_info(f'Single action mode: target={target}, behavior={behavior}, frequency={frequency} (multiplier={multiplier})')
     simulator.execute_single_action(behavior)
 EOF
 
     # Run the Python script with proper arguments
-    python3 /tmp/benign_simulator.py "$TARGET" "$BEHAVIOR"
+    python3 /tmp/benign_simulator.py "$TARGET" "$BEHAVIOR" "$FREQUENCY"
     
     # Clean up
     rm -f /tmp/benign_simulator.py
