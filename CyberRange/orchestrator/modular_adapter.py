@@ -252,7 +252,9 @@ class ConfigurationAdapter:
         # Apply specific adaptations
         adapted_config = self._adapt_attack_behaviors(adapted_config)
         adapted_config = self._adapt_benign_behaviors(adapted_config)
+        adapted_config = self._adapt_waf_configuration(adapted_config)
         adapted_config = self._adapt_volume_paths(adapted_config)
+        adapted_config = self._adapt_network_aliases(adapted_config)
         
         return adapted_config
     
@@ -287,6 +289,42 @@ class ConfigurationAdapter:
                 config['behaviors']['attacks'] = attacks
             elif existing_attacks:
                 self.logger.info(f"Using existing attack behaviors ({len(existing_attacks)} attacks defined)")
+                
+                # Ensure script_args are set for existing attacks if not defined
+                for attack in existing_attacks:
+                    if 'script_args' not in attack and attack.get('script') == '/scripts/attack.sh':
+                        # Extract attack type from attack name or use default
+                        attack_name = attack.get('name', '')
+                        
+                        # Remove common suffixes to get the base attack type
+                        attack_type = attack_name.replace('_attacks', '').replace('_attack', '').replace('_comprehensive', '').replace('_test', '')
+                        
+                        # Map to standard attack types
+                        if attack_type in ['sql', 'sql_injection']:
+                            attack_type = 'sql_injection'
+                        elif attack_type in ['xss']:
+                            attack_type = 'xss'
+                        elif attack_type in ['directory_traversal', 'traversal']:
+                            attack_type = 'directory_traversal'
+                        elif attack_type in ['command_injection', 'command_inj']:
+                            attack_type = 'command_injection'
+                        elif attack_type in ['authentication_bypass', 'auth_bypass']:
+                            attack_type = 'authentication_bypass'
+                        elif attack_type in ['file_discovery']:
+                            attack_type = 'file_discovery'
+                        elif attack_type in ['http_method_enum', 'method_enum']:
+                            attack_type = 'http_method_enum'
+                        
+                        # Add script_args dynamically based on scenario waf_mode
+                        attack['script_args'] = ['--attack-type', attack_type, '--waf-mode', waf_mode]
+                        self.logger.info(f"Added script_args for {attack['name']}: {attack['script_args']}")
+                        
+                        # Handle "all" lines configuration for comprehensive testing
+                        if 'payload_config' in attack and 'lines' in attack['payload_config']:
+                            if attack['payload_config']['lines'] == "all":
+                                # Remove the lines restriction to execute all payloads
+                                del attack['payload_config']['lines']
+                                self.logger.info(f"Configured {attack['name']} to execute ALL payloads")
         
         except Exception as e:
             self.logger.warning(f"Failed to adapt attack behaviors: {e}")
@@ -324,6 +362,24 @@ class ConfigurationAdapter:
         
         return config
     
+    def _adapt_network_aliases(self, config: Dict) -> Dict:
+        """Adapt network aliases from simple format to container_manager format"""
+        try:
+            for node in config.get('infrastructure', {}).get('nodes', []):
+                if 'aliases' in node:
+                    # Convert from {network: [aliases]} to network_aliases format
+                    network_aliases = {}
+                    for network, aliases in node['aliases'].items():
+                        network_aliases[network] = aliases
+                    node['network_aliases'] = network_aliases
+                    # Remove the old aliases field to avoid confusion
+                    del node['aliases']
+                    self.logger.info(f"Converted aliases for node {node.get('name', 'unknown')}: {network_aliases}")
+        except Exception as e:
+            self.logger.warning(f"Failed to adapt network aliases: {e}")
+        
+        return config
+    
     def _adapt_volume_paths(self, config: Dict) -> Dict:
         """Adapt volume paths to use relative paths"""
         try:
@@ -344,6 +400,46 @@ class ConfigurationAdapter:
                     
         except Exception as e:
             self.logger.warning(f"Failed to adapt volume paths: {e}")
+        
+        return config
+    
+    def _adapt_waf_configuration(self, config: Dict) -> Dict:
+        """Adapt WAF configuration based on waf_mode (simplified)"""
+        try:
+            scenario = config.get('scenario', {})
+            waf_mode = scenario.get('waf_mode', 'off')
+            
+            # Find nginx node in infrastructure
+            for node in config.get('infrastructure', {}).get('nodes', []):
+                if node.get('name') == 'nginx' and node.get('role') == 'proxy':
+                    
+                    if waf_mode == 'on':
+                        # Enable real WAF: Use ModSecurity image with minimal config
+                        node['image'] = 'owasp/modsecurity-crs:nginx'
+                        node['environment'] = [
+                            'BACKEND=http://juice-shop:3000',
+                            'PROXY=1',
+                            'PORT=8080',
+                            'MODSEC_RULE_ENGINE=On',
+                            'PARANOIA=2',
+                            'ANOMALY_INBOUND=5'
+                        ]
+                        node['ports'] = ['80:8080']
+                        # Remove nginx.conf mount for ModSecurity - it has its own config
+                        if 'volumes' in node:
+                            node['volumes'] = [v for v in node['volumes'] if 'nginx.conf' not in v]
+                        self.logger.info("WAF enabled: Real ModSecurity protection")
+                        
+                    else:
+                        # Standard nginx (waf_mode: off or any other value)
+                        node['image'] = 'nginx:alpine'
+                        node['ports'] = ['80:80']
+                        self.logger.info("WAF disabled: Standard nginx proxy")
+                    
+                    break
+                    
+        except Exception as e:
+            self.logger.warning(f"Failed to adapt WAF configuration: {e}")
         
         return config
     

@@ -17,7 +17,7 @@ set -e
 
 # Global variables
 TARGET="http://fancystore.com"
-ATTACK_FILE="/opt/scripts/attacks.txt"
+ATTACK_FILE=""  # Will be set by command line argument or based on attack type
 START_LINE=""
 END_LINE=""
 SUCCESS_COUNT=0
@@ -743,35 +743,46 @@ execute_attacks_once() {
         # Debug: Print parsed fields
         echo "[DEBUG] Line $line_num: attack_type='$attack_type', waf_mode='$waf_mode', WAF_MODE='$WAF_MODE'"
         
+        # Map attack types to handle different naming conventions
+        mapped_attack_type="$attack_type"
+        case "$attack_type" in
+            "auth_bypass")
+                mapped_attack_type="authentication_bypass"
+                ;;
+            "cmd_injection")
+                mapped_attack_type="command_injection"
+                ;;
+            "traversal")
+                mapped_attack_type="directory_traversal"
+                ;;
+            "method_enum")
+                mapped_attack_type="http_method_enum"
+                ;;
+        esac
+        
         # New: Filter attacks based on ATTACK_TYPE (use command line argument, not environment variable)
-        if [[ "$ATTACK_TYPE" != "all" && "$attack_type" != "$ATTACK_TYPE" ]]; then
-            echo "[DEBUG] Skipping attack: ATTACK_TYPE='$ATTACK_TYPE', attack_type='$attack_type' (type mismatch)"
+        if [[ "$ATTACK_TYPE" != "all" && "$mapped_attack_type" != "$ATTACK_TYPE" ]]; then
+            echo "[DEBUG] Skipping attack: ATTACK_TYPE='$ATTACK_TYPE', attack_type='$attack_type', mapped='$mapped_attack_type' (type mismatch)"
             continue
         fi
         
-        # New: Filter attacks based on WAF_MODE
-        echo "[DEBUG] WAF filtering: WAF_MODE='$WAF_MODE', waf_mode='$waf_mode'"
-        if [[ "$WAF_MODE" == "on" && "$waf_mode" != "bypass" ]]; then
-            # WAF ON mode: only execute bypass attacks
-            echo "[DEBUG] Skipping attack: WAF_MODE=$WAF_MODE, attack_waf_mode=$waf_mode (not bypass)"
-            continue
-        elif [[ "$WAF_MODE" == "off" && "$waf_mode" != "block" ]]; then
-            # WAF OFF mode: only execute normal attacks (should be blocked by WAF)
-            echo "[DEBUG] Skipping attack: WAF_MODE=$WAF_MODE, attack_waf_mode=$waf_mode (not block)"
-            continue
-        fi
-        echo "[DEBUG] WAF filter passed: WAF_MODE='$WAF_MODE', waf_mode='$waf_mode'"
+        # Execute all attacks (WAF filtering disabled)
+        echo "[DEBUG] Executing attack: attack_type='$mapped_attack_type', waf_mode='$waf_mode'"
         
         # Count this as a valid payload
         payload_count=$((payload_count + 1))
         echo "[DEBUG] Valid payload found: payload_count=$payload_count, START_LINE=$START_LINE, END_LINE=$END_LINE"
         
         # Check if we're in the specified range (based on payload count, not line number)
+        # If no range is specified, execute all payloads
         if [[ -n "$START_LINE" && -n "$END_LINE" ]]; then
             if [[ $payload_count -lt $START_LINE ]] || [[ $payload_count -gt $END_LINE ]]; then
                 echo "[DEBUG] Skipping payload $payload_count: outside range [$START_LINE-$END_LINE]"
                 continue
             fi
+        else
+            # No range specified, execute all payloads
+            echo "[DEBUG] No range specified, executing all payloads"
         fi
         
         # Print attack start marker with WAF mode info
@@ -924,6 +935,37 @@ while [ $# -gt 0 ]; do
   esac
 done
 
+# Set attack file based on attack type if not specified via --attack-file
+if [[ -z "$ATTACK_FILE" ]]; then
+    case "$ATTACK_TYPE" in
+        "sql_injection")
+            ATTACK_FILE="/scripts/attacks/sql_inj.txt"
+            ;;
+        "xss")
+            ATTACK_FILE="/scripts/attacks/xss.txt"
+            ;;
+        "directory_traversal")
+            ATTACK_FILE="/scripts/attacks/directory_traversal.txt"
+            ;;
+        "command_injection")
+            ATTACK_FILE="/scripts/attacks/command_inj.txt"
+            ;;
+        "authentication_bypass")
+            ATTACK_FILE="/scripts/attacks/auth_bypass.txt"
+            ;;
+        "file_discovery")
+            ATTACK_FILE="/scripts/attacks/file_discovery.txt"
+            ;;
+        "http_method_enum")
+            ATTACK_FILE="/scripts/attacks/method_enum.txt"
+            ;;
+        *)
+            echo "[WARNING] Unknown attack type: $ATTACK_TYPE, using default"
+            ATTACK_FILE="/scripts/attacks/sql_inj.txt"
+            ;;
+    esac
+fi
+
 # Main execution
 echo "[*] Attacking target: $TARGET"
 echo "[*] Attack file: $ATTACK_FILE"
@@ -953,8 +995,7 @@ echo "  ATTACK_PHASE: $ATTACK_PHASE"
 echo "  VARIANT_ID: $VARIANT_ID"
 
 echo "Starting Comprehensive Attack Script..."
-echo "Sleeping for 30 seconds before starting the attack..."
-sleep 30
+echo "Ready to start attacks immediately..."
 
 # Duration-aware attack execution function
 execute_attacks() {

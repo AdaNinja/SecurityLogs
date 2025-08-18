@@ -439,6 +439,12 @@ class ContainerManager:
                 container.reload()
                 
                 if container.status == 'running':
+                    # For nginx/ModSecurity containers, don't wait for health check to speed up
+                    container_name = container.name
+                    if 'nginx' in container_name.lower():
+                        self.logger.info(f"Container {container_id} ({container_name}) is running - proceeding without health check")
+                        return True
+                    
                     # Check health status if health check is configured
                     if container.attrs['State'].get('Health'):
                         health_status = container.attrs['State']['Health']['Status']
@@ -450,7 +456,7 @@ class ContainerManager:
                         self.logger.info(f"Container {container_id} is running")
                         return True
                 
-                time.sleep(5)
+                time.sleep(2)  # Reduced wait time
             
             self.logger.warning(f"Container {container_id} not ready within {timeout} seconds")
             return False

@@ -1,8 +1,0 @@
-scenario:
-  attack_types:
-  - sql_injection
-  description: Simple quick_test configuration
-  duration: 30
-  name: quick_test
-  random_seed: 12345
-  waf_mode: 'off'

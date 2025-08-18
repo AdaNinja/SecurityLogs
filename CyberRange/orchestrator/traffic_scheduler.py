@@ -101,7 +101,17 @@ class ParallelTrafficExecutor:
         self.stop_event.clear()
         self.execution_stats = {}
         
-        self.logger.info(f"Starting parallel traffic execution for {self.scenario_duration} seconds")
+        # Check if this is an unlimited duration scenario
+        unlimited_duration = self.scenario_duration == 0
+        
+        if unlimited_duration:
+            self.logger.info("Starting unlimited parallel traffic execution (will stop when all behaviors complete)")
+        else:
+            self.logger.info(f"Starting parallel traffic execution for {self.scenario_duration} seconds")
+        
+        # Initialize execution stats for all behaviors BEFORE starting threads
+        for behavior in behaviors:
+            self.execution_stats[behavior.name] = {'count': 0, 'success': 0, 'failed': 0, 'completed': False}
         
         # Start a thread for each behavior
         for behavior in behaviors:
@@ -121,15 +131,32 @@ class ParallelTrafficExecutor:
             thread.daemon = True
             thread.start()
             self.threads.append(thread)
-            self.execution_stats[behavior.name] = {'count': 0, 'success': 0, 'failed': 0}
             self.logger.info(f"Started parallel thread: {thread.name}")
         
-        # Wait for scenario duration
-        self.logger.info(f"All threads started. Waiting {self.scenario_duration} seconds...")
-        time.sleep(self.scenario_duration)
+        if unlimited_duration:
+            # Monitor threads until all complete
+            self.logger.info("All threads started. Monitoring for completion...")
+            while not self.stop_event.is_set():
+                # Check if all threads have completed their work
+                all_completed = True
+                for behavior_name, stats in self.execution_stats.items():
+                    if not stats.get('completed', False):
+                        all_completed = False
+                        break
+                
+                if all_completed:
+                    self.logger.info("All behaviors completed, stopping execution...")
+                    break
+                
+                # Wait a bit before checking again
+                time.sleep(2.0)
+        else:
+            # Wait for scenario duration
+            self.logger.info(f"All threads started. Waiting {self.scenario_duration} seconds...")
+            time.sleep(self.scenario_duration)
         
         # Stop all threads
-        self.logger.info("Scenario duration reached, stopping all traffic threads...")
+        self.logger.info("Stopping all traffic threads...")
         self.stop_event.set()
         
         # Wait for threads to finish (with timeout)
@@ -148,7 +175,11 @@ class ParallelTrafficExecutor:
         # Higher percentage = shorter interval between attacks
         base_interval = 100.0 / behavior.percentage if behavior.percentage > 0 else 60.0
         
-        while not self.stop_event.is_set():
+        # For unlimited duration, we need to determine when to stop
+        # This could be based on payload completion or other criteria
+        max_executions = 1000  # Safety limit to prevent infinite loops
+        
+        while not self.stop_event.is_set() and self.execution_stats[behavior.name]['count'] < max_executions:
             try:
                 # Execute single attack
                 attack_config = {
@@ -169,6 +200,14 @@ class ParallelTrafficExecutor:
                     self.execution_stats[behavior.name]['failed'] += 1
                     self.logger.warning(f"{behavior.name}: Attack #{self.execution_stats[behavior.name]['count']} failed")
                 
+                # For unlimited duration, check if we should continue
+                if self.scenario_duration == 0:
+                    # In unlimited mode, we'll stop after a reasonable number of executions
+                    # This prevents infinite loops while still allowing comprehensive testing
+                    if self.execution_stats[behavior.name]['count'] >= 100:  # Execute 100 attacks per type
+                        self.logger.info(f"{behavior.name}: Reached execution limit for unlimited mode")
+                        break
+                
                 # Wait for next attack with some randomness
                 interval = base_interval + random.uniform(-1.0, 1.0)
                 if self.stop_event.wait(max(0.5, interval)):
@@ -179,6 +218,8 @@ class ParallelTrafficExecutor:
                 if self.stop_event.wait(5.0):
                     break
         
+        # Mark this behavior as completed
+        self.execution_stats[behavior.name]['completed'] = True
         total = self.execution_stats[behavior.name]['count']
         self.logger.info(f"{behavior.name}: Completed {total} attacks")
     
@@ -188,7 +229,10 @@ class ParallelTrafficExecutor:
         # Higher percentage = shorter interval between actions
         base_interval = 100.0 / behavior.percentage if behavior.percentage > 0 else 60.0
         
-        while not self.stop_event.is_set():
+        # For unlimited duration, we need to determine when to stop
+        max_executions = 1000  # Safety limit to prevent infinite loops
+        
+        while not self.stop_event.is_set() and self.execution_stats[behavior.name]['count'] < max_executions:
             try:
                 # Execute single benign action
                 benign_config = {
@@ -208,6 +252,13 @@ class ParallelTrafficExecutor:
                     self.execution_stats[behavior.name]['failed'] += 1
                     self.logger.warning(f"{behavior.name}: Action #{self.execution_stats[behavior.name]['count']} failed")
                 
+                # For unlimited duration, check if we should continue
+                if self.scenario_duration == 0:
+                    # In unlimited mode, we'll stop after a reasonable number of executions
+                    if self.execution_stats[behavior.name]['count'] >= 50:  # Execute 50 benign actions
+                        self.logger.info(f"{behavior.name}: Reached execution limit for unlimited mode")
+                        break
+                
                 # Wait for next action with some randomness
                 interval = base_interval + random.uniform(-0.5, 0.5)
                 if self.stop_event.wait(max(0.5, interval)):
@@ -218,6 +269,8 @@ class ParallelTrafficExecutor:
                 if self.stop_event.wait(5.0):
                     break
         
+        # Mark this behavior as completed
+        self.execution_stats[behavior.name]['completed'] = True
         total = self.execution_stats[behavior.name]['count']
         self.logger.info(f"{behavior.name}: Completed {total} benign actions")
     

@@ -104,8 +104,22 @@ class ScenarioManager:
             f"{self.experiment_dir}/benign_user"
         ]
         
+        # Add modsecurity directory only if WAF is enabled
+        waf_mode = self.config.get('scenario', {}).get('waf_mode', 'off')
+        if waf_mode == 'on':
+            experiment_subdirs.append(f"{self.experiment_dir}/modsecurity")
+        
         for directory in experiment_subdirs:
             os.makedirs(directory, exist_ok=True)
+            # Set permissions for nginx/modsecurity directories to work with ModSecurity container
+            if directory.endswith('/nginx') or directory.endswith('/modsecurity'):
+                os.chmod(directory, 0o777)
+                # Also ensure any existing files are writable
+                for root, dirs, files in os.walk(directory):
+                    for d in dirs:
+                        os.chmod(os.path.join(root, d), 0o777)
+                    for f in files:
+                        os.chmod(os.path.join(root, f), 0o666)
             self.logger.info(f"Created experiment directory: {directory}")
         
         # Update log paths in configuration for this experiment
@@ -117,13 +131,18 @@ class ScenarioManager:
         if 'infrastructure' in self.config and 'nodes' in self.config['infrastructure']:
             for node in self.config['infrastructure']['nodes']:
                 if node['name'] == 'nginx' and 'volumes' in node:
-                    # Update nginx log volume path
+                    # Update nginx and modsecurity log volume paths
                     for i, volume in enumerate(node['volumes']):
                         if '/var/log/nginx' in volume:
                             host_path, container_path = volume.split(':', 1)
                             if host_path == './logs/nginx':
                                 node['volumes'][i] = f"./{self.experiment_dir}/nginx:{container_path}"
                                 self.logger.info(f"Updated nginx log path: {node['volumes'][i]}")
+                        elif '/var/log/modsecurity' in volume:
+                            host_path, container_path = volume.split(':', 1)
+                            if host_path == './logs/modsecurity':
+                                node['volumes'][i] = f"./{self.experiment_dir}/modsecurity:{container_path}"
+                                self.logger.info(f"Updated modsecurity log path: {node['volumes'][i]}")
                 
                 elif node['name'] == 'attacker' and 'volumes' in node:
                     # Update attacker log volume path
@@ -148,6 +167,8 @@ class ScenarioManager:
             for log_config in self.config['data_collection']['logs']:
                 if log_config['source'] == 'nginx':
                     log_config['path'] = f"/{self.experiment_dir}/nginx/detailed.log"
+                elif log_config['source'] == 'modsecurity':
+                    log_config['path'] = f"/{self.experiment_dir}/modsecurity/audit.log"
                 elif log_config['source'] == 'attacker':
                     log_config['path'] = f"/{self.experiment_dir}/attacker/attack.log"
                 elif log_config['source'] == 'benign_user':
@@ -488,6 +509,11 @@ class ScenarioManager:
         try:
             scenario_duration = self.config.get('scenario', {}).get('duration', 300)
             
+            if scenario_duration == 0:
+                self.logger.info("Executing unlimited parallel traffic (will stop when all behaviors complete)")
+            else:
+                self.logger.info(f"Executing parallel traffic for {scenario_duration} seconds")
+            
             # Create parallel behaviors
             self.logger.info("Creating parallel traffic behaviors...")
             behaviors = create_parallel_behaviors(self.config)
@@ -506,7 +532,10 @@ class ScenarioManager:
                 benign_executor=self.execute_single_benign_traffic
             )
             
-            self.logger.info("Parallel traffic execution completed")
+            if scenario_duration == 0:
+                self.logger.info("Unlimited parallel traffic execution completed - all behaviors finished")
+            else:
+                self.logger.info("Parallel traffic execution completed")
             return success
             
         except Exception as e:

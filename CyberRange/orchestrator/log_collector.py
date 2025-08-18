@@ -56,6 +56,10 @@ class LogCollector:
                         '/var/log/nginx/access.log': 'logs/nginx/access.log',
                         '/var/log/nginx/error.log': 'logs/nginx/error.log'
                     },
+                    'modsecurity': {
+                        '/var/log/modsecurity/audit.log': 'logs/modsecurity/audit.log',
+                        '/var/log/modsecurity/debug.log': 'logs/modsecurity/debug.log'
+                    },
                     'attacker': {
                         '/logs/attack.log': 'logs/attacker/attack.log'
                     },
@@ -67,6 +71,9 @@ class LogCollector:
                 # Get the host path for this container and log file
                 if source in path_mapping and container_path in path_mapping[source]:
                     host_path = path_mapping[source][container_path]
+                    
+                    # Use context.experiment_dir to construct the host_path
+                    host_path = os.path.join(context.experiment_dir, source, log_filename)
                     
                     # Check if the file exists
                     if os.path.exists(host_path):

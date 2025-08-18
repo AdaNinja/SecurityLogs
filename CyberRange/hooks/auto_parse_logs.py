@@ -46,10 +46,20 @@ def auto_parse_logs():
         # Get experiment directory from environment
         experiment_dir = os.environ.get('EXPERIMENT_DIR', 'logs')
         
+        # Extract experiment name from experiment_dir for output structure
+        if '/' in experiment_dir:
+            experiment_name = experiment_dir.split('/')[-1]
+        else:
+            experiment_name = experiment_dir
+            
+        # Create matching output directory structure
+        output_dir = f'output/{experiment_name}'
+        os.makedirs(output_dir, exist_ok=True)
+        
         cmd = [
             sys.executable, str(parse_script),
             '--input-dir', experiment_dir,
-            '--output-dir', 'output',
+            '--output-dir', output_dir,
             '--log-type', 'all'
         ]
         logger.info(f"Command: {' '.join(cmd)}")
