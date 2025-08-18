@@ -6,19 +6,19 @@
 scenario:
   name: "large-scale-dataset-test"
   description: "Large-scale dataset generation using supported parameters with new timing controls"
-  duration: 172800  # 10 minutes for testing (change to 172800 for full 48 hours)
+  duration: 172800  # 48 hours for full dataset generation
   random_seed: 20240101
   attack_types: ["sql_injection", "xss", "directory_traversal", "command_injection", "authentication_bypass", "file_discovery", "http_method_enum"]
   waf_mode: "off"  # Pure data collection without defensive interference
 
-# Realistic traffic distribution (20% attacks, 80% benign) with optimized timing
+# Realistic traffic distribution (1.3% attacks, 98.7% benign) - matching test_2day_config ratios
 # Using new interval and max-payloads parameters for better control
 behaviors:
   attacks:
-  # High-frequency, high-value attacks (8% total)
+  # Realistic attack distribution (1.3% total) - matching test ratios
   - name: sql_injection_continuous
     node: attacker
-    percentage: 4.0  # 4% of total traffic - every 25 seconds
+    percentage: 0.3  # 0.3% of total traffic
     payload_config:
       files:
       - /scripts/attacks/sql_inj.txt
@@ -28,7 +28,7 @@ behaviors:
     
   - name: xss_continuous
     node: attacker
-    percentage: 2.5  # 2.5% of total traffic - every 40 seconds
+    percentage: 0.2  # 0.2% of total traffic
     payload_config:
       files:
       - /scripts/attacks/xss.txt
@@ -38,7 +38,7 @@ behaviors:
     
   - name: authentication_bypass_continuous
     node: attacker
-    percentage: 1.5  # 1.5% of total traffic - every 67 seconds
+    percentage: 0.2  # 0.2% of total traffic
     payload_config:
       files:
       - /scripts/attacks/auth_bypass.txt
@@ -46,10 +46,9 @@ behaviors:
     script: /scripts/attack.sh
     script_args: ["--attack-type", "authentication_bypass", "--waf-mode", "off", "--interval", "5", "--max-payloads", "12"]
     
-  # Medium-frequency attacks (7% total)
   - name: directory_traversal_continuous
     node: attacker
-    percentage: 2.0  # 2% of total traffic - every 50 seconds
+    percentage: 0.2  # 0.2% of total traffic
     payload_config:
       files:
       - /scripts/attacks/directory_traversal.txt
@@ -59,7 +58,7 @@ behaviors:
     
   - name: command_injection_continuous
     node: attacker
-    percentage: 2.0  # 2% of total traffic - every 50 seconds
+    percentage: 0.2  # 0.2% of total traffic
     payload_config:
       files:
       - /scripts/attacks/command_inj.txt
@@ -69,7 +68,7 @@ behaviors:
     
   - name: file_discovery_continuous
     node: attacker
-    percentage: 2.0  # 2% of total traffic - every 50 seconds
+    percentage: 0.1  # 0.1% of total traffic
     payload_config:
       files:
       - /scripts/attacks/file_discovery.txt
@@ -79,7 +78,7 @@ behaviors:
     
   - name: http_method_enum_continuous
     node: attacker
-    percentage: 1.0  # 1% of total traffic - every 100 seconds
+    percentage: 0.1  # 0.1% of total traffic
     payload_config:
       files:
       - /scripts/attacks/method_enum.txt
@@ -87,23 +86,23 @@ behaviors:
     script: /scripts/attack.sh
     script_args: ["--attack-type", "http_method_enum", "--waf-mode", "off", "--interval", "8", "--max-payloads", "6"]
     
-  # Large-scale realistic benign traffic (80% total) with frequency controls
+  # Large-scale realistic benign traffic (98.7% total) - matching test ratios
   benign_traffic:
   - name: enterprise_business_traffic
     node: benign_user
-    percentage: 50  # 50% core business operations - every 2 seconds
+    percentage: 80  # 80% core business operations
     script: /scripts/benign.sh
     script_args: ["--target", "http://fancystore.com", "--behavior", "browse", "--frequency", "high"]
     
   - name: automated_systems_traffic
     node: benign_user
-    percentage: 20  # 20% automated systems and APIs - every 5 seconds
+    percentage: 15  # 15% automated systems and APIs
     script: /scripts/benign.sh
     script_args: ["--target", "http://fancystore.com", "--behavior", "shop", "--frequency", "normal"]
     
   - name: mobile_app_traffic
     node: benign_user
-    percentage: 10  # 10% mobile application traffic - every 10 seconds
+    percentage: 3.7  # 3.7% mobile application traffic
     script: /scripts/benign.sh
     script_args: ["--target", "http://fancystore.com", "--behavior", "browse", "--frequency", "low"]
 
@@ -183,7 +182,7 @@ data_collection:
   - interface: any
     filter: net 172.27.0.0/16 or net 172.28.0.0/16
     output: large_scale_network_traffic.pcap
-    capture_size: 2GB  # 2GB for 10-minute test (change to 20GB for full run)
+    capture_size: 20GB  # 20GB for full 48-hour run
 
 # Standard hooks using supported parameters
 hooks:
