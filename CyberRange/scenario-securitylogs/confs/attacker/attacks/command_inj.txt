@@ -1,6 +1,0 @@
-cmd_injection|commix|POST|/rest/admin/application-configuration|{"serverName":"test; ls -la"}|401|block|Command injection with semicolon
-cmd_injection|commix|POST|/rest/admin/application-configuration|{"serverName":"test && whoami"}|401|block|Command injection with AND
-cmd_injection|commix|POST|/rest/admin/application-configuration|{"serverName":"test | cat /etc/passwd"}|401|block|Command injection with pipe
-cmd_injection|commix|POST|/rest/admin/application-configuration|{"serverName":"test`id`"}|401|block|Command injection with backticks
-cmd_injection|commix|POST|/rest/admin/application-configuration|{"serverName":"test$(whoami)"}|401|block|Command injection with subshell
-cmd_injection|commix|POST|/rest/admin/application-configuration|{"serverName":"test%3B ls -la"}|401|block|URL encoded command injection

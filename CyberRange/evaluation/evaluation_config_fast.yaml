@@ -1,0 +1,115 @@
+# CyberRange Dataset Quality Evaluation Configuration (Fast Mode)
+# For test-all-features_20250826_220246 dataset - Quick Analysis
+
+evaluation:
+  name: "Test-All-Features Dataset Quality Evaluation (Fast Mode)"
+  description: "Quick quality evaluation with limited packet analysis"
+
+# Dataset paths for actual test data
+datasets:
+  cyberrange:
+    # Path to CyberRange PCAP file
+    pcap_path: "/home/jiayi/SecurityLogs/CyberRange/output/test-all-features_20250826_220246/network_traffic.pcap"
+    # Path to nginx detailed.log CSV file (Ground Truth)
+    gt_log_path: "/home/jiayi/SecurityLogs/CyberRange/output/test-all-features_20250826_220246/nginx_detailed.csv"
+    # Additional logs for comprehensive analysis
+    attack_log_path: "/home/jiayi/SecurityLogs/CyberRange/output/test-all-features_20250826_220246/attack_consolidated.csv"
+
+# Baseline configuration (disabled for fast mode)
+baseline:
+  # Whether to generate Fiberfox baseline PCAPs
+  generate_fiberfox: false
+  
+  # Skip baseline PCAP analysis for speed
+  existing_pcaps: {}
+
+# IDS detection configuration (simplified)
+detection:
+  # Disable IDS detection for fast analysis
+  enabled: false
+  
+  # IDS tools to use
+  detectors:
+    suricata: false
+  
+  # Time tolerance for matching alerts with GT (seconds)
+  time_tolerance: 5.0
+  
+  # Parallel detection (faster but uses more resources)
+  parallel: true
+
+# Quality metrics weights for test-all-features scenario
+metrics:
+  weights:
+    detection_accuracy: 0.0     # Skip IDS analysis
+    label_quality: 0.4          # Focus on GT labels
+    data_diversity: 0.3         # Coverage of attack types
+    temporal_quality: 0.2       # Time distribution quality
+    attack_realism: 0.1         # How realistic attacks are
+  
+  # Expected attack distribution for this scenario
+  expected_distribution:
+    sql_injection: 0.10
+    xss: 0.10
+    command_injection: 0.10
+    directory_traversal: 0.10
+    auth_bypass: 0.10
+    file_discovery: 0.10
+    method_enumeration: 0.10
+    advanced_attack: 0.20
+    benign: 0.10
+
+# Output configuration
+output:
+  # Output directory for results
+  directory: "./evaluation_results/test_all_features_fast"
+  
+  # Report formats to generate
+  formats:
+    - json
+    - markdown
+  
+  # Save intermediate results
+  save_intermediate: true
+  
+  # Clean up temporary files
+  cleanup_temp: false
+
+# Logging configuration
+logging:
+  # Log level: DEBUG, INFO, WARNING, ERROR
+  level: "INFO"
+  
+  # Save logs to file
+  file: true
+  
+  # Console output
+  console: true
+  
+  # Colorized output (console only)
+  colorize: true
+
+# Advanced options - optimized for speed
+advanced:
+  # Maximum PCAP file size to analyze (MB)
+  max_pcap_size: 100
+  
+  # Maximum number of packets to analyze (reduced for speed)
+  max_packets: 10000  # Only analyze first 10K packets
+  
+  # Enable memory optimization for large files
+  memory_optimization: true
+  
+  # Number of worker threads
+  num_workers: 2
+  
+  # Skip time-consuming analysis
+  skip_deep_packet_analysis: true
+  skip_protocol_analysis: true
+  
+  # Scenario-specific parameters
+  scenario:
+    name: "test-all-features"
+    duration: 600  # 10 minutes
+    expected_attack_types: 8  # 7 basic + 1 advanced
+    expected_benign_types: 2

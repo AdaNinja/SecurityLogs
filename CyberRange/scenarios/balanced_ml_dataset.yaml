@@ -1,0 +1,282 @@
+# Balanced Dataset for Machine Learning Research
+# Traffic ratio: 7 attack classes evenly distributed (≈12.86% each) + 10% benign
+# Duration: 60 minutes (3600 seconds)
+
+scenario:
+  name: "balanced-ml-dataset"
+  description: "Balanced 2-hour dataset with 50% attack traffic (7 types @ 7.14% each) + 50% benign for ML research"
+  duration: 7200  # 2 hours for comprehensive data collection
+  random_seed: 20240103
+  attack_types: ["sql_injection", "xss", "command_injection", "directory_traversal", "auth_bypass", "file_discovery", "method_enumeration"]
+  waf_mode: "off"  # No WAF for clean dataset
+  validation_mode: "ml_dataset"  # Enable ML-focused validation
+
+# Behavior configuration - balanced distribution for ML
+behaviors:
+  attacks:
+  # SQL Injection attacks (7.14%)
+  - name: sql_injection_balanced
+    node: attacker_1
+    percentage: 0.0714
+    script: /scripts/unified_attack.sh
+    script_args: ["--mode", "basic", "--type", "sql", "--interval", "2"]
+    
+  # Cross-Site Scripting attacks (7.14%)
+  - name: xss_balanced
+    node: attacker_2
+    percentage: 0.0714
+    script: /scripts/unified_attack.sh
+    script_args: ["--mode", "basic", "--type", "xss", "--interval", "2"]
+    
+  # Command Injection attacks (7.14%)
+  - name: command_injection_balanced
+    node: attacker_3
+    percentage: 0.0714
+    script: /scripts/unified_attack.sh
+    script_args: ["--mode", "basic", "--type", "cmd", "--interval", "2"]
+    
+  # Directory Traversal attacks (7.14%)
+  - name: directory_traversal_balanced
+    node: attacker_4
+    percentage: 0.0714
+    script: /scripts/unified_attack.sh
+    script_args: ["--mode", "basic", "--type", "dir", "--interval", "2"]
+    
+  # Authentication Bypass attacks (7.14%)
+  - name: auth_bypass_balanced
+    node: attacker_5
+    percentage: 0.0714
+    script: /scripts/unified_attack.sh
+    script_args: ["--mode", "basic", "--type", "auth", "--interval", "2"]
+    
+  # File Discovery attacks (7.14%)
+  - name: file_discovery_balanced
+    node: attacker_6
+    percentage: 0.0714
+    script: /scripts/unified_attack.sh
+    script_args: ["--mode", "basic", "--type", "file", "--interval", "2"]
+    
+  # Method Enumeration attacks (7.14%)
+  - name: method_enumeration_balanced
+    node: attacker_7
+    percentage: 0.0714
+    script: /scripts/unified_attack.sh
+    script_args: ["--mode", "basic", "--type", "method", "--interval", "2"]
+
+  # Benign user activities (50%)
+  benign_traffic:
+  - name: benign_browsing
+    node: benign_user_1
+    percentage: 0.20
+    script: /scripts/benign.sh
+    script_args: ["--target", "http://fancystore.com", "--behavior", "browse", "--interval", "2"]
+    
+  - name: benign_shopping
+    node: benign_user_2
+    percentage: 0.15
+    script: /scripts/benign.sh
+    script_args: ["--target", "http://fancystore.com", "--behavior", "shopping", "--interval", "3"]
+    
+  - name: benign_search
+    node: benign_user_3
+    percentage: 0.10
+    script: /scripts/benign.sh
+    script_args: ["--target", "http://fancystore.com", "--behavior", "search", "--interval", "4"]
+    
+  - name: benign_api
+    node: benign_user_4
+    percentage: 0.05
+    script: /scripts/benign.sh
+    script_args: ["--target", "http://fancystore.com", "--behavior", "api", "--interval", "5"]
+
+# Infrastructure configuration for ML dataset generation
+infrastructure:
+  networks:
+  - name: internal-net
+    driver: bridge
+  - name: external-net
+    driver: bridge
+    
+  nodes:
+  # Target: Juice Shop
+  - name: juice-shop
+    role: target
+    image: bkimminich/juice-shop
+    networks: ['internal-net']
+    ports: ['3000:3000']
+    environment: ['NODE_ENV=ml_research']
+    
+  # Nginx proxy (no WAF for clean labels)
+  - name: nginx
+    role: proxy
+    image: nginx:latest
+    networks: ['internal-net', 'external-net']
+    network_aliases:
+      internal-net: ['fancystore.com']
+      external-net: ['fancystore.com']
+    ports: ['80:80']
+    volumes:
+    - ./scenario-securitylogs/confs/nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+    - ./logs/nginx:/var/log/nginx
+    
+  # Multiple attackers for different attack types
+  - name: attacker_1
+    role: attacker
+    image: ras-attacker:latest
+    networks: ['external-net']
+    environment:
+    - TARGET_URL=http://fancystore.com
+    - ATTACK_TYPE=sql_injection
+    volumes:
+    - ./scenario-securitylogs/confs/attacker:/scripts
+    - ./logs/attacker_1:/logs
+    
+  - name: attacker_2
+    role: attacker
+    image: ras-attacker:latest
+    networks: ['external-net']
+    environment:
+    - TARGET_URL=http://fancystore.com
+    - ATTACK_TYPE=xss
+    volumes:
+    - ./scenario-securitylogs/confs/attacker:/scripts
+    - ./logs/attacker_2:/logs
+    
+  - name: attacker_3
+    role: attacker
+    image: ras-attacker:latest
+    networks: ['external-net']
+    environment:
+    - TARGET_URL=http://fancystore.com
+    - ATTACK_TYPE=command_injection
+    volumes:
+    - ./scenario-securitylogs/confs/attacker:/scripts
+    - ./logs/attacker_3:/logs
+    
+  - name: attacker_4
+    role: attacker
+    image: ras-attacker:latest
+    networks: ['external-net']
+    environment:
+    - TARGET_URL=http://fancystore.com
+    - ATTACK_TYPE=directory_traversal
+    volumes:
+    - ./scenario-securitylogs/confs/attacker:/scripts
+    - ./logs/attacker_4:/logs
+    
+  - name: attacker_5
+    role: attacker
+    image: ras-attacker:latest
+    networks: ['external-net']
+    environment:
+    - TARGET_URL=http://fancystore.com
+    - ATTACK_TYPE=auth_bypass
+    volumes:
+    - ./scenario-securitylogs/confs/attacker:/scripts
+    - ./logs/attacker_5:/logs
+    
+  - name: attacker_6
+    role: attacker
+    image: ras-attacker:latest
+    networks: ['external-net']
+    environment:
+    - TARGET_URL=http://fancystore.com
+    - ATTACK_TYPE=file_discovery
+    volumes:
+    - ./scenario-securitylogs/confs/attacker:/scripts
+    - ./logs/attacker_6:/logs
+    
+  - name: attacker_7
+    role: attacker
+    image: ras-attacker:latest
+    networks: ['external-net']
+    environment:
+    - TARGET_URL=http://fancystore.com
+    - ATTACK_TYPE=method_enumeration
+    volumes:
+    - ./scenario-securitylogs/confs/attacker:/scripts
+    - ./logs/attacker_7:/logs
+    
+  # Benign user
+  - name: benign_user
+    role: user
+    image: python:3.9-slim
+    command: tail -f /dev/null
+    networks: ['external-net']
+    environment:
+    - TARGET_URL=http://fancystore.com
+    - USER_TYPE=ml_benign
+    volumes:
+    - ./scenario-securitylogs/confs/user:/scripts
+    - ./logs/benign_user:/logs
+
+# Data collection optimized for ML
+data_collection:
+  logs:
+  - source: nginx
+    path: /var/log/nginx/detailed.log
+    output: ml_dataset_nginx_detailed.csv
+    parser: nginx_parser
+    real_time: true
+  - source: attacker_1
+    path: /logs/attack.log
+    output: ml_dataset_sql_injection.csv
+    parser: attacker_parser
+    real_time: true
+  - source: attacker_2
+    path: /logs/attack.log
+    output: ml_dataset_xss.csv
+    parser: attacker_parser
+    real_time: true
+  - source: attacker_3
+    path: /logs/attack.log
+    output: ml_dataset_cmd_injection.csv
+    parser: attacker_parser
+    real_time: true
+  - source: attacker_4
+    path: /logs/attack.log
+    output: ml_dataset_dir_traversal.csv
+    parser: attacker_parser
+    real_time: true
+  - source: attacker_5
+    path: /logs/attack.log
+    output: ml_dataset_auth_bypass.csv
+    parser: attacker_parser
+    real_time: true
+  - source: attacker_6
+    path: /logs/attack.log
+    output: ml_dataset_file_discovery.csv
+    parser: attacker_parser
+    real_time: true
+  - source: attacker_7
+    path: /logs/attack.log
+    output: ml_dataset_method_enum.csv
+    parser: attacker_parser
+    real_time: true
+  - source: benign_user
+    path: /logs/user.log
+    output: ml_dataset_benign.csv
+    parser: user_parser
+    real_time: true
+  network:
+  - interface: any
+    filter: net 172.27.0.0/16 or net 172.28.0.0/16
+    output: ml_dataset_network_traffic.pcap
+    capture_size: 500MB
+
+# ML-specific hooks
+hooks:
+  post_node_start:
+  - name: verify_ml_setup
+    script: ./hooks/verify_ml_setup.py
+    timeout: 60
+  post_collection:
+  - name: generate_ml_features
+    script: ./hooks/extract_ml_features.py
+    timeout: 600
+  - name: validate_class_balance
+    script: ./hooks/validate_balance.py
+    timeout: 300
+  - name: create_ml_splits
+    script: ./hooks/create_train_test_splits.py
+    timeout: 300

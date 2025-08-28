@@ -1,0 +1,271 @@
+# Realistic Production Environment Scenario
+# Traffic ratio: 1.5% attack (1.3% basic + 0.2% advanced) + 98.5% benign
+# Duration: 2 hours (7200 seconds)
+
+scenario:
+  name: "realistic-production"
+  description: "24-hour production simulation with 4.5% attack traffic (4% basic + 0.5% advanced) and 95.5% benign traffic"
+  duration: 86400  # 24 hours for realistic long-term testing
+  random_seed: 20240102
+  attack_types: ["sql_injection", "xss", "command_injection", "directory_traversal", "auth_bypass", "file_discovery", "method_enumeration"]
+  waf_mode: "detect"  # WAF in detection mode for realistic environment
+  validation_mode: "production"  # Enable production-level validation
+
+# Behavior configuration - realistic distribution
+behaviors:
+  attacks:
+  # Realistic attack distribution (total 4.5%)
+  - name: sql_injection_attempts
+    node: attacker
+    percentage: 0.008  # 0.8%
+    script: /scripts/unified_attack.sh
+    script_args: ["--mode", "basic", "--type", "sql", "--interval", "45"]
+    
+  - name: xss_attempts
+    node: attacker
+    percentage: 0.006  # 0.6%
+    script: /scripts/unified_attack.sh
+    script_args: ["--mode", "basic", "--type", "xss", "--interval", "60"]
+    
+  - name: command_injection_attempts
+    node: attacker
+    percentage: 0.005  # 0.5%
+    script: /scripts/unified_attack.sh
+    script_args: ["--mode", "basic", "--type", "cmd", "--interval", "75"]
+    
+  - name: directory_traversal_scan
+    node: attacker
+    percentage: 0.006  # 0.6%
+    script: /scripts/unified_attack.sh
+    script_args: ["--mode", "basic", "--type", "dir", "--interval", "50"]
+    
+  - name: auth_bypass_attempts
+    node: attacker
+    percentage: 0.007  # 0.7%
+    script: /scripts/unified_attack.sh
+    script_args: ["--mode", "basic", "--type", "auth", "--interval", "40"]
+    
+  - name: file_discovery_scans
+    node: attacker
+    percentage: 0.004  # 0.4%
+    script: /scripts/unified_attack.sh
+    script_args: ["--mode", "basic", "--type", "file", "--interval", "90"]
+    
+  - name: method_enumeration
+    node: attacker
+    percentage: 0.004  # 0.4%
+    script: /scripts/unified_attack.sh
+    script_args: ["--mode", "basic", "--type", "method", "--interval", "120"]
+    
+  # Advanced multi-phase attacks (0.5%)
+  - name: advanced_apts
+    node: attacker
+    percentage: 0.005  # 0.5%
+    script: /scripts/advanced_attack.sh
+    script_args: ["--phase", "all", "--interval", "200"]
+
+  # Benign user activities (95.5%)
+  benign_traffic:
+  # Regular browsing - majority of traffic  
+  - name: normal_browsing
+    node: benign_user_1
+    percentage: 0.38  # 38%
+    script: /scripts/benign.sh
+    script_args: ["--target", "http://fancystore.com", "--behavior", "browse", "--interval", "5", "--pages", "10"]
+    
+  - name: product_search
+    node: benign_user_2
+    percentage: 0.19  # 19%
+    script: /scripts/benign.sh
+    script_args: ["--target", "http://fancystore.com", "--behavior", "search", "--interval", "8", "--keywords", "juice,fruit,organic"]
+    
+  - name: user_registration
+    node: benign_user_3
+    percentage: 0.048  # 4.8%
+    script: /scripts/benign.sh
+    script_args: ["--target", "http://fancystore.com", "--behavior", "register", "--interval", "180"]
+    
+  - name: user_login
+    node: benign_user_4
+    percentage: 0.095  # 9.5%
+    script: /scripts/benign.sh
+    script_args: ["--target", "http://fancystore.com", "--behavior", "login", "--interval", "60"]
+    
+  - name: shopping_cart
+    node: benign_user_5
+    percentage: 0.143  # 14.3%
+    script: /scripts/benign.sh
+    script_args: ["--target", "http://fancystore.com", "--behavior", "shopping", "--interval", "20"]
+    
+  - name: api_calls
+    node: benign_user_6
+    percentage: 0.084  # 8.4% (to reach 95.5% total)
+    script: /scripts/benign.sh
+    script_args: ["--target", "http://fancystore.com", "--behavior", "api", "--interval", "3"]
+
+# Infrastructure configuration with multiple benign users
+infrastructure:
+  networks:
+  - name: internal-net
+    driver: bridge
+  - name: external-net
+    driver: bridge
+    
+  nodes:
+  # Target: Juice Shop
+  - name: juice-shop
+    role: target
+    image: bkimminich/juice-shop
+    networks: ['internal-net']
+    ports: ['3000:3000']
+    environment: ['NODE_ENV=production']
+    resources:
+      limits:
+        cpus: '2.0'
+        memory: 2G
+    
+  # Nginx proxy with WAF
+  - name: nginx
+    role: proxy
+    image: nginx:latest
+    networks: ['internal-net', 'external-net']
+    network_aliases:
+      internal-net: ['fancystore.com']
+      external-net: ['fancystore.com']
+    ports: ['80:80']
+    volumes:
+    - ./scenario-securitylogs/confs/nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+    - ./scenario-securitylogs/confs/nginx/modsecurity.conf:/etc/nginx/modsecurity.conf:ro
+    - ./logs/nginx:/var/log/nginx
+    
+  # Single attacker (simulating distributed attacks)
+  - name: attacker
+    role: attacker
+    image: ras-attacker:latest
+    networks: ['external-net']
+    environment:
+    - TARGET_URL=http://fancystore.com
+    - ATTACK_MODE=stealth
+    volumes:
+    - ./scenario-securitylogs/confs/attacker:/scripts
+    - ./logs/attacker:/logs
+    
+  # Multiple benign users
+  - name: benign_user_1
+    role: user
+    image: python:3.9-slim
+    command: tail -f /dev/null
+    networks: ['external-net']
+    environment:
+    - TARGET_URL=http://fancystore.com
+    - USER_TYPE=browser
+    volumes:
+    - ./scenario-securitylogs/confs/user:/scripts
+    - ./logs/benign_user_1:/logs
+    
+  - name: benign_user_2
+    role: user
+    image: python:3.9-slim
+    command: tail -f /dev/null
+    networks: ['external-net']
+    environment:
+    - TARGET_URL=http://fancystore.com
+    - USER_TYPE=searcher
+    volumes:
+    - ./scenario-securitylogs/confs/user:/scripts
+    - ./logs/benign_user_2:/logs
+    
+  - name: benign_user_3
+    role: user
+    image: python:3.9-slim
+    command: tail -f /dev/null
+    networks: ['external-net']
+    environment:
+    - TARGET_URL=http://fancystore.com
+    - USER_TYPE=new_user
+    volumes:
+    - ./scenario-securitylogs/confs/user:/scripts
+    - ./logs/benign_user_3:/logs
+    
+  - name: benign_user_4
+    role: user
+    image: python:3.9-slim
+    command: tail -f /dev/null
+    networks: ['external-net']
+    environment:
+    - TARGET_URL=http://fancystore.com
+    - USER_TYPE=returning_user
+    volumes:
+    - ./scenario-securitylogs/confs/user:/scripts
+    - ./logs/benign_user_4:/logs
+    
+  - name: benign_user_5
+    role: user
+    image: python:3.9-slim
+    command: tail -f /dev/null
+    networks: ['external-net']
+    environment:
+    - TARGET_URL=http://fancystore.com
+    - USER_TYPE=shopper
+    volumes:
+    - ./scenario-securitylogs/confs/user:/scripts
+    - ./logs/benign_user_5:/logs
+    
+  - name: benign_user_6
+    role: user
+    image: python:3.9-slim
+    command: tail -f /dev/null
+    networks: ['external-net']
+    environment:
+    - TARGET_URL=http://fancystore.com
+    - USER_TYPE=api_client
+    volumes:
+    - ./scenario-securitylogs/confs/user:/scripts
+    - ./logs/benign_user_6:/logs
+
+# Data collection for production environment
+data_collection:
+  logs:
+  - source: nginx
+    path: /var/log/nginx/detailed.log
+    output: production_nginx_detailed.csv
+    parser: nginx_parser
+    real_time: true
+    rotation: 100MB
+  - source: attacker
+    path: /logs/attack.log
+    output: production_attack_log.csv
+    parser: attacker_parser
+    real_time: true
+  - source: benign_user_1
+    path: /logs/user.log
+    output: production_user_1.csv
+    parser: user_parser
+    real_time: true
+  - source: benign_user_2
+    path: /logs/user.log
+    output: production_user_2.csv
+    parser: user_parser
+    real_time: true
+  # ... (similar for other users)
+  network:
+  - interface: any
+    filter: net 172.27.0.0/16 or net 172.28.0.0/16
+    output: production_network_traffic.pcap
+    capture_size: 1GB
+    rotation: true
+
+# Production monitoring hooks
+hooks:
+  post_node_start:
+  - name: verify_production_services
+    script: ./hooks/verify_production.py
+    timeout: 120
+  periodic:
+  - name: monitor_performance
+    script: ./hooks/monitor_metrics.py
+    interval: 300  # Every 5 minutes
+  post_collection:
+  - name: generate_production_report
+    script: ./hooks/production_report.py
+    timeout: 600

@@ -1,0 +1,102 @@
+# CyberRange Dataset Quality Evaluation Configuration
+
+evaluation:
+  name: "CyberRange Dataset Quality Evaluation"
+  description: "Comprehensive evaluation of CyberRange-generated security datasets"
+
+# Dataset paths
+datasets:
+  cyberrange:
+    # Path to CyberRange PCAP file
+    pcap_path: "/home/jiayi/SecurityLogs/CyberRange/output/test-all-features_20250826_122621/network_traffic.pcap"
+    # Path to nginx detailed.log CSV file (Ground Truth)
+    gt_log_path: "/home/jiayi/SecurityLogs/CyberRange/output/test-all-features_20250826_122621/nginx_detailed.csv"
+
+# Baseline configuration
+baseline:
+  # Whether to generate Fiberfox baseline PCAPs
+  generate_fiberfox: false
+  
+  # Target URL for Fiberfox generation (if enabled)
+  target_url: "http://localhost:3000"
+  
+  # Duration for each attack strategy (seconds)
+  duration: 60
+  
+  # Existing baseline PCAPs (if not generating)
+  existing_pcaps:
+    SLOW: "/home/jiayi/SecurityLogs/CyberRange/analysis/data_sources/fiberfox_data/fiberfox_pcaps/fiberfox/pcaps/fiberfox_slow.pcap"
+    GET: "/home/jiayi/SecurityLogs/CyberRange/analysis/data_sources/fiberfox_data/fiberfox_pcaps/fiberfox/pcaps/fiberfox_get.pcap"
+    BYPASS: "/home/jiayi/SecurityLogs/CyberRange/analysis/data_sources/fiberfox_data/fiberfox_pcaps/fiberfox/pcaps/fiberfox_bypass.pcap"
+    AVB: "/home/jiayi/SecurityLogs/CyberRange/analysis/data_sources/fiberfox_data/fiberfox_pcaps/fiberfox/pcaps/fiberfox_avb.pcap"
+
+# IDS detection configuration
+detection:
+  # Enable IDS detection evaluation
+  enabled: true
+  
+  # IDS tools to use
+  detectors:
+    suricata: true
+    # snort: false  # Future implementation
+    # zeek: false   # Future implementation
+  
+  # Time tolerance for matching alerts with GT (seconds)
+  time_tolerance: 5.0
+  
+  # Parallel detection (faster but uses more resources)
+  parallel: true
+
+# Quality metrics weights
+metrics:
+  weights:
+    detection_accuracy: 0.3
+    label_quality: 0.25
+    data_diversity: 0.2
+    temporal_quality: 0.15
+    attack_realism: 0.1
+
+# Output configuration
+output:
+  # Output directory for results
+  directory: "./evaluation_results"
+  
+  # Report formats to generate
+  formats:
+    - json
+    - html
+    - markdown
+  
+  # Save intermediate results
+  save_intermediate: true
+  
+  # Clean up temporary files
+  cleanup_temp: true
+
+# Logging configuration
+logging:
+  # Log level: DEBUG, INFO, WARNING, ERROR
+  level: "INFO"
+  
+  # Save logs to file
+  file: true
+  
+  # Console output
+  console: true
+  
+  # Colorized output (console only)
+  colorize: true
+
+# Advanced options
+advanced:
+  # Maximum PCAP file size to analyze (MB)
+  max_pcap_size: 1000
+  
+  # Maximum number of packets to analyze
+  max_packets: 1000000
+  
+  # Enable memory optimization for large files
+  memory_optimization: true
+  
+  # Number of worker threads
+  num_workers: 4

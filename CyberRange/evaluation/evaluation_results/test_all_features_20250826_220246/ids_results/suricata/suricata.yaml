@@ -1,0 +1,28 @@
+logging:
+  default-log-level: notice
+  outputs:
+  - file:
+      enabled: true
+      filename: suricata.log
+      level: info
+outputs:
+- eve-log:
+    enabled: true
+    filename: eve.json
+    filetype: regular
+    types:
+    - alert:
+        enabled: true
+    - http:
+        enabled: true
+    - dns:
+        enabled: true
+    - flow:
+        enabled: true
+vars:
+  address-groups:
+    EXTERNAL_NET: '!$HOME_NET'
+    HOME_NET: '[192.168.0.0/16,10.0.0.0/8,172.16.0.0/12]'
+  port-groups:
+    HTTP_PORTS: '80'
+    SHELLCODE_PORTS: '!80'

@@ -1,2 +1,0 @@
-2025/07/31 10:11:48 [error] 20#20: *1 connect() failed (111: Connection refused) while connecting to upstream, client: 172.19.0.3, server: fancystore.com, request: "GET / HTTP/1.1", upstream: "http://172.18.0.2:3000/", host: "fancystore.com"
-2025/07/31 10:11:50 [error] 20#20: *3 connect() failed (111: Connection refused) while connecting to upstream, client: 172.19.0.3, server: fancystore.com, request: "GET / HTTP/1.1", upstream: "http://172.18.0.2:3000/", host: "fancystore.com"

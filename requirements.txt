@@ -1,7 +1,0 @@
-# CyberRange 最小依赖
-docker>=6.0.0
-PyYAML>=6.0
-
-# 可选：日志解析支持
-pandas>=1.5.0
-numpy>=1.24.0

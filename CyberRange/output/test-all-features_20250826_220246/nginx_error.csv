@@ -1,0 +1,1 @@
+timestamp,source_type,source_name,event_type,severity,message,ip_src,ip_dst,port_src,port_dst,protocol,user_agent,request_method,request_path,response_code,payload,label

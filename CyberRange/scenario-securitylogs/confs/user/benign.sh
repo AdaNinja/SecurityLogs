@@ -9,8 +9,11 @@ exec > >(tee /logs/user.log) 2>&1
 # Parse command line arguments
 TARGET="http://fancystore.com"  # Default target
 DURATION=5  # Default duration in minutes
-BEHAVIOR=""  # Behavior type (browse, shop, etc.)
+BEHAVIOR="browse"  # Behavior type (browse, shop, search, login, register, api, mixed)
 FREQUENCY="normal"  # Frequency level: low, normal, high
+INTERVAL=5  # Interval between actions in seconds
+PAGES=10  # Number of pages to browse
+KEYWORDS="juice,fruit,organic"  # Search keywords
 
 while [ $# -gt 0 ]; do
   case $1 in
@@ -30,8 +33,35 @@ while [ $# -gt 0 ]; do
       FREQUENCY="$2"
       shift 2
       ;;
+    --interval)
+      INTERVAL="$2"
+      shift 2
+      ;;
+    --pages)
+      PAGES="$2"
+      shift 2
+      ;;
+    --keywords)
+      KEYWORDS="$2"
+      shift 2
+      ;;
+    --help)
+      echo "Benign User Activity Simulator"
+      echo "Usage: $0 [options]"
+      echo ""
+      echo "Options:"
+      echo "  --target URL       Target URL (default: http://fancystore.com)"
+      echo "  --behavior TYPE    Behavior type: browse, shop, search, login, register, api, mixed"
+      echo "  --frequency LEVEL  Frequency level: low, normal, high"
+      echo "  --interval SEC     Interval between actions in seconds"
+      echo "  --pages NUM        Number of pages to browse"
+      echo "  --keywords LIST    Comma-separated search keywords"
+      echo "  --help             Show this help"
+      exit 0
+      ;;
     *)
       echo "Unknown option $1"
+      echo "Use --help for usage information"
       exit 1
       ;;
   esac
@@ -159,6 +189,11 @@ class BenignUserSimulator:
             'premium', 'fast', 'lightweight', 'durable', 'modern'
         ]
         
+        # Get search keywords from environment if available
+        env_keywords = os.environ.get('BENIGN_KEYWORDS', '')
+        if env_keywords:
+            self.search_terms.extend(env_keywords.split(','))
+        
         self.user_agents = [
             'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
             'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
@@ -179,10 +214,16 @@ class BenignUserSimulator:
         try:
             from urllib.parse import urlparse
             parsed = urlparse(url)
-            socket.gethostbyname(parsed.hostname)
+            # Special handling for common hostnames
+            if parsed.hostname in ['localhost', 'fancystore.com', 'juice-shop']:
+                # Skip DNS check for known local hosts
+                pass
+            else:
+                socket.gethostbyname(parsed.hostname)
         except Exception as e:
             log_warning(f'DNS resolution failed for {parsed.hostname}: {e}')
-            return 0
+            # Continue anyway for local testing
+            pass
         
         if headers is None:
             headers = {}
@@ -291,6 +332,11 @@ class BenignUserSimulator:
         product_id = random.randint(1, 100)
         quantity = random.randint(1, 3)
         log_info(f'Adding product {product_id} to cart (quantity: {quantity})')
+        
+        # Track cart items for session consistency
+        if not hasattr(self, 'cart_items'):
+            self.cart_items = []
+        self.cart_items.append(product_id)
         
         cart_data = {
             'product_id': product_id,
@@ -414,9 +460,25 @@ class BenignUserSimulator:
         # Select action based on behavior
         if behavior == 'browse':
             actions = [self.browse_homepage, self.view_product, self.browse_category]
-        elif behavior == 'shop':
-            actions = [self.add_to_cart, self.view_cart, self.user_login]
+        elif behavior == 'shop' or behavior == 'shopping':
+            actions = [self.add_to_cart, self.view_cart, self.view_product, self.browse_category]
+        elif behavior == 'search':
+            actions = [self.search_products, self.browse_category]
+        elif behavior == 'login':
+            actions = [self.user_login]
+        elif behavior == 'register':
+            actions = [self.user_register]
+        elif behavior == 'api':
+            actions = [self.api_call]
+        elif behavior == 'mixed':
+            # Use all available actions for mixed behavior
+            actions = [
+                self.browse_homepage, self.search_products, self.browse_category,
+                self.view_product, self.add_to_cart, self.view_cart,
+                self.user_login, self.api_call
+            ]
         else:
+            # Default to browsing
             actions = [self.browse_homepage, self.search_products]
         
         # Execute one random action
@@ -449,6 +511,11 @@ if __name__ == '__main__':
     simulator.execute_single_action(behavior)
 EOF
 
+    # Export environment variables for Python script
+    export BENIGN_INTERVAL="$INTERVAL"
+    export BENIGN_PAGES="$PAGES"
+    export BENIGN_KEYWORDS="$KEYWORDS"
+    
     # Run the Python script with proper arguments
     python3 /tmp/benign_simulator.py "$TARGET" "$BEHAVIOR" "$FREQUENCY"
     

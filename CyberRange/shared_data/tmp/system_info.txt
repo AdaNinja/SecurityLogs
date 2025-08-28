@@ -1,0 +1,7 @@
+Thu Aug 21 11:15:09 UTC 2025: 系统信息收集
+容器ID: 1f8eb159c54d
+进程信息: USER         PID %CPU %MEM    VSZ   RSS TTY      STAT START   TIME COMMAND
+root           1  0.0  0.0   2232   796 ?        Ss   11:04   0:00 tail -f /dev/null
+root          84  0.0  0.0      0     0 ?        Z    11:09   0:00 [advanced_attack] <defunct>
+root         161  0.0  0.0      0     0 ?        Z    11:10   0:00 [advanced_attack] <defunct>
+root         453  0.3  0.0   4116  3140 ?        Ss   11:14   0:00 /bin/bash /scripts/advanced_attack.sh --phase all --target http://fancystore.com --exfil-method file

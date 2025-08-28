@@ -1,0 +1,23 @@
+# Basic SQL Injection Payloads
+# Format: method|endpoint|payload|expected_code|attack_id|description
+
+# Classic SQL Injection
+POST|/rest/user/login|{"email":"' OR '1'='1' --","password":"any"}|401|sqli_basic_001|Classic OR 1=1
+POST|/rest/user/login|{"email":"admin' --","password":"any"}|401|sqli_basic_002|Comment bypass
+POST|/rest/user/login|{"email":"' OR 1=1 --","password":"any"}|401|sqli_basic_003|Boolean bypass
+POST|/rest/user/login|{"email":"admin'/*","password":"any"}|401|sqli_basic_004|Multi-line comment
+POST|/rest/user/login|{"email":"' OR 'a'='a","password":"any"}|401|sqli_basic_005|String comparison
+
+# Error-based SQL Injection
+POST|/rest/user/login|{"email":"' AND 1=CONVERT(int, @@version) --","password":"any"}|401|sqli_error_001|MSSQL version extraction
+POST|/rest/user/login|{"email":"' AND extractvalue(1,concat(0x7e,version())) --","password":"any"}|401|sqli_error_002|MySQL version extraction
+POST|/rest/user/login|{"email":"' AND 1=cast((SELECT version()) as int) --","password":"any"}|401|sqli_error_003|PostgreSQL version extraction
+POST|/rest/user/login|{"email":"' AND 1=(SELECT 1/0) --","password":"any"}|401|sqli_error_004|Division by zero error
+POST|/rest/user/login|{"email":"' AND 1=utl_inaddr.get_host_address((SELECT user FROM dual)) --","password":"any"}|401|sqli_error_005|Oracle error injection
+
+# Stacked Queries
+POST|/rest/user/login|{"email":"admin'; DROP TABLE users; --","password":"any"}|401|sqli_stacked_001|Drop table attempt
+POST|/rest/user/login|{"email":"admin'; INSERT INTO users VALUES ('hacker','pass'); --","password":"any"}|401|sqli_stacked_002|Insert malicious user
+POST|/rest/user/login|{"email":"admin'; UPDATE users SET password='hacked'; --","password":"any"}|401|sqli_stacked_003|Update all passwords
+POST|/rest/user/login|{"email":"admin'; EXEC xp_cmdshell('whoami'); --","password":"any"}|401|sqli_stacked_004|Command execution MSSQL
+POST|/rest/user/login|{"email":"admin'; CREATE TABLE hacked (data varchar(8000)); --","password":"any"}|401|sqli_stacked_005|Create malicious table

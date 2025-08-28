@@ -1,6 +1,0 @@
-method_enum|nmap|nmap|-p80 --script http-methods fancystore.com|405|block|PUT method test
-method_enum|nmap|nmap|-p80 --script http-methods fancystore.com|405|block|DELETE method test
-method_enum|nmap|nmap|-p80 --script http-methods fancystore.com|405|block|HEAD method test
-method_enum|nmap|nmap|-p80 --script http-methods fancystore.com|405|block|OPTIONS method test
-method_enum|nmap|nmap|-p80 --script http-methods fancystore.com|405|block|TRACE method test
-method_enum|nmap|nmap|-p80 --script http-methods fancystore.com|405|block|PATCH method test

@@ -1,0 +1,8 @@
+timestamp,source_type,source_name,event_type,severity,message,ip_src,ip_dst,port_src,port_dst,protocol,user_agent,request_method,request_path,response_code,payload,label
+2025-08-27T21:58:04.661000Z,application,user_behavior,info,info,Target URL: http://fancystore.com,,,,,HTTP,,,,,,0
+2025-08-27T21:58:04.662000Z,application,user_behavior,info,info,Container IP: 172.16.218.130,,,,,HTTP,,,,,,0
+2025-08-27T21:58:04.662000Z,application,user_behavior,info,info,"Single action mode: target=http://fancystore.com, behavior=register, frequency=normal (multiplier=1.0)",,,,,HTTP,,,,,,0
+2025-08-27T21:58:04.662000Z,application,user_behavior,info,info,Executing single register action,,,,,HTTP,,,,,,0
+2025-08-27T21:58:04.662000Z,application,user_behavior,info,info,Attempting user registration,,,,,HTTP,,,,,,0
+2025-08-27T21:58:04.672000Z,application,user_behavior,info,info,SUCCESS POST /register - Status: 200,172.16.218.130,,,,HTTP,"Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36",POST,/register,200,,0
+2025-08-27T21:58:06.280000Z,application,user_behavior,info,info,Single register action completed successfully,,,,,HTTP,,,,,,0

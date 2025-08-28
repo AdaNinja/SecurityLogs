@@ -102,6 +102,51 @@ def parse_nginx_logs(input_file: str, output_file: str):
         return False
 
 
+def parse_merged_attack_logs(attack_files: list, output_file: str):
+    """Parse and merge multiple attack log files into single CSV"""
+    try:
+        from attack_parser import AttackParser
+        
+        parser = AttackParser('attacker')
+        total_lines = 0
+        
+        with open(output_file, 'w', encoding='utf-8', newline='') as csv_file:
+            # Write CSV header
+            csv_file.write('timestamp,source_type,source_name,event_type,severity,message,ip_src,ip_dst,port_src,port_dst,protocol,user_agent,request_method,request_path,response_code,payload,label,log_file\n')
+            
+            for attack_file in attack_files:
+                filename = os.path.basename(attack_file)
+                logging.info(f"Processing attack file: {filename}")
+                
+                try:
+                    with open(attack_file, 'r', encoding='utf-8') as f:
+                        lines = f.readlines()
+                    
+                    for line in lines:
+                        line = line.strip()
+                        if line:
+                            result = parser.parse_line(line)
+                            if result:
+                                # Escape quotes in CSV fields
+                                message = result['message'].replace('"', '""')
+                                user_agent = result['user_agent'].replace('"', '""')
+                                payload = result['payload'].replace('"', '""')
+                                
+                                csv_file.write(f'{result["timestamp"]},{result["source_type"]},{result["source_name"]},{result["event_type"]},{result["severity"]},"{message}",{result["ip_src"]},{result["ip_dst"]},{result["port_src"]},{result["port_dst"]},{result["protocol"]},"{user_agent}",{result["request_method"]},{result["request_path"]},{result["response_code"]},"{payload}",{result["label"]},{filename}\n')
+                                total_lines += 1
+                                
+                except Exception as e:
+                    logging.warning(f"Failed to parse attack file {filename}: {e}")
+                    continue
+
+        logging.info(f"✅ Merged {len(attack_files)} attack log files into {output_file} ({total_lines} total records)")
+        return True
+        
+    except Exception as e:
+        logging.error(f"❌ Failed to merge attack logs: {e}")
+        return False
+
+
 def parse_attack_logs(input_file: str, output_file: str):
     """Parse attack logs to CSV"""
     try:
@@ -305,25 +350,19 @@ def main():
                 if parse_nginx_logs(input_path, output_path):
                     success_count += 1
     
-    # Parse attack logs
+    # Parse attack logs - merge all into single CSV
     if args.log_type in ['all', 'attack']:
-        # Look for attack log files with pattern attack_*.log
+        # Look for attack log files with pattern structured_attack_*.log
         import glob
-        attack_log_pattern = os.path.join(args.input_dir, 'attacker', 'attack_*.log')
+        attack_log_pattern = os.path.join(args.input_dir, 'attacker', 'structured_attack_*.log')
         attack_files = glob.glob(attack_log_pattern)
         
         if attack_files:
-            # Parse each attack log file
-            for attack_file in attack_files:
-                # Extract attack type from filename if possible
-                filename = os.path.basename(attack_file)
-                attack_type = filename.replace('attack_', '').replace('.log', '')
-                output_file = f'attack_{attack_type}.csv'
-                output_path = os.path.join(args.output_dir, output_file)
-                
-                total_count += 1
-                if parse_attack_logs(attack_file, output_path):
-                    success_count += 1
+            # Merge all attack logs into single consolidated CSV
+            output_path = os.path.join(args.output_dir, 'attack_consolidated.csv')
+            total_count += 1
+            if parse_merged_attack_logs(attack_files, output_path):
+                success_count += 1
         else:
             # Fallback to old pattern
             attack_files = [

