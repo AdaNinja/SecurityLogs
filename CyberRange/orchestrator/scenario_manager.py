@@ -144,14 +144,16 @@ class ScenarioManager:
                                 node['volumes'][i] = f"./{self.experiment_dir}/modsecurity:{container_path}"
                                 self.logger.info(f"Updated modsecurity log path: {node['volumes'][i]}")
                 
-                elif node['name'] == 'attacker' and 'volumes' in node:
-                    # Update attacker log volume path
+                elif ('attacker' in node['name'] or node['name'].startswith('apt_attacker')) and 'volumes' in node:
+                    # Update attacker log volume path (supports multiple attackers with nested structure)
                     for i, volume in enumerate(node['volumes']):
                         if '/logs' in volume and not '/scripts' in volume:
                             host_path, container_path = volume.split(':', 1)
-                            if host_path == './logs/attacker':
-                                node['volumes'][i] = f"./{self.experiment_dir}/attacker:{container_path}"
-                                self.logger.info(f"Updated attacker log path: {node['volumes'][i]}")
+                            if host_path.startswith('./logs/'):
+                                # Create nested structure: attacker/attacker_1, attacker/attacker_2, etc.
+                                attacker_name = node['name']
+                                node['volumes'][i] = f"./{self.experiment_dir}/attacker/{attacker_name}:{container_path}"
+                                self.logger.info(f"Updated {attacker_name} log path: {node['volumes'][i]}")
                 
                 elif node['name'].startswith('benign_user') and 'volumes' in node:
                     # Update benign user log volume path
