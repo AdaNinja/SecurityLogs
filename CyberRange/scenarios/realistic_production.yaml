@@ -6,7 +6,7 @@ scenario:
   name: "realistic-production"
   description: "4-hour production simulation with 2% attack traffic (1.7% basic + 0.3% advanced) and 98% benign traffic"
   duration: 14400  # 4 hours for realistic testing with manageable data size
-  random_seed: 20240102
+  random_seed: 20250830
   attack_types: ["sql_injection", "xss", "command_injection", "directory_traversal", "auth_bypass", "file_discovery", "method_enumeration"]
   waf_mode: "detect"  # WAF in detection mode for realistic environment
   validation_mode: "production"  # Enable production-level validation
@@ -143,12 +143,18 @@ infrastructure:
     role: attacker
     image: ras-attacker:latest
     networks: ['external-net']
+    ports: ['8080:8080', '8443:8443']  # exfiltration port
+    command: ["/bin/bash", "-c", "/scripts/start_services.sh"]  # start services
     environment:
     - TARGET_URL=http://fancystore.com
     - ATTACK_MODE=stealth
+    - EXPERIMENT_NAME=realistic-production
     volumes:
     - ./scenario-securitylogs/confs/attacker:/scripts
+    - ./scenario-securitylogs/scripts:/common_scripts
     - ./logs/attacker:/logs
+    - ./shared_data:/shared_data  # shared data
+    - ./exfiltrated_data:/exfiltrated_data  # exfiltrated data
     
   # Multiple benign users
   - name: benign_user_1
@@ -233,17 +239,17 @@ data_collection:
     real_time: true
     rotation: 100MB
   - source: attacker
-    path: /logs/attack.log
+    path: /logs/attacker/attack_*.log
     output: production_attack_log.csv
     parser: attacker_parser
     real_time: true
   - source: benign_user_1
-    path: /logs/user.log
+    path: /logs/benign_user_*/user.log
     output: production_user_1.csv
     parser: user_parser
     real_time: true
   - source: benign_user_2
-    path: /logs/user.log
+    path: /logs/benign_user_*/user.log
     output: production_user_2.csv
     parser: user_parser
     real_time: true

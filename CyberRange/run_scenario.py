@@ -243,6 +243,16 @@ def run_scenario(config_path: str, dry_run_mode: bool = False) -> bool:
     if dry_run_mode:
         return dry_run(config)
     
+    # Setup experiment directories
+    logger.info("Setting up experiment directories...")
+    experiment_name, full_experiment_name = setup_experiment_directories(config_path)
+    
+    # Add experiment info to environment for containers
+    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+    os.environ['EXPERIMENT_NAME'] = experiment_name
+    os.environ['FULL_EXPERIMENT_NAME'] = full_experiment_name
+    os.environ['TIMESTAMP'] = timestamp
+    
     try:
         # Initialize scenario manager with pre-loaded config
         logger.info("Initializing scenario manager...")
@@ -268,6 +278,47 @@ def run_scenario(config_path: str, dry_run_mode: bool = False) -> bool:
     except Exception as e:
         logger.error(f"Error during scenario execution: {e}")
         return False
+
+
+def setup_experiment_directories(config_path: str) -> tuple[str, str]:
+    """
+    Setup experiment directories using the hook
+    
+    Returns:
+        tuple: (experiment_name, full_experiment_name)
+    """
+    import subprocess
+    
+    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+    
+    try:
+        # 运行目录设置hook
+        result = subprocess.run([
+            sys.executable, 
+            "hooks/setup_experiment_directories.py", 
+            config_path, 
+            timestamp
+        ], capture_output=True, text=True, check=True)
+        
+        # 解析输出
+        experiment_name = None
+        full_experiment_name = None
+        
+        for line in result.stdout.strip().split('\n'):
+            if line.startswith('EXPERIMENT_NAME='):
+                experiment_name = line.split('=', 1)[1]
+            elif line.startswith('FULL_EXPERIMENT_NAME='):
+                full_experiment_name = line.split('=', 1)[1]
+        
+        logging.info(f"✅ Experiment directories setup completed: {full_experiment_name}")
+        return experiment_name, full_experiment_name
+        
+    except subprocess.CalledProcessError as e:
+        logging.warning(f"Failed to setup experiment directories: {e}")
+        # 回退到基本设置
+        experiment_name = Path(config_path).stem
+        full_experiment_name = f"{experiment_name}_{timestamp}"
+        return experiment_name, full_experiment_name
 
 
 def main():

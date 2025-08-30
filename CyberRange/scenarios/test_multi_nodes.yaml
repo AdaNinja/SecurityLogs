@@ -5,7 +5,7 @@
 scenario:
   name: "test-multi-nodes"
   description: "5-minute test to verify multiple attacker and benign user nodes work correctly"
-  duration: 300  # 5 minutes
+  duration: 120  # 5 minutes
   random_seed: 20240106
   attack_types: ["sql_injection", "xss", "command_injection"]
   waf_mode: "off"
@@ -166,32 +166,32 @@ data_collection:
     parser: nginx_parser
     real_time: true
   - source: attacker_1
-    path: /logs/attack.log
+    path: /logs/attacker/attack_*.log
     output: multi_node_test_attacker_1.csv
     parser: attacker_parser
     real_time: true
   - source: attacker_2
-    path: /logs/attack.log
+    path: /logs/attacker/attack_*.log
     output: multi_node_test_attacker_2.csv
     parser: attacker_parser
     real_time: true
   - source: attacker_3
-    path: /logs/attack.log
+    path: /logs/attacker/attack_*.log
     output: multi_node_test_attacker_3.csv
     parser: attacker_parser
     real_time: true
   - source: benign_user_1
-    path: /logs/user.log
+    path: /logs/benign_user_*/user.log
     output: multi_node_test_benign_1.csv
     parser: user_parser
     real_time: true
   - source: benign_user_2
-    path: /logs/user.log
+    path: /logs/benign_user_*/user.log
     output: multi_node_test_benign_2.csv
     parser: user_parser
     real_time: true
   - source: benign_user_3
-    path: /logs/user.log
+    path: /logs/benign_user_*/user.log
     output: multi_node_test_benign_3.csv
     parser: user_parser
     real_time: true

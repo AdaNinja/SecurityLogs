@@ -342,16 +342,75 @@ def main():
     if args.log_type in ['all', 'attack']:
         # Look for attack log files with pattern structured_attack_*.log
         import glob
-        attack_log_pattern = os.path.join(args.input_dir, 'attacker', 'structured_attack_*.log')
-        attack_files = glob.glob(attack_log_pattern)
+        
+        # Try multiple patterns to find attack logs
+        attack_patterns = [
+            # Multi-node patterns: attacker/attacker_X/
+            os.path.join(args.input_dir, 'attacker', 'attacker_*', 'structured_attack_*.log'),
+            os.path.join(args.input_dir, 'attacker', 'attacker_*', 'attack_*.log'),
+            # Single node patterns: attacker/attacker/
+            os.path.join(args.input_dir, 'attacker', 'attacker', 'structured_attack_*.log'),
+            os.path.join(args.input_dir, 'attacker', 'attacker', 'attack_*.log'),
+            # Legacy patterns
+            os.path.join(args.input_dir, 'attacker', 'structured_attack_*.log'),
+            os.path.join(args.input_dir, 'attacker', 'attack_*.log')
+        ]
+        
+        attack_files = []
+        for pattern in attack_patterns:
+            files = glob.glob(pattern)
+            if files:
+                attack_files.extend(files)
+                break  # Use first pattern that finds files
         
         if attack_files:
-            # Merge all attack logs into single consolidated CSV
-            output_path = os.path.join(args.output_dir, 'attack_consolidated.csv')
-            total_count += 1
-            if parse_merged_attack_logs(attack_files, output_path):
-                success_count += 1
+            # Group attack files by attacker node (extract from path)
+            attacker_groups = {}
+            for attack_file in attack_files:
+                # Extract attacker node from path: .../attacker/attacker/... or .../attacker_X/...
+                path_parts = attack_file.split(os.sep)
+                attacker_node = None
+                
+                # Look for attacker identifier in path
+                for i, part in enumerate(path_parts):
+                    if part.startswith('attacker'):
+                        if part == 'attacker':
+                            # Check next part for attacker_X pattern
+                            if i + 1 < len(path_parts) and path_parts[i + 1].startswith('attacker'):
+                                next_part = path_parts[i + 1]
+                                if next_part == 'attacker':
+                                    # Pattern: .../attacker/attacker/...
+                                    attacker_node = 'attacker'
+                                else:
+                                    # Pattern: .../attacker/attacker_X/...
+                                    attacker_node = next_part
+                            else:
+                                # Default attacker
+                                attacker_node = 'attacker'
+                        else:
+                            # Pattern: .../attacker_X/... (direct)
+                            attacker_node = part
+                        break
+                
+                if attacker_node is None:
+                    attacker_node = 'attacker'  # fallback
+                
+                if attacker_node not in attacker_groups:
+                    attacker_groups[attacker_node] = []
+                attacker_groups[attacker_node].append(attack_file)
+            
+            logging.info(f"Found {len(attack_files)} attack log files from {len(attacker_groups)} attacker nodes: {list(attacker_groups.keys())}")
+            
+            # Process each attacker node separately
+            for attacker_node, node_files in attacker_groups.items():
+                output_file = f'{attacker_node}_attacks.csv'
+                output_path = os.path.join(args.output_dir, output_file)
+                total_count += 1
+                logging.info(f"Processing {len(node_files)} attack logs for {attacker_node} -> {output_file}")
+                if parse_merged_attack_logs(node_files, output_path):
+                    success_count += 1
         else:
+            logging.warning("No attack log files found with any pattern")
             # Fallback to old pattern
             attack_files = [
                 ('attacker/attack.log', 'attack_log.csv'),
@@ -369,20 +428,47 @@ def main():
     
     # Parse user behavior logs
     if args.log_type in ['all', 'user']:
-        user_files = [
-            ('benign_user/user.log', 'user_behavior.csv'),
-            ('benign_user/behavior.log', 'user_behavior_alt.csv'),
-            ('benign_user/application.log', 'user_application.csv')
+        # Try multiple patterns to find user logs
+        import glob
+        
+        user_patterns = [
+            os.path.join(args.input_dir, 'benign_user', 'benign_user_*', 'user.log'),
+            os.path.join(args.input_dir, 'benign_user', 'user.log'),
+            os.path.join(args.input_dir, 'benign_user', 'behavior.log'),
+            os.path.join(args.input_dir, 'benign_user', 'application.log')
         ]
         
-        for input_file, output_file in user_files:
-            input_path = os.path.join(args.input_dir, input_file)
-            output_path = os.path.join(args.output_dir, output_file)
-            
-            if os.path.exists(input_path):
+        user_files_found = []
+        for pattern in user_patterns:
+            files = glob.glob(pattern)
+            user_files_found.extend(files)
+        
+        if user_files_found:
+            # Process each user log file
+            for i, user_file in enumerate(user_files_found):
+                output_file = f'user_behavior_{i+1}.csv'
+                output_path = os.path.join(args.output_dir, output_file)
                 total_count += 1
-                if parse_user_behavior_logs(input_path, output_path):
+                logging.info(f"Processing user log: {os.path.basename(user_file)}")
+                if parse_user_behavior_logs(user_file, output_path):
                     success_count += 1
+        else:
+            logging.warning("No user log files found with any pattern")
+            # Fallback to old pattern
+            user_files = [
+                ('benign_user/user.log', 'user_behavior.csv'),
+                ('benign_user/behavior.log', 'user_behavior_alt.csv'),
+                ('benign_user/application.log', 'user_application.csv')
+            ]
+            
+            for input_file, output_file in user_files:
+                input_path = os.path.join(args.input_dir, input_file)
+                output_path = os.path.join(args.output_dir, output_file)
+                
+                if os.path.exists(input_path):
+                    total_count += 1
+                    if parse_user_behavior_logs(input_path, output_path):
+                        success_count += 1
     
     # 仅复制PCAP文件到输出目录，不生成CSV
     pcap_files = list(Path(args.input_dir).glob('*.pcap'))

@@ -6,7 +6,7 @@ scenario:
   name: "apt-simulation"
   description: "6-hour APT attack chain simulation with 5% attack traffic following MITRE ATT&CK framework"
   duration: 21600  # 6 hours for complete APT lifecycle
-  random_seed: 20240105
+  random_seed: 20250830
   attack_types: ["sql_injection", "xss", "command_injection", "directory_traversal", "auth_bypass", "file_discovery", "method_enumeration"]
   waf_mode: "detect"  # WAF in detection mode for realistic APT evasion
   validation_mode: "apt_simulation"  # Enable APT-specific validation
@@ -183,49 +183,73 @@ infrastructure:
     role: attacker
     image: ras-attacker:latest
     networks: ['external-net']
+    ports: ['8082:8080', '8445:8443']  # exfiltration port (avoid conflict)
+    command: ["/bin/bash", "-c", "/scripts/start_services.sh"]  # start services
     environment:
     - TARGET_URL=http://fancystore.com
     - ATTACK_MODE=apt_persist
     - APT_PHASE=persistence
+    - EXPERIMENT_NAME=apt-simulation
     volumes:
     - ./scenario-securitylogs/confs/attacker:/scripts
+    - ./scenario-securitylogs/scripts:/common_scripts
     - ./logs/apt_attacker_persist:/logs
+    - ./shared_data:/shared_data  # shared data
+    - ./exfiltrated_data:/exfiltrated_data  # exfiltrated data
     
   - name: apt_attacker_lateral
     role: attacker
     image: ras-attacker:latest
     networks: ['external-net', 'apt-c2-net']
+    ports: ['8083:8080', '8446:8443']  # exfiltration port (avoid conflict)
+    command: ["/bin/bash", "-c", "/scripts/start_services.sh"]  # start services
     environment:
     - TARGET_URL=http://fancystore.com
     - ATTACK_MODE=apt_lateral
     - APT_PHASE=lateral_movement
+    - EXPERIMENT_NAME=apt-simulation
     volumes:
     - ./scenario-securitylogs/confs/attacker:/scripts
+    - ./scenario-securitylogs/scripts:/common_scripts
     - ./logs/apt_attacker_lateral:/logs
+    - ./shared_data:/shared_data  # shared data
+    - ./exfiltrated_data:/exfiltrated_data  # exfiltrated data
     
   - name: apt_attacker_exfil
     role: attacker
     image: ras-attacker:latest
     networks: ['external-net', 'apt-c2-net']
+    ports: ['8080:8080', '8443:8443']  # exfiltration port
+    command: ["/bin/bash", "-c", "/scripts/start_services.sh"]  # start services
     environment:
     - TARGET_URL=http://fancystore.com
     - ATTACK_MODE=apt_exfil
     - APT_PHASE=exfiltration
+    - EXPERIMENT_NAME=apt-simulation
     volumes:
     - ./scenario-securitylogs/confs/attacker:/scripts
+    - ./scenario-securitylogs/scripts:/common_scripts
     - ./logs/apt_attacker_exfil:/logs
+    - ./shared_data:/shared_data  # shared data
+    - ./exfiltrated_data:/exfiltrated_data  # exfiltrated data
     
   - name: apt_attacker_c2
     role: attacker
     image: ras-attacker:latest
     networks: ['apt-c2-net']
+    ports: ['8080:8080', '8443:8443']  # C2 communication port
+    command: ["/bin/bash", "-c", "/scripts/start_services.sh"]  # start services
     environment:
     - TARGET_URL=http://fancystore.com
     - ATTACK_MODE=apt_c2
     - APT_PHASE=command_control
+    - EXPERIMENT_NAME=apt-simulation
     volumes:
     - ./scenario-securitylogs/confs/attacker:/scripts
+    - ./scenario-securitylogs/scripts:/common_scripts
     - ./logs/apt_attacker_c2:/logs
+    - ./shared_data:/shared_data  # shared data
+    - ./exfiltrated_data:/exfiltrated_data  # exfiltrated data
     
   - name: apt_attacker_stealth
     role: attacker
@@ -323,68 +347,68 @@ data_collection:
     rotation: 100MB
   # APT Attacker logs - organized by attack phase
   - source: apt_attacker_recon
-    path: /logs/attack.log
+    path: /logs/attacker/attack_*.log
     output: apt_phase1_reconnaissance.csv
     parser: attacker_parser
     real_time: true
   - source: apt_attacker_initial
-    path: /logs/attack.log
+    path: /logs/attacker/attack_*.log
     output: apt_phase1_initial_access.csv
     parser: attacker_parser
     real_time: true
   - source: apt_attacker_persist
-    path: /logs/attack.log
+    path: /logs/attacker/attack_*.log
     output: apt_phase2_persistence.csv
     parser: attacker_parser
     real_time: true
   - source: apt_attacker_lateral
-    path: /logs/attack.log
+    path: /logs/attacker/attack_*.log
     output: apt_phase3_lateral_movement.csv
     parser: attacker_parser
     real_time: true
   - source: apt_attacker_exfil
-    path: /logs/attack.log
+    path: /logs/attacker/attack_*.log
     output: apt_phase4_exfiltration.csv
     parser: attacker_parser
     real_time: true
   - source: apt_attacker_c2
-    path: /logs/attack.log
+    path: /logs/attacker/attack_*.log
     output: apt_phase5_command_control.csv
     parser: attacker_parser
     real_time: true
   - source: apt_attacker_stealth
-    path: /logs/attack.log
+    path: /logs/attacker/attack_*.log
     output: apt_phase6_defense_evasion.csv
     parser: attacker_parser
     real_time: true
   # Business user logs
   - source: business_user_1
-    path: /logs/user.log
+    path: /logs/benign_user_*/user.log
     output: apt_business_browsing.csv
     parser: user_parser
     real_time: true
   - source: business_user_2
-    path: /logs/user.log
+    path: /logs/benign_user_*/user.log
     output: apt_business_transactions.csv
     parser: user_parser
     real_time: true
   - source: business_user_3
-    path: /logs/user.log
+    path: /logs/benign_user_*/user.log
     output: apt_business_searches.csv
     parser: user_parser
     real_time: true
   - source: business_user_4
-    path: /logs/user.log
+    path: /logs/benign_user_*/user.log
     output: apt_business_api.csv
     parser: user_parser
     real_time: true
   - source: business_user_5
-    path: /logs/user.log
+    path: /logs/benign_user_*/user.log
     output: apt_business_admin.csv
     parser: user_parser
     real_time: true
   - source: business_user_6
-    path: /logs/user.log
+    path: /logs/benign_user_*/user.log
     output: apt_business_registration.csv
     parser: user_parser
     real_time: true
