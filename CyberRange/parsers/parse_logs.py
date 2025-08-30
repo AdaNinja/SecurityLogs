@@ -28,46 +28,11 @@ def setup_logging():
         format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
     )
 
+# Create global logger
+logger = logging.getLogger(__name__)
 
-def parse_pcap_file(input_file: str, output_file: str) -> bool:
-    """Parse PCAP file to CSV format"""
-    try:
-        import subprocess
-        from pcap_parser import PcapParser
-        
-        # Convert PCAP to text using tcpdump
-        try:
-            result = subprocess.run([
-                'tcpdump', '-r', input_file, '-n', '-tttt'
-            ], capture_output=True, text=True, timeout=30)
-            
-            if result.returncode != 0:
-                logging.error(f"❌ tcpdump failed: {result.stderr}")
-                return False
-            
-            tcpdump_output = result.stdout
-            
-        except subprocess.TimeoutExpired:
-            logging.error(f"❌ tcpdump timeout for file: {input_file}")
-            return False
-        except FileNotFoundError:
-            logging.error(f"❌ tcpdump not found. Please install tcpdump.")
-            return False
-        
-        # Parse the tcpdump output
-        parser = PcapParser('network_traffic')
-        parsed_count = parser.parse_tcpdump_output(tcpdump_output, output_file)
-        
-        if parsed_count > 0:
-            logging.info(f"✅ PCAP file parsed successfully: {output_file} ({parsed_count} lines)")
-            return True
-        else:
-            logging.warning(f"⚠️ No data parsed from PCAP file: {input_file}")
-            return False
-            
-    except Exception as e:
-        logging.error(f"❌ Failed to parse PCAP file {input_file}: {e}")
-        return False
+
+
 
 
 def parse_nginx_logs(input_file: str, output_file: str):
@@ -349,6 +314,29 @@ def main():
                 total_count += 1
                 if parse_nginx_logs(input_path, output_path):
                     success_count += 1
+        
+        # Generate network traffic CSV from nginx logs
+        nginx_log_path = os.path.join(args.input_dir, 'nginx/detailed.log')
+        if os.path.exists(nginx_log_path):
+            logger.info("Generating network traffic CSV from nginx detailed log...")
+            try:
+                from network_traffic_generator import NetworkTrafficGenerator
+                generator = NetworkTrafficGenerator()
+                
+                # 加载nginx日志
+                if generator.load_nginx_log(nginx_log_path):
+                    # 生成CSV
+                    output_path = os.path.join(args.output_dir, 'network_traffic.csv')
+                    if generator.generate_network_traffic_csv(output_path):
+                        logger.info("Successfully generated network traffic CSV")
+                    else:
+                        logger.error("Failed to generate network traffic CSV")
+                else:
+                    logger.error("Failed to load nginx log")
+            except Exception as e:
+                logger.error(f"Error generating network traffic CSV: {e}")
+        
+
     
     # Parse attack logs - merge all into single CSV
     if args.log_type in ['all', 'attack']:
@@ -396,15 +384,7 @@ def main():
                 if parse_user_behavior_logs(input_path, output_path):
                     success_count += 1
     
-    # Parse PCAP files if they exist
-    pcap_files = list(Path(args.input_dir).glob('*.pcap'))
-    for pcap_file in pcap_files:
-        output_csv = os.path.join(args.output_dir, f"{pcap_file.stem}_traffic.csv")
-        total_count += 1
-        if parse_pcap_file(str(pcap_file), output_csv):
-            success_count += 1
-    
-    # Copy pcap files if they exist (keep original)
+    # 仅复制PCAP文件到输出目录，不生成CSV
     pcap_files = list(Path(args.input_dir).glob('*.pcap'))
     for pcap_file in pcap_files:
         output_pcap = os.path.join(args.output_dir, pcap_file.name)
@@ -412,10 +392,33 @@ def main():
             import shutil
             shutil.copy2(pcap_file, output_pcap)
             logging.info(f"✅ Copied pcap file: {output_pcap}")
+            total_count += 1
+            success_count += 1
         except Exception as e:
             logging.error(f"❌ Failed to copy pcap file: {e}")
+            total_count += 1
     
     logging.info(f"📊 Parsing completed: {success_count}/{total_count} files processed successfully")
+    
+    # Generate network traffic summary if network_traffic.csv exists
+    network_traffic_csv = os.path.join(args.output_dir, 'network_traffic.csv')
+    if os.path.exists(network_traffic_csv):
+        try:
+            from traffic_summary_generator import TrafficSummaryGenerator
+            
+            summary_generator = TrafficSummaryGenerator()
+            if summary_generator.analyze_network_traffic(network_traffic_csv):
+                # Generate summary report
+                summary_json = os.path.join(args.output_dir, 'network_traffic_summary.json')
+                if summary_generator.generate_summary_report(summary_json):
+                    logging.info(f"✅ Generated network traffic summary: {summary_json}")
+                    summary_generator.print_summary()
+                else:
+                    logging.error("❌ Failed to generate network traffic summary")
+            else:
+                logging.error("❌ Failed to analyze network traffic")
+        except Exception as e:
+            logging.error(f"❌ Error generating network traffic summary: {e}")
     
     if success_count == total_count:
         logging.info("🎉 All files parsed successfully!")

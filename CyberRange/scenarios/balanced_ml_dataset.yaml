@@ -4,8 +4,8 @@
 
 scenario:
   name: "balanced-ml-dataset"
-  description: "Balanced 2-hour dataset with 50% attack traffic (7 types @ 7.14% each) + 50% benign for ML research"
-  duration: 7200  # 2 hours for comprehensive data collection
+  description: "Balanced 1-hour dataset with 30% attack traffic (7 types @ 4.3% each) + 70% benign for ML research"
+  duration: 3600  # 1 hour focused on data quality over quantity
   random_seed: 20240103
   attack_types: ["sql_injection", "xss", "command_injection", "directory_traversal", "auth_bypass", "file_discovery", "method_enumeration"]
   waf_mode: "off"  # No WAF for clean dataset
@@ -14,80 +14,80 @@ scenario:
 # Behavior configuration - balanced distribution for ML
 behaviors:
   attacks:
-  # SQL Injection attacks (7.14%)
+  # SQL Injection attacks (4.3%)
   - name: sql_injection_balanced
     node: attacker_1
-    percentage: 0.0714
+    percentage: 0.043
     script: /scripts/unified_attack.sh
-    script_args: ["--mode", "basic", "--type", "sql", "--interval", "2"]
+    script_args: ["--mode", "basic", "--type", "sql", "--interval", "8"]
     
-  # Cross-Site Scripting attacks (7.14%)
+  # Cross-Site Scripting attacks (4.3%)
   - name: xss_balanced
     node: attacker_2
-    percentage: 0.0714
+    percentage: 0.043
     script: /scripts/unified_attack.sh
-    script_args: ["--mode", "basic", "--type", "xss", "--interval", "2"]
+    script_args: ["--mode", "basic", "--type", "xss", "--interval", "8"]
     
-  # Command Injection attacks (7.14%)
+  # Command Injection attacks (4.3%)
   - name: command_injection_balanced
     node: attacker_3
-    percentage: 0.0714
+    percentage: 0.043
     script: /scripts/unified_attack.sh
-    script_args: ["--mode", "basic", "--type", "cmd", "--interval", "2"]
+    script_args: ["--mode", "basic", "--type", "cmd", "--interval", "8"]
     
-  # Directory Traversal attacks (7.14%)
+  # Directory Traversal attacks (4.3%)
   - name: directory_traversal_balanced
     node: attacker_4
-    percentage: 0.0714
+    percentage: 0.043
     script: /scripts/unified_attack.sh
-    script_args: ["--mode", "basic", "--type", "dir", "--interval", "2"]
+    script_args: ["--mode", "basic", "--type", "dir", "--interval", "8"]
     
-  # Authentication Bypass attacks (7.14%)
+  # Authentication Bypass attacks (4.3%)
   - name: auth_bypass_balanced
     node: attacker_5
-    percentage: 0.0714
+    percentage: 0.043
     script: /scripts/unified_attack.sh
-    script_args: ["--mode", "basic", "--type", "auth", "--interval", "2"]
+    script_args: ["--mode", "basic", "--type", "auth", "--interval", "8"]
     
-  # File Discovery attacks (7.14%)
+  # File Discovery attacks (4.3%)
   - name: file_discovery_balanced
     node: attacker_6
-    percentage: 0.0714
+    percentage: 0.043
     script: /scripts/unified_attack.sh
-    script_args: ["--mode", "basic", "--type", "file", "--interval", "2"]
+    script_args: ["--mode", "basic", "--type", "file", "--interval", "8"]
     
-  # Method Enumeration attacks (7.14%)
+  # Method Enumeration attacks (4.3%)
   - name: method_enumeration_balanced
     node: attacker_7
-    percentage: 0.0714
+    percentage: 0.043
     script: /scripts/unified_attack.sh
-    script_args: ["--mode", "basic", "--type", "method", "--interval", "2"]
+    script_args: ["--mode", "basic", "--type", "method", "--interval", "8"]
 
-  # Benign user activities (50%)
+  # Benign user activities (70%)
   benign_traffic:
   - name: benign_browsing
     node: benign_user_1
-    percentage: 0.20
+    percentage: 0.30
     script: /scripts/benign.sh
-    script_args: ["--target", "http://fancystore.com", "--behavior", "browse", "--interval", "2"]
+    script_args: ["--target", "http://fancystore.com", "--behavior", "browse", "--interval", "5"]
     
   - name: benign_shopping
     node: benign_user_2
-    percentage: 0.15
+    percentage: 0.20
     script: /scripts/benign.sh
-    script_args: ["--target", "http://fancystore.com", "--behavior", "shopping", "--interval", "3"]
+    script_args: ["--target", "http://fancystore.com", "--behavior", "shopping", "--interval", "6"]
     
   - name: benign_search
     node: benign_user_3
-    percentage: 0.10
+    percentage: 0.15
     script: /scripts/benign.sh
-    script_args: ["--target", "http://fancystore.com", "--behavior", "search", "--interval", "4"]
+    script_args: ["--target", "http://fancystore.com", "--behavior", "search", "--interval", "8"]
     
   - name: benign_api
     node: benign_user_4
     percentage: 0.05
     script: /scripts/benign.sh
-    script_args: ["--target", "http://fancystore.com", "--behavior", "api", "--interval", "5"]
+    script_args: ["--target", "http://fancystore.com", "--behavior", "api", "--interval", "10"]
 
 # Infrastructure configuration for ML dataset generation
 infrastructure:

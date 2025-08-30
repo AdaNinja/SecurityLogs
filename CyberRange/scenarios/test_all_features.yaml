@@ -4,7 +4,7 @@
 scenario:
   name: "test-all-features"
   description: "Comprehensive 10-minute test to validate all attack types with enhanced verification"
-  duration: 600  # 10 minutes for comprehensive testing
+  duration: 180  # 5 minutes for comprehensive testing
   random_seed: 20240101
   attack_types: ["sql_injection", "xss", "command_injection", "directory_traversal", "auth_bypass", "file_discovery", "method_enumeration"]
   waf_mode: "off"  # Disable WAF for clean testing
@@ -59,23 +59,40 @@ behaviors: #90%
   # Test advanced multi-phase attack
   - name: test_advanced_attack
     node: attacker
-    percentage: 0.2  # 20% for multi-phase testing
+    percentage: 0.15  # 20% for multi-phase testing
     script: /scripts/advanced_attack.sh
     script_args: ["--phase", "all", "--interval", "8"]
 
   # Benign user activities
   benign_traffic:
+  # - name: normal_browsing
+  #   node: benign_user
+  #   percentage: 0.05
+  #   script: /scripts/benign.sh
+  #   script_args: ["--target", "http://fancystore.com", "--behavior", "browse", "--interval", "10"]
+    
+  # - name: user_registration
+  #   node: benign_user
+  #   percentage: 0.05
+  #   script: /scripts/benign.sh
+  #   script_args: ["--target", "http://fancystore.com", "--behavior", "register", "--interval", "20"]
   - name: normal_browsing
-    node: benign_user
-    percentage: 0.05
+    node: benign_user_1
+    percentage: 0.05  # 38%
     script: /scripts/benign.sh
-    script_args: ["--target", "http://fancystore.com", "--behavior", "browse", "--interval", "10"]
+    script_args: ["--target", "http://fancystore.com", "--behavior", "browse", "--interval", "5", "--pages", "10"]
+    
+  - name: product_search
+    node: benign_user_2
+    percentage: 0.05  # 19%
+    script: /scripts/benign.sh
+    script_args: ["--target", "http://fancystore.com", "--behavior", "search", "--interval", "8", "--keywords", "juice,fruit,organic"]
     
   - name: user_registration
-    node: benign_user
-    percentage: 0.05
+    node: benign_user_3
+    percentage: 0.05  # 4.8%
     script: /scripts/benign.sh
-    script_args: ["--target", "http://fancystore.com", "--behavior", "register", "--interval", "20"]
+    script_args: ["--target", "http://fancystore.com", "--behavior", "register", "--interval", "180"]
 
 # Infrastructure configuration
 infrastructure:
@@ -119,18 +136,42 @@ infrastructure:
     - ./scenario-securitylogs/confs/attacker:/scripts
     - ./logs/attacker:/logs
     
-  # Benign user container
-  - name: benign_user
+  # Benign user containers
+  - name: benign_user_1
     role: user
     image: python:3.9-slim
     command: tail -f /dev/null
     networks: ['external-net']
     environment:
     - TARGET_URL=http://fancystore.com
-    - USER_TYPE=test_user
+    - USER_TYPE=browser_user
     volumes:
     - ./scenario-securitylogs/confs/user:/scripts
-    - ./logs/benign_user:/logs
+    - ./logs/benign_user_1:/logs
+    
+  - name: benign_user_2
+    role: user
+    image: python:3.9-slim
+    command: tail -f /dev/null
+    networks: ['external-net']
+    environment:
+    - TARGET_URL=http://fancystore.com
+    - USER_TYPE=search_user
+    volumes:
+    - ./scenario-securitylogs/confs/user:/scripts
+    - ./logs/benign_user_2:/logs
+    
+  - name: benign_user_3
+    role: user
+    image: python:3.9-slim
+    command: tail -f /dev/null
+    networks: ['external-net']
+    environment:
+    - TARGET_URL=http://fancystore.com
+    - USER_TYPE=register_user
+    volumes:
+    - ./scenario-securitylogs/confs/user:/scripts
+    - ./logs/benign_user_3:/logs
 
 # Data collection
 data_collection:
@@ -145,9 +186,19 @@ data_collection:
     output: test_attack_log.csv
     parser: attacker_parser
     real_time: true
-  - source: benign_user
+  - source: benign_user_1
     path: /logs/user.log
-    output: test_user_log.csv
+    output: test_user_1_log.csv
+    parser: user_parser
+    real_time: true
+  - source: benign_user_2
+    path: /logs/user.log
+    output: test_user_2_log.csv
+    parser: user_parser
+    real_time: true
+  - source: benign_user_3
+    path: /logs/user.log
+    output: test_user_3_log.csv
     parser: user_parser
     real_time: true
   network:

@@ -153,14 +153,14 @@ class ScenarioManager:
                                 node['volumes'][i] = f"./{self.experiment_dir}/attacker:{container_path}"
                                 self.logger.info(f"Updated attacker log path: {node['volumes'][i]}")
                 
-                elif node['name'] == 'benign_user' and 'volumes' in node:
+                elif node['name'].startswith('benign_user') and 'volumes' in node:
                     # Update benign user log volume path
                     for i, volume in enumerate(node['volumes']):
                         if '/logs' in volume and not '/scripts' in volume:
                             host_path, container_path = volume.split(':', 1)
-                            if host_path == './logs/benign_user':
-                                node['volumes'][i] = f"./{self.experiment_dir}/benign_user:{container_path}"
-                                self.logger.info(f"Updated benign_user log path: {node['volumes'][i]}")
+                            if host_path.startswith('./logs/benign_user'):
+                                node['volumes'][i] = f"./{self.experiment_dir}/benign_user/{node['name']}:{container_path}"
+                                self.logger.info(f"Updated {node['name']} log path: {node['volumes'][i]}")
         
         # Update data collection paths
         if 'data_collection' in self.config and 'logs' in self.config['data_collection']:

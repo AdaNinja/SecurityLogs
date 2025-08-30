@@ -159,8 +159,82 @@ class NginxParser(BaseParser):
             return None
     
     def _parse_combined_line(self, line: str) -> Optional[Dict[str, Any]]:
-        """Parse nginx combined log line"""
+        """Parse nginx combined/detailed log line"""
         try:
+            # Try detailed log format first (with attack headers)
+            # Format: IP - - [timestamp] "METHOD path HTTP/version" status size "referer" "user_agent" "attack-id" "payload-id" "timestamp" "real-ip" "traffic-type" "attack-type" "chain-id" "phase"
+            detailed_pattern = r'^(\S+) - - \[([^\]]+)\] "([^"]*)" (\d+) (\d+) "([^"]*)" "([^"]*)" "([^"]*)" "([^"]*)" "([^"]*)" "([^"]*)" "([^"]*)" "([^"]*)" "([^"]*)" "([^"]*)"'
+            match = re.match(detailed_pattern, line)
+            
+            if match:
+                # Parse detailed format
+                groups = match.groups()
+                ip_src = groups[0]
+                timestamp_str = groups[1]
+                request = groups[2]
+                status_code = groups[3]
+                size = groups[4]
+                referer = groups[5]
+                user_agent = groups[6]
+                attack_id = groups[7]
+                payload_id = groups[8]
+                attack_timestamp = groups[9]
+                real_ip = groups[10]
+                traffic_type = groups[11]
+                attack_type = groups[12]
+                chain_id = groups[13]
+                phase = groups[14]
+                
+                # Parse request line
+                request_parts = request.split()
+                if len(request_parts) >= 2:
+                    method = request_parts[0]
+                    path = request_parts[1]
+                else:
+                    method = "UNKNOWN"
+                    path = "/"
+                
+                # Normalize timestamp
+                normalized_timestamp = self.normalize_timestamp(timestamp_str)
+                
+                # Determine event type and severity
+                event_type = "http_request"
+                severity = "info"
+                if status_code.startswith('4'):
+                    severity = "warning"
+                    event_type = "http_error"
+                elif status_code.startswith('5'):
+                    severity = "error"
+                    event_type = "http_error"
+                
+                # Determine label from traffic type
+                label = 1 if traffic_type == "attack" else 0
+                
+                return {
+                    'timestamp': normalized_timestamp,
+                    'source_type': self.source_type,
+                    'source_name': self.source_name,
+                    'event_type': event_type,
+                    'severity': severity,
+                    'message': f"{method} {path} - {status_code}",
+                    'ip_src': ip_src,
+                    'ip_dst': '',
+                    'port_src': '',
+                    'port_dst': '',
+                    'protocol': 'HTTP',
+                    'user_agent': user_agent,
+                    'request_method': method,
+                    'request_path': path,
+                    'response_code': status_code,
+                    'payload': attack_id if attack_id != "-" else payload_id,
+                    'label': label,
+                    # Additional fields for detailed analysis
+                    'attack_type': attack_type if attack_type != "-" else '',
+                    'chain_id': chain_id if chain_id != "-" else '',
+                    'phase': phase if phase != "-" else ''
+                }
+            
+            # Fall back to standard combined format
             # Pattern: IP - - [timestamp] "METHOD path HTTP/version" status size "referer" "user_agent"
             pattern = r'^(\S+) - - \[([^\]]+)\] "([^"]*)" (\d+) (\d+) "([^"]*)" "([^"]*)"'
             match = re.match(pattern, line)

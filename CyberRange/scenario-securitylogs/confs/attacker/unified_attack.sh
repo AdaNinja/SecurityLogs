@@ -153,7 +153,19 @@ execute_payload_attack() {
     local attack_id="$5"
     local description="$6"
     
-    log "INFO" "Executing attack: $description (ID: $attack_id)"
+    # Generate unique event ID for each attack
+    if [[ -z "$ATTACK_EVENT_ID" ]] || [[ "$ATTACK_MODE" == "basic" ]]; then
+        local timestamp=$(date +%s)
+        local container_id=$(hostname | cut -c1-8)
+        ATTACK_EVENT_ID="event_${timestamp}_${container_id}_$$"
+    fi
+    
+    # Set attack chain ID for basic attacks
+    local chain_id="basic_${attack_id}"
+    local phase="1"  # Basic attacks are always phase 1
+    local category="basic_attack"
+    
+    log "INFO" "Executing attack: $description (ID: $attack_id, Event: $ATTACK_EVENT_ID)"
     
     # Determine content type based on payload
     local content_type="application/x-www-form-urlencoded"
@@ -167,6 +179,11 @@ execute_payload_attack() {
         -H "User-Agent: $USER_AGENT" \
         -H "X-Attack-Type: $ATTACK_TYPE" \
         -H "X-Attack-ID: $attack_id" \
+        -H "X-Attack-Event-ID: $ATTACK_EVENT_ID" \
+        -H "X-Attack-Chain-ID: $chain_id" \
+        -H "X-Attack-Phase: $phase" \
+        -H "X-Payload-Category: $category" \
+        -H "X-Traffic-Type: attack" \
         -H "X-Attack-Timestamp: $(date -u +%Y-%m-%dT%H:%M:%S.%3NZ)" \
         -d "$payload" 2>/dev/null)
     

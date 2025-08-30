@@ -4,8 +4,8 @@
 
 scenario:
   name: "realistic-production"
-  description: "24-hour production simulation with 4.5% attack traffic (4% basic + 0.5% advanced) and 95.5% benign traffic"
-  duration: 86400  # 24 hours for realistic long-term testing
+  description: "4-hour production simulation with 2% attack traffic (1.7% basic + 0.3% advanced) and 98% benign traffic"
+  duration: 14400  # 4 hours for realistic testing with manageable data size
   random_seed: 20240102
   attack_types: ["sql_injection", "xss", "command_injection", "directory_traversal", "auth_bypass", "file_discovery", "method_enumeration"]
   waf_mode: "detect"  # WAF in detection mode for realistic environment
@@ -14,94 +14,94 @@ scenario:
 # Behavior configuration - realistic distribution
 behaviors:
   attacks:
-  # Realistic attack distribution (total 4.5%)
+  # Realistic attack distribution (total 1.7%)
   - name: sql_injection_attempts
     node: attacker
-    percentage: 0.008  # 0.8%
+    percentage: 0.003  # 0.3%
     script: /scripts/unified_attack.sh
-    script_args: ["--mode", "basic", "--type", "sql", "--interval", "45"]
+    script_args: ["--mode", "basic", "--type", "sql", "--interval", "180"]
     
   - name: xss_attempts
     node: attacker
-    percentage: 0.006  # 0.6%
+    percentage: 0.0025  # 0.25%
     script: /scripts/unified_attack.sh
-    script_args: ["--mode", "basic", "--type", "xss", "--interval", "60"]
+    script_args: ["--mode", "basic", "--type", "xss", "--interval", "240"]
     
   - name: command_injection_attempts
     node: attacker
-    percentage: 0.005  # 0.5%
+    percentage: 0.0025  # 0.25%
     script: /scripts/unified_attack.sh
-    script_args: ["--mode", "basic", "--type", "cmd", "--interval", "75"]
+    script_args: ["--mode", "basic", "--type", "cmd", "--interval", "300"]
     
   - name: directory_traversal_scan
     node: attacker
-    percentage: 0.006  # 0.6%
+    percentage: 0.003  # 0.3%
     script: /scripts/unified_attack.sh
-    script_args: ["--mode", "basic", "--type", "dir", "--interval", "50"]
+    script_args: ["--mode", "basic", "--type", "dir", "--interval", "200"]
     
   - name: auth_bypass_attempts
     node: attacker
-    percentage: 0.007  # 0.7%
+    percentage: 0.003  # 0.3%
     script: /scripts/unified_attack.sh
-    script_args: ["--mode", "basic", "--type", "auth", "--interval", "40"]
+    script_args: ["--mode", "basic", "--type", "auth", "--interval", "150"]
     
   - name: file_discovery_scans
     node: attacker
-    percentage: 0.004  # 0.4%
+    percentage: 0.002  # 0.2%
     script: /scripts/unified_attack.sh
-    script_args: ["--mode", "basic", "--type", "file", "--interval", "90"]
+    script_args: ["--mode", "basic", "--type", "file", "--interval", "360"]
     
   - name: method_enumeration
     node: attacker
-    percentage: 0.004  # 0.4%
+    percentage: 0.002  # 0.2%
     script: /scripts/unified_attack.sh
-    script_args: ["--mode", "basic", "--type", "method", "--interval", "120"]
+    script_args: ["--mode", "basic", "--type", "method", "--interval", "480"]
     
-  # Advanced multi-phase attacks (0.5%)
+  # Advanced multi-phase attacks (0.3%)
   - name: advanced_apts
     node: attacker
-    percentage: 0.005  # 0.5%
+    percentage: 0.003  # 0.3%
     script: /scripts/advanced_attack.sh
-    script_args: ["--phase", "all", "--interval", "200"]
+    script_args: ["--phase", "all", "--interval", "600"]
 
-  # Benign user activities (95.5%)
+  # Benign user activities (98%)
   benign_traffic:
   # Regular browsing - majority of traffic  
   - name: normal_browsing
     node: benign_user_1
-    percentage: 0.38  # 38%
+    percentage: 0.40  # 40%
     script: /scripts/benign.sh
-    script_args: ["--target", "http://fancystore.com", "--behavior", "browse", "--interval", "5", "--pages", "10"]
+    script_args: ["--target", "http://fancystore.com", "--behavior", "browse", "--interval", "15", "--pages", "10"]
     
   - name: product_search
     node: benign_user_2
-    percentage: 0.19  # 19%
+    percentage: 0.20  # 20%
     script: /scripts/benign.sh
-    script_args: ["--target", "http://fancystore.com", "--behavior", "search", "--interval", "8", "--keywords", "juice,fruit,organic"]
+    script_args: ["--target", "http://fancystore.com", "--behavior", "search", "--interval", "25", "--keywords", "juice,fruit,organic"]
     
   - name: user_registration
     node: benign_user_3
-    percentage: 0.048  # 4.8%
+    percentage: 0.05  # 5%
     script: /scripts/benign.sh
-    script_args: ["--target", "http://fancystore.com", "--behavior", "register", "--interval", "180"]
+    script_args: ["--target", "http://fancystore.com", "--behavior", "register", "--interval", "300"]
     
   - name: user_login
     node: benign_user_4
-    percentage: 0.095  # 9.5%
+    percentage: 0.10  # 10%
     script: /scripts/benign.sh
-    script_args: ["--target", "http://fancystore.com", "--behavior", "login", "--interval", "60"]
+    script_args: ["--target", "http://fancystore.com", "--behavior", "login", "--interval", "90"]
     
   - name: shopping_cart
     node: benign_user_5
-    percentage: 0.143  # 14.3%
+    percentage: 0.15  # 15%
     script: /scripts/benign.sh
-    script_args: ["--target", "http://fancystore.com", "--behavior", "shopping", "--interval", "20"]
+    script_args: ["--target", "http://fancystore.com", "--behavior", "shopping", "--interval", "45"]
     
   - name: api_calls
     node: benign_user_6
-    percentage: 0.084  # 8.4% (to reach 95.5% total)
+    percentage: 0.08  # 8% (to reach 98% total)
     script: /scripts/benign.sh
-    script_args: ["--target", "http://fancystore.com", "--behavior", "api", "--interval", "3"]
+    script_args: ["--target", "http://fancystore.com", "--behavior", "api", "--interval", "12"]
 
 # Infrastructure configuration with multiple benign users
 infrastructure:
