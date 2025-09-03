@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
-网络流量标签生成器
-从nginx_detailed.csv和network_traffic.pcap生成带标签的network_traffic.csv
+Mapping GT Label to Network Traffic
+output: network_traffic.csv
 """
 
 import os
@@ -13,25 +13,24 @@ import re
 from datetime import datetime, timedelta
 from typing import Dict, List, Tuple, Optional
 
-# 设置日志
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)
 
 
 class NetworkTrafficGenerator:
-    """网络流量CSV生成器"""
+    """Network Traffic CSV Generator"""
     
     def __init__(self):
         self.nginx_records = []
         self.pcap_records = []
         
     def load_nginx_csv(self, nginx_csv_path: str) -> bool:
-        """加载nginx_detailed.csv"""
+        """Load nginx_detailed.csv"""
         try:
-            # 读取CSV，处理可能的格式问题
+            # Read CSV, handle possible format issues
             df = pd.read_csv(nginx_csv_path, 
-                           on_bad_lines='skip',  # 跳过格式错误的行
-                           quoting=1)  # 使用引号处理
+                           on_bad_lines='skip', 
+                           quoting=1)  
             
             self.nginx_records = df.to_dict('records')
             logger.info(f"Loaded {len(self.nginx_records)} records from nginx CSV")
@@ -41,10 +40,10 @@ class NetworkTrafficGenerator:
             return False
     
     def load_nginx_log(self, nginx_log_path: str) -> bool:
-        """直接加载nginx detailed.log来获取完整的攻击信息"""
+        """Load nginx detailed.log to get complete attack information"""
         try:
             records = []
-            # 解析detailed日志格式（新格式）
+            # Parse detailed log format (new format)
             # Format: IP:Port - - [timestamp] "request" status size "referer" "user_agent" "attack-id" "traffic-type" "attack-type" "event-id" "chain-id" "phase" "category" "msec" "connection"
             pattern = r'^(\S+) - - \[([^\]]+)\] "([^"]*)" (\d+) (\d+) "([^"]*)" "([^"]*)" "([^"]*)" "([^"]*)" "([^"]*)" "([^"]*)" "([^"]*)" "([^"]*)" "([^"]*)" "([^"]*)" "([^"]*)"'
             
@@ -53,7 +52,7 @@ class NetworkTrafficGenerator:
                     match = re.match(pattern, line.strip())
                     if match:
                         groups = match.groups()
-                        # 解析request
+                        # Parse request
                         request_parts = groups[2].split()
                         method = request_parts[0] if request_parts else "UNKNOWN"
                         path = request_parts[1] if len(request_parts) > 1 else "/"
@@ -88,7 +87,7 @@ class NetworkTrafficGenerator:
             return False
     
     def load_pcap_csv(self, pcap_csv_path: str) -> bool:
-        """加载network_traffic_traffic.csv（从PCAP解析的流量数据）"""
+        """Load network_traffic_traffic.csv (from PCAP parsed traffic data)"""
         try:
             df = pd.read_csv(pcap_csv_path)
             self.pcap_records = df.to_dict('records')
@@ -99,25 +98,25 @@ class NetworkTrafficGenerator:
             return False
     
     def generate_network_traffic_csv(self, output_path: str) -> bool:
-        """生成带标签的network_traffic.csv"""
+        """Generate labeled network_traffic.csv"""
         try:
             labeled_flows = []
             
-            # 优先使用nginx日志记录（如果已加载）
+            # Use nginx log records first (if loaded)
             records_to_use = self.nginx_log_records if hasattr(self, 'nginx_log_records') else self.nginx_records
             
-            # 为每个nginx记录创建流量记录
+            # Create flow record for each nginx record
             for nginx_record in records_to_use:
-                # 提取关键信息
+                # Extract key information
                 timestamp = nginx_record.get('timestamp', '')
                 ip_src = nginx_record.get('ip_src', '')
                 request_method = nginx_record.get('method', nginx_record.get('request_method', ''))
                 request_path = nginx_record.get('path', nginx_record.get('request_path', ''))
                 response_code = nginx_record.get('status_code', nginx_record.get('response_code', 200))
                 
-                # 从nginx日志判断是否为攻击
+                # Determine if it's an attack from nginx log
                 if 'traffic_type' in nginx_record:
-                    # 使用traffic_type字段
+                    # Use traffic_type field
                     is_attack = nginx_record.get('traffic_type') == 'attack'
                     payload = nginx_record.get('attack_id', '') if nginx_record.get('attack_id', '') not in ['-', ''] else ''
                     attack_type = nginx_record.get('attack_type', '')
@@ -125,7 +124,7 @@ class NetworkTrafficGenerator:
                     phase = nginx_record.get('phase', '')
                     event_id = nginx_record.get('event_id', '')
                 else:
-                    # 从CSV记录
+                    # From CSV record
                     label = nginx_record.get('label', 0)
                     is_attack = label == 1 or label == '1'
                     payload = nginx_record.get('payload', '')
@@ -134,9 +133,9 @@ class NetworkTrafficGenerator:
                     phase = ''
                     event_id = ''
                 
-                # 生成事件阶段标签
+                # Generate event stage label
                 if 'traffic_type' in nginx_record:
-                    # 直接使用nginx日志中的信息
+                    # Use information from nginx log
                     event_stage_label = self._generate_event_stage_label_from_log(
                         is_attack, payload, chain_id, phase, attack_type, event_id
                     )
@@ -145,38 +144,38 @@ class NetworkTrafficGenerator:
                         is_attack, payload, nginx_record
                     )
                 
-                # 创建流量记录
+                # Create flow record
                 flow_record = {
                     'timestamp': timestamp,
                     'src_ip': ip_src,
-                    'dst_ip': '172.18.0.2',  # nginx容器IP（假设）
-                    'src_port': 0,  # 从旧格式日志无法获取
+                    'dst_ip': '172.18.0.2',  # nginx container IP 
+                    'src_port': 0,  # Cannot get from old format log
                     'dst_port': 80,
                     'protocol': 'TCP',
                     'packets': 1,
                     'bytes': int(nginx_record.get('size', 0)) if 'size' in nginx_record else 1000,
-                    'duration': 0.1,  # 默认持续时间
+                    'duration': 0.1,  # Default duration
                     'http_method': request_method,
                     'http_path': request_path,
                     'http_status': response_code,
                     'binary_label': 1 if is_attack else 0,
                     'event_stage_label': event_stage_label,
                     'attack_type': self._extract_attack_type(attack_type if 'traffic_type' in nginx_record else payload) if is_attack else '',
-                    'confidence': 'high'  # 基于nginx日志的标签置信度高
+                    'confidence': 'high'  # High confidence based on nginx log
                 }
                 
                 labeled_flows.append(flow_record)
             
-            # 创建DataFrame并保存
+            # Create DataFrame and save
             df = pd.DataFrame(labeled_flows)
             
-            # 添加统计信息列
+            # Add statistics column
             df['flow_id'] = range(1, len(df) + 1)
             
-            # 保存CSV
+            # Save CSV
             df.to_csv(output_path, index=False)
             
-            # 生成统计信息
+            # Generate statistics
             stats = {
                 'total_flows': len(df),
                 'attack_flows': len(df[df['binary_label'] == 1]),
@@ -195,30 +194,30 @@ class NetworkTrafficGenerator:
             return False
     
     def _generate_event_stage_label(self, is_attack: bool, payload: str, record: Dict) -> str:
-        """生成事件阶段标签"""
+        """Generate event stage label"""
         if not is_attack:
             return 'benign'
         
-        # 从payload提取信息
+        # Extract information from payload
         if not payload or payload == '-':
             return 'unknown_attack'
         
-        # 检查是否有chain_id和phase信息（新字段）
+        # Check if there is chain_id and phase information (new field)
         chain_id = record.get('chain_id', '')
         phase = record.get('phase', '')
         
         if chain_id and chain_id != '-':
-            # 高级攻击
+            # Advanced attack
             if phase and phase != '-':
                 return f"{chain_id}_phase{phase}"
             else:
                 return chain_id
         
-        # 基础攻击 - 使用payload作为标识
+        # Basic attack - use payload as identifier
         if payload.startswith('basic_'):
             return payload
         elif '_' in payload:
-            # 尝试解析攻击类型和ID
+            # Try to parse attack type and ID
             parts = payload.split('_')
             if len(parts) >= 2:
                 return f"basic_{parts[0]}_{parts[1]}"
@@ -228,83 +227,205 @@ class NetworkTrafficGenerator:
     def _generate_event_stage_label_from_log(self, is_attack: bool, payload: str, 
                                             chain_id: str, phase: str, attack_type: str, 
                                             event_id: str = '') -> str:
-        """从nginx日志信息生成事件阶段标签"""
+        """Generate event stage label from nginx log"""
         if not is_attack:
             return 'benign'
         
-        # 使用chain_id作为主要标识
+        # Use chain_id as main identifier
         if chain_id and chain_id != '-':
-            # 对于高级攻击，包含phase信息
+            # For advanced attack, include phase information
             if chain_id.startswith('advanced_'):
                 if phase and phase != '-':
                     return f"{chain_id}_phase{phase}"
                 else:
                     return chain_id
-            # 对于基础攻击
+            # For basic attack
             else:
                 return chain_id
         
-        # 如果没有chain_id，使用payload
+        # If there is no chain_id, use payload
         if payload and payload != '-':
             return payload
         
-        # 最后使用attack_type
+        # Finally use attack_type
         if attack_type and attack_type != '-':
             return f"attack_{attack_type}"
         
         return 'unknown_attack'
     
     def _extract_attack_type(self, payload: str) -> str:
-        """从payload提取攻击类型"""
+        """Extract attack type from payload"""
         if not payload or payload == '-':
             return 'unknown'
         
-        # 常见攻击类型映射
+        # Comprehensive attack type mapping
         attack_types = {
+            # Basic attack types
             'sql': 'SQL Injection',
-            'xss': 'Cross-Site Scripting',
+            'xss': 'Cross-Site Scripting', 
             'cmd': 'Command Injection',
             'file': 'File Access',
             'path': 'Path Traversal',
             'auth': 'Authentication Attack',
             'method': 'HTTP Method Attack',
-            'api': 'API Attack'
+            'api': 'API Attack',
+            
+            # Extended attack types
+            'dir': 'Directory Traversal',
+            'directory': 'Directory Traversal',
+            'traversal': 'Directory Traversal',
+            
+            # Authentication and authorization
+            'auth_bypass': 'Authentication Bypass',
+            'bypass': 'Authentication Bypass',
+            'credential': 'Credential Attack',
+            'bruteforce': 'Brute Force Attack',
+            'brute': 'Brute Force Attack',
+            
+            # File and information disclosure
+            'file_disc': 'File Discovery',
+            'disclosure': 'Information Disclosure',
+            'info': 'Information Disclosure',
+            'enum': 'Enumeration Attack',
+            'enumeration': 'Enumeration Attack',
+            
+            # HTTP method attacks
+            'method_enum': 'HTTP Method Enumeration',
+            'options': 'HTTP Method Attack',
+            'trace': 'HTTP Method Attack',
+            'put': 'HTTP Method Attack',
+            'delete': 'HTTP Method Attack',
+            'patch': 'HTTP Method Attack',
+            
+            # Advanced attack phases
+            'phase1': 'Initial Access',
+            'phase2': 'Command & Control',
+            'phase3': 'Data Exfiltration', 
+            'phase4': 'Lateral Movement',
+            
+            # Specific advanced techniques
+            'c2': 'Command & Control',
+            'backdoor': 'Backdoor Installation',
+            'persistence': 'Persistence Mechanism',
+            'exfiltration': 'Data Exfiltration',
+            'exfil': 'Data Exfiltration',
+            'lateral': 'Lateral Movement',
+            'movement': 'Lateral Movement',
+            'pivot': 'Network Pivoting',
+            
+            # Shell and execution
+            'shell': 'Remote Shell',
+            'reverse': 'Reverse Shell',
+            'bind': 'Bind Shell',
+            'exec': 'Code Execution',
+            'execution': 'Code Execution',
+            'rce': 'Remote Code Execution',
+            
+            # Network and service attacks
+            'smb': 'SMB Attack',
+            'ssh': 'SSH Attack',
+            'rdp': 'RDP Attack',
+            'ftp': 'FTP Attack',
+            'dns': 'DNS Attack',
+            'http': 'HTTP Attack',
+            'https': 'HTTPS Attack',
+            
+            # Data manipulation
+            'upload': 'File Upload Attack',
+            'download': 'File Download Attack',
+            'compression': 'Data Compression',
+            'encoding': 'Data Encoding',
+            'obfuscation': 'Code Obfuscation',
+            
+            # Reconnaissance and scanning
+            'recon': 'Reconnaissance',
+            'scan': 'Network Scanning',
+            'probe': 'Service Probing',
+            'fingerprint': 'Fingerprinting',
+            
+            # Privilege escalation
+            'privesc': 'Privilege Escalation',
+            'escalation': 'Privilege Escalation',
+            'root': 'Root Access Attempt',
+            'admin': 'Admin Access Attempt',
+            
+            # Injection attacks (extended)
+            'ldap': 'LDAP Injection',
+            'xpath': 'XPath Injection',
+            'xml': 'XML Injection',
+            'json': 'JSON Injection',
+            'nosql': 'NoSQL Injection',
+            
+            # Web application attacks
+            'csrf': 'Cross-Site Request Forgery',
+            'ssrf': 'Server-Side Request Forgery',
+            'lfi': 'Local File Inclusion',
+            'rfi': 'Remote File Inclusion',
+            'idor': 'Insecure Direct Object Reference',
+            
+            # Cryptographic attacks
+            'crypto': 'Cryptographic Attack',
+            'hash': 'Hash Attack',
+            'encryption': 'Encryption Attack',
+            'ssl': 'SSL/TLS Attack',
+            'tls': 'SSL/TLS Attack'
         }
         
-        # 尝试从payload提取攻击类型
+        # Try to extract attack type from payload
         payload_lower = payload.lower()
-        for key, name in attack_types.items():
-            if key in payload_lower:
-                return name
         
-        # 如果payload以攻击类型开头
+        # First, try exact prefix matching (most accurate)
         parts = payload.split('_')
-        if parts[0] in attack_types:
-            return attack_types[parts[0]]
+        if len(parts) > 0:
+            # Check for compound attack IDs like "auth_bypass_001"
+            if len(parts) >= 2:
+                compound_key = f"{parts[0]}_{parts[1]}"
+                if compound_key in attack_types:
+                    return attack_types[compound_key]
+            
+            # Check for single prefix like "sql_001"
+            if parts[0] in attack_types:
+                return attack_types[parts[0]]
         
+        # Second, try substring matching for attack type keywords
+        # Sort by length (longest first) to match more specific terms first
+        sorted_keys = sorted(attack_types.keys(), key=len, reverse=True)
+        for key in sorted_keys:
+            if key in payload_lower:
+                return attack_types[key]
+        
+        # Third, check for phase-based attacks
+        if 'phase' in payload_lower:
+            import re
+            phase_match = re.search(r'phase(\d+)', payload_lower)
+            if phase_match:
+                phase_key = f"phase{phase_match.group(1)}"
+                if phase_key in attack_types:
+                    return attack_types[phase_key]
+        
+        # If no match found, return 'Other' with more context
         return 'Other'
 
 
 def process_network_traffic(nginx_csv_path: str, pcap_csv_path: str, output_dir: str) -> bool:
-    """处理网络流量数据的主函数"""
+    """Process network traffic data"""
     try:
         generator = NetworkTrafficGenerator()
         
-        # 尝试先加载nginx详细日志（如果存在）
+        # Try to load nginx detailed log first (if exists)
         nginx_log_path = nginx_csv_path.replace('/output/', '/logs/').replace('_detailed.csv', '/detailed.log')
         if os.path.exists(nginx_log_path):
             logger.info(f"Loading nginx detailed log: {nginx_log_path}")
             generator.load_nginx_log(nginx_log_path)
         else:
-            # 否则加载CSV
+            # Otherwise load CSV
             if not generator.load_nginx_csv(nginx_csv_path):
                 return False
         
-        # 如果有PCAP CSV，也加载（可选）
         if os.path.exists(pcap_csv_path):
             generator.load_pcap_csv(pcap_csv_path)
         
-        # 生成network_traffic.csv
+        # Generate network_traffic.csv
         output_path = os.path.join(output_dir, 'network_traffic.csv')
         return generator.generate_network_traffic_csv(output_path)
         

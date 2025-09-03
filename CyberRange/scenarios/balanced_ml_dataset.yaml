@@ -6,7 +6,7 @@ scenario:
   name: "balanced-ml-dataset"
   description: "Balanced 1-hour dataset with 30% attack traffic (7 types @ 4.3% each) + 70% benign for ML research"
   duration: 3600  # 1 hour focused on data quality over quantity
-  random_seed: 20240103
+  random_seed: 20250830
   attack_types: ["sql_injection", "xss", "command_injection", "directory_traversal", "auth_bypass", "file_discovery", "method_enumeration"]
   waf_mode: "off"  # No WAF for clean dataset
   validation_mode: "ml_dataset"  # Enable ML-focused validation
@@ -219,42 +219,42 @@ data_collection:
     parser: nginx_parser
     real_time: true
   - source: attacker_1
-    path: /logs/attack.log
+    path: /logs/attacker/attack_*.log
     output: ml_dataset_sql_injection.csv
     parser: attacker_parser
     real_time: true
   - source: attacker_2
-    path: /logs/attack.log
+    path: /logs/attacker/attack_*.log
     output: ml_dataset_xss.csv
     parser: attacker_parser
     real_time: true
   - source: attacker_3
-    path: /logs/attack.log
+    path: /logs/attacker/attack_*.log
     output: ml_dataset_cmd_injection.csv
     parser: attacker_parser
     real_time: true
   - source: attacker_4
-    path: /logs/attack.log
+    path: /logs/attacker/attack_*.log
     output: ml_dataset_dir_traversal.csv
     parser: attacker_parser
     real_time: true
   - source: attacker_5
-    path: /logs/attack.log
+    path: /logs/attacker/attack_*.log
     output: ml_dataset_auth_bypass.csv
     parser: attacker_parser
     real_time: true
   - source: attacker_6
-    path: /logs/attack.log
+    path: /logs/attacker/attack_*.log
     output: ml_dataset_file_discovery.csv
     parser: attacker_parser
     real_time: true
   - source: attacker_7
-    path: /logs/attack.log
+    path: /logs/attacker/attack_*.log
     output: ml_dataset_method_enum.csv
     parser: attacker_parser
     real_time: true
   - source: benign_user
-    path: /logs/user.log
+    path: /logs/benign_user_*/user.log
     output: ml_dataset_benign.csv
     parser: user_parser
     real_time: true

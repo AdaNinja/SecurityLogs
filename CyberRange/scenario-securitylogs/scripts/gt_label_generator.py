@@ -115,56 +115,20 @@ class GTLabelGenerator:
         
         labeled_records = []
         
-        # Create time-based attack mapping
-        attack_time_map = {}
-        for attack in self.attack_details:
-            # Parse attack timestamp
-            try:
-                attack_time = datetime.strptime(attack['timestamp'], '%Y-%m-%dT%H:%M:%SZ')
-                attack_time_map[attack_time] = {
-                    'payload_id': attack['payload_id'],
-                    'source_ip': attack['source_ip'],
-                    'attack_type': attack['attack_type']
-                }
-            except ValueError:
-                print(f"[WARNING] Could not parse attack timestamp: {attack['timestamp']}")
-                continue
-        
-        print(f"[*] Created time-based attack mapping for {len(attack_time_map)} attacks")
+        print(f"[*] Using IP-based matching for {len(self.attack_ips)} attack IPs")
         
         for record in self.nginx_records:
             # Initialize label as benign (default)
             gt_label = "benign"
             label_reason = "default_benign"
             
-            # Method 1: Time + IP matching (±5 seconds)
-            try:
-                nginx_time = datetime.strptime(record['timestamp'], '%d/%b/%Y:%H:%M:%S +0000')
-                
-                for attack_time, attack_info in attack_time_map.items():
-                    time_diff = abs((nginx_time - attack_time).total_seconds())
-                    
-                    if time_diff <= 5:  # 5-second window
-                        if record['ip'] == attack_info['source_ip']:
-                            gt_label = "attack"
-                            label_reason = f"time_ip_match:payload_{attack_info['payload_id']}_at_{attack_time.strftime('%H:%M:%S')}"
-                            break
-                        elif record['source_ip'] == attack_info['source_ip']:
-                            gt_label = "attack"
-                            label_reason = f"time_source_ip_match:payload_{attack_info['payload_id']}_at_{attack_time.strftime('%H:%M:%S')}"
-                            break
-                            
-            except ValueError:
-                print(f"[WARNING] Could not parse nginx timestamp: {record['timestamp']}")
-            
-            # Method 2: IP matching (fallback)
-            if gt_label == "benign":
-                if record['ip'] in self.attack_ips:
-                    gt_label = "attack"
-                    label_reason = f"ip_match:{record['ip']}"
-                elif record['source_ip'] in self.attack_ips:
-                    gt_label = "attack"
-                    label_reason = f"source_ip_match:{record['source_ip']}"
+            # IP matching (simplified approach)
+            if record['ip'] in self.attack_ips:
+                gt_label = "attack"
+                label_reason = f"ip_match:{record['ip']}"
+            elif record['source_ip'] in self.attack_ips:
+                gt_label = "attack"
+                label_reason = f"source_ip_match:{record['source_ip']}"
             
             # Add label information to record
             labeled_record = record.copy()
@@ -245,7 +209,6 @@ class GTLabelGenerator:
                 'attack_ips': list(self.attack_ips),
                 'attack_details': self.attack_details,
                 'labeling_rules': [
-                    "Time + IP matching (±5 seconds): nginx timestamp matches attack.log timestamp and IP matches → attack",
                     "IP matching: IP in attack_ips list → attack",
                     "Default: all other traffic → benign"
                 ]
@@ -301,9 +264,8 @@ class GTLabelGenerator:
             # Labeling rules
             f.write("LABELING RULES USED:\n")
             f.write("-" * 20 + "\n")
-            f.write("1. Time + IP matching (±5 seconds): nginx timestamp matches attack.log timestamp and IP matches → attack\n")
-            f.write("2. IP matching: IP in attack_ips list → attack\n")
-            f.write("3. Default: all other traffic → benign\n")
+            f.write("1. IP matching: IP in attack_ips list → attack\n")
+            f.write("2. Default: all other traffic → benign\n")
             
         print(f"[*] Summary report generated: {summary_file}")
         
