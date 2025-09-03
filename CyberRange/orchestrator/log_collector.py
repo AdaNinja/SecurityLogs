@@ -22,12 +22,17 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'parsers'))
 class LogCollector:
     def __init__(self):
         """Initialize LogCollector"""
+        # Initialize logger first
+        self.logger = logging.getLogger(__name__)
+        
         try:
             self.client = docker.from_env()
-            self.logger = logging.getLogger(__name__)
+            self.logger.info("Docker client initialized successfully for LogCollector")
         except Exception as e:
             self.logger.error(f"Failed to initialize Docker client: {str(e)}")
-            raise
+            self.logger.warning("Docker functionality will be limited. Some features may not work.")
+            # Don't raise exception, allow system to continue without Docker
+            self.client = None
     
     def collect_log(self, log_config: Dict, context) -> Optional[str]:
         """
@@ -266,6 +271,10 @@ class LogCollector:
         Returns:
             str: Path to combined attack log file or None if failed
         """
+        if not hasattr(context, 'docker_client') or context.docker_client is None:
+            self.logger.warning("Docker client not available, skipping attacker log collection")
+            return None
+            
         try:
             # Find attacker container
             attacker_container = None
