@@ -16,12 +16,17 @@ import os
 class ScriptExecutor:
     def __init__(self):
         """Initialize ScriptExecutor"""
+        # Initialize logger first
+        self.logger = logging.getLogger(__name__)
+        
         try:
             self.client = docker.from_env()
-            self.logger = logging.getLogger(__name__)
+            self.logger.info("Docker client initialized successfully for ScriptExecutor")
         except Exception as e:
             self.logger.error(f"Failed to initialize Docker client: {str(e)}")
-            raise
+            self.logger.warning("Docker functionality will be limited. Some features may not work.")
+            # Don't raise exception, allow system to continue without Docker
+            self.client = None
     
     def execute_attack(self, container_id: str, script_path: str, payload_config: Dict, attack_config: Dict) -> bool:
         """
@@ -36,6 +41,10 @@ class ScriptExecutor:
         Returns:
             bool: True if attack executed successfully
         """
+        if self.client is None:
+            self.logger.warning("Docker client not available, skipping attack execution")
+            return False
+            
         try:
             container = self.client.containers.get(container_id)
             
@@ -190,6 +199,10 @@ class ScriptExecutor:
         Returns:
             bool: True if traffic executed successfully
         """
+        if self.client is None:
+            self.logger.warning("Docker client not available, skipping single benign traffic execution")
+            return False
+            
         try:
             container = self.client.containers.get(container_id)
             
@@ -247,6 +260,10 @@ class ScriptExecutor:
         Returns:
             bool: True if traffic generation executed successfully
         """
+        if self.client is None:
+            self.logger.warning("Docker client not available, skipping benign traffic execution")
+            return False
+            
         try:
             container = self.client.containers.get(container_id)
             
@@ -391,6 +408,10 @@ class ScriptExecutor:
         Returns:
             Dict: Command execution result
         """
+        if self.client is None:
+            self.logger.warning("Docker client not available, skipping command execution")
+            return {"success": False, "error": "Docker client not available"}
+            
         try:
             container = self.client.containers.get(container_id)
             
@@ -425,6 +446,10 @@ class ScriptExecutor:
         Returns:
             bool: True if script completed successfully
         """
+        if self.client is None:
+            self.logger.warning("Docker client not available, skipping script completion wait")
+            return False
+            
         try:
             container = self.client.containers.get(container_id)
             start_time = time.time()
@@ -502,6 +527,10 @@ class ScriptExecutor:
         Returns:
             str: Log content
         """
+        if self.client is None:
+            self.logger.warning("Docker client not available, cannot get script logs")
+            return ""
+            
         try:
             container = self.client.containers.get(container_id)
             
