@@ -25,14 +25,18 @@ class ContainerInfo:
 class ContainerManager:
     def __init__(self):
         """Initialize ContainerManager with Docker client"""
+        # Initialize logger first
+        self.logger = logging.getLogger(__name__)
+        
         try:
             self.client = docker.from_env()
-            self.logger = logging.getLogger(__name__)
             self.project_root = self._get_project_root()
             self.logger.info("Docker client initialized successfully")
         except Exception as e:
             self.logger.error(f"Failed to initialize Docker client: {str(e)}")
-            raise
+            self.logger.warning("Docker functionality will be limited. Some features may not work.")
+            # Don't raise exception, allow system to continue without Docker
+            self.client = None
     
     def create_network(self, network_config: Dict) -> bool:
         """
@@ -44,6 +48,10 @@ class ContainerManager:
         Returns:
             bool: True if network created successfully
         """
+        if self.client is None:
+            self.logger.warning("Docker client not available, skipping network creation")
+            return False
+            
         try:
             network_name = network_config['name']
             driver = network_config.get('driver', 'bridge')
@@ -94,6 +102,10 @@ class ContainerManager:
         Returns:
             ContainerInfo: Container information or None if failed
         """
+        if self.client is None:
+            self.logger.warning("Docker client not available, skipping container start")
+            return None
+            
         try:
             container_name = node_config['name']
             image = node_config['image']
@@ -351,6 +363,10 @@ class ContainerManager:
         Returns:
             bool: True if container stopped successfully
         """
+        if self.client is None:
+            self.logger.warning("Docker client not available, skipping container stop")
+            return False
+            
         try:
             container = self.client.containers.get(container_id)
             container.stop(timeout=30)
@@ -371,6 +387,10 @@ class ContainerManager:
         Returns:
             bool: True if container removed successfully
         """
+        if self.client is None:
+            self.logger.warning("Docker client not available, skipping container removal")
+            return False
+            
         try:
             container = self.client.containers.get(container_id)
             container.remove(force=True)
@@ -391,6 +411,10 @@ class ContainerManager:
         Returns:
             bool: True if network removed successfully
         """
+        if self.client is None:
+            self.logger.warning("Docker client not available, skipping network removal")
+            return False
+            
         try:
             network = self.client.networks.get(network_name)
             network.remove()
@@ -411,6 +435,10 @@ class ContainerManager:
         Returns:
             str: Container status or None if not found
         """
+        if self.client is None:
+            self.logger.warning("Docker client not available, cannot get container status")
+            return None
+            
         try:
             container = self.client.containers.get(container_id)
             container.reload()
@@ -431,6 +459,10 @@ class ContainerManager:
         Returns:
             bool: True if container is ready within timeout
         """
+        if self.client is None:
+            self.logger.warning("Docker client not available, cannot wait for container")
+            return False
+            
         try:
             container = self.client.containers.get(container_id)
             start_time = time.time()
@@ -472,6 +504,10 @@ class ContainerManager:
         Returns:
             List[ContainerInfo]: List of container information
         """
+        if self.client is None:
+            self.logger.warning("Docker client not available, cannot list containers")
+            return []
+            
         containers = []
         try:
             for container in self.client.containers.list(all=True):
@@ -489,6 +525,10 @@ class ContainerManager:
         Returns:
             List[Dict]: List of network information
         """
+        if self.client is None:
+            self.logger.warning("Docker client not available, cannot list networks")
+            return []
+            
         networks = []
         try:
             for network in self.client.networks.list():
