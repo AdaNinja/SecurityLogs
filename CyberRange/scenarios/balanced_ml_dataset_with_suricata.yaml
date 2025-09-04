@@ -1,17 +1,18 @@
-# Balanced Dataset for Machine Learning Research
+# Balanced Dataset for Machine Learning Research with Suricata Monitoring
+# B组实验：与A组完全相同，仅添加Suricata纯监控
 # Traffic ratio: 7 attack classes evenly distributed (≈12.86% each) + 10% benign
 # Duration: 60 minutes (3600 seconds)
 
 scenario:
-  name: "balanced-ml-dataset"
-  description: "Balanced 1-hour dataset with 30% attack traffic (7 types @ 4.3% each) + 70% benign for ML research"
+  name: "balanced-ml-dataset-with-suricata"
+  description: "Balanced 1-hour dataset with 30% attack traffic (7 types @ 4.3% each) + 70% benign for ML research + Suricata monitoring"
   duration: 3600  # 1 hour focused on data quality over quantity
   random_seed: 20250830
   attack_types: ["sql_injection", "xss", "command_injection", "directory_traversal", "auth_bypass", "file_discovery", "method_enumeration"]
   waf_mode: "off"  # No WAF for clean dataset
   validation_mode: "ml_dataset"  # Enable ML-focused validation
 
-# Behavior configuration - balanced distribution for ML
+# Behavior configuration - balanced distribution for ML (与A组完全相同)
 behaviors:
   attacks:
   # Basic attacks (20% total) - using unified attacker
@@ -48,7 +49,7 @@ behaviors:
     script: /scripts/benign.sh
     script_args: ["--target", "http://fancystore.com", "--behavior", "search", "--interval", "15"]
 
-# Infrastructure configuration for ML dataset generation
+# Infrastructure configuration for ML dataset generation (与A组完全相同 + Suricata)
 infrastructure:
   networks:
   - name: internal-net
@@ -109,7 +110,20 @@ infrastructure:
     - ./scenario-securitylogs/confs/user:/scripts
     - /mnt/mypassport/cyberrange_data/runs/current_run/logs/benign_user:/logs
 
-# Data collection optimized for ML
+  # Suricata监控节点 - 新增
+  - name: suricata
+    role: monitor
+    image: cyberrange-suricata:latest
+    networks: ['external-net', 'internal-net']
+    privileged: true
+    cap_add: ['NET_ADMIN', 'NET_RAW']
+    volumes:
+    - /mnt/mypassport/cyberrange_data/runs/current_run/suricata_logs:/var/log/suricata
+    - ./suricata_config/suricata.yaml:/etc/suricata/suricata.yaml:ro
+    - ./suricata_config/custom.rules:/var/lib/suricata/rules/custom.rules:ro
+    command: ["/start-suricata.sh"]
+
+# Data collection optimized for ML (与A组完全相同 + Suricata日志)
 data_collection:
   logs:
   - source: nginx
@@ -127,13 +141,19 @@ data_collection:
     output: /mnt/mypassport/cyberrange_data/runs/current_run/output/ml_dataset_benign.csv
     parser: user_parser
     real_time: true
+  # 新增Suricata日志收集
+  - source: suricata
+    path: /var/log/suricata/eve.json
+    output: /mnt/mypassport/cyberrange_data/runs/current_run/output/suricata_alerts.json
+    parser: suricata_parser
+    real_time: true
   network:
   - interface: any
     filter: net 172.27.0.0/16 or net 172.28.0.0/16
     output: /mnt/mypassport/cyberrange_data/runs/current_run/output/ml_dataset_network_traffic.pcap
     capture_size: 500MB
 
-# ML-specific hooks
+# ML-specific hooks (与A组完全相同)
 hooks:
   post_node_start:
   - name: verify_ml_setup

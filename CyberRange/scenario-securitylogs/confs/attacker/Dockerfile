@@ -56,12 +56,16 @@ ENV ATTACK_PHASE=automated
 ENV VARIANT_ID=full_attack_suite
 
 # Copy attack scripts and configuration files
-COPY attack.sh /opt/scripts/
+COPY unified_attack.sh /opt/scripts/unified_attack.sh
+COPY advanced_attack.sh /opt/scripts/
+COPY start_services.sh /opt/scripts/
 COPY attacks/ /opt/scripts/attacks/
 COPY detection_rules.yaml /opt/scripts/
 
 # Set execution permissions
-RUN chmod +x /opt/scripts/attack.sh
+RUN chmod +x /opt/scripts/unified_attack.sh
+RUN chmod +x /opt/scripts/advanced_attack.sh
+RUN chmod +x /opt/scripts/start_services.sh
 
 # Default command - keep container running
 CMD ["tail", "-f", "/dev/null"] 

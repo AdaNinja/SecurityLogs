@@ -1,0 +1,40 @@
+{
+  "validation_summary": {
+    "group_a_reproducibility": "PASS",
+    "group_b_reproducibility": "FAIL",
+    "cross_group_consistency": "PASS",
+    "overall_validation": "FAIL"
+  },
+  "detailed_analysis": {
+    "group_a": {
+      "data": [
+        {
+          "run": "run_01",
+          "total_attacks": 847,
+          "attack_types": {},
+          "has_data": true
+        },
+        {
+          "run": "run_02",
+          "total_attacks": 815,
+          "attack_types": {},
+          "has_data": true
+        },
+        {
+          "run": "run_03",
+          "total_attacks": 815,
+          "attack_types": {},
+          "has_data": true
+        }
+      ],
+      "metrics": {
+        "runs_count": 3,
+        "attack_counts": [
+          847,
+          815,
+          815
+        ],
+        "mean": 825.6666666666666,
+        "std": 15.084944665313014,
+        "cv": 0.01827001776178403,
+        "min": 

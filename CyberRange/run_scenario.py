@@ -9,6 +9,7 @@ import sys
 import argparse
 import logging
 import yaml
+import subprocess
 from pathlib import Path
 from datetime import datetime
 from typing import Dict, Optional
@@ -17,6 +18,84 @@ from typing import Dict, Optional
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
 from orchestrator import ScenarioManager, ErrorHandler
+
+
+def build_required_images() -> bool:
+    """
+    Build required Docker images if they don't exist
+    
+    Returns:
+        bool: True if all images are available, False otherwise
+    """
+    logger = logging.getLogger(__name__)
+    
+    # Check if build script exists
+    build_script = Path(__file__).parent / "build_images.sh"
+    if not build_script.exists():
+        logger.error("Build script not found: build_images.sh")
+        return False
+    
+    try:
+        logger.info("🔨 Building required Docker images...")
+        result = subprocess.run(
+            [str(build_script)],
+            capture_output=True,
+            text=True,
+            cwd=Path(__file__).parent
+        )
+        
+        if result.returncode == 0:
+            logger.info("✅ Docker images built successfully")
+            return True
+        else:
+            logger.error(f"❌ Failed to build images: {result.stderr}")
+            return False
+            
+    except Exception as e:
+        logger.error(f"❌ Error building images: {e}")
+        return False
+
+
+def check_required_images() -> bool:
+    """
+    Check if required Docker images exist
+    
+    Returns:
+        bool: True if all required images exist, False otherwise
+    """
+    logger = logging.getLogger(__name__)
+    
+    required_images = ["ras-attacker:latest"]
+    
+    try:
+        # Get list of existing images
+        result = subprocess.run(
+            ["docker", "images", "--format", "{{.Repository}}:{{.Tag}}"],
+            capture_output=True,
+            text=True
+        )
+        
+        if result.returncode != 0:
+            logger.error("Failed to list Docker images")
+            return False
+        
+        existing_images = result.stdout.strip().split('\n')
+        
+        missing_images = []
+        for image in required_images:
+            if image not in existing_images:
+                missing_images.append(image)
+        
+        if missing_images:
+            logger.warning(f"Missing images: {missing_images}")
+            return False
+        
+        logger.info("✅ All required images are available")
+        return True
+        
+    except Exception as e:
+        logger.error(f"Error checking images: {e}")
+        return False
 
 
 def resolve_config_path(config_path: str) -> Optional[str]:
@@ -242,6 +321,14 @@ def run_scenario(config_path: str, dry_run_mode: bool = False) -> bool:
     # Perform dry run if requested
     if dry_run_mode:
         return dry_run(config)
+    
+    # Check and build required Docker images
+    logger.info("Checking required Docker images...")
+    if not check_required_images():
+        logger.info("Building missing Docker images...")
+        if not build_required_images():
+            logger.error("Failed to build required images. Exiting.")
+            return False
     
     # Setup experiment directories
     logger.info("Setting up experiment directories...")
