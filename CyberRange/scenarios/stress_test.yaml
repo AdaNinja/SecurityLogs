@@ -1,0 +1,358 @@
+# Stress Test Scenario - High-Density Attack Performance Testing
+# Traffic ratio: 80% attack (70% basic + 10% advanced) + 20% benign
+# Duration: 30 minutes (1800 seconds)
+
+scenario:
+  name: "stress-test"
+  description: "30-minute high-intensity stress test with 80% attack traffic for performance benchmarking"
+  duration: 1800  # 30 minutes for system stress testing
+  random_seed: 20240104
+  attack_types: ["sql_injection", "xss", "command_injection", "directory_traversal", "auth_bypass", "file_discovery", "method_enumeration"]
+  waf_mode: "off"  # No WAF to maximize system load
+  validation_mode: "stress_test"  # Enable stress testing validation
+
+# Behavior configuration - maximum attack density
+behaviors:
+  attacks:
+  # High-frequency basic attacks (70% total)
+  - name: stress_sql_injection
+    node: attacker_1
+    percentage: 0.15  # 15%
+    script: /scripts/unified_attack.sh
+    script_args: ["--mode", "basic", "--type", "sql", "--interval", "1"]
+    
+  - name: stress_xss
+    node: attacker_2
+    percentage: 0.12  # 12%
+    script: /scripts/unified_attack.sh
+    script_args: ["--mode", "basic", "--type", "xss", "--interval", "1"]
+    
+  - name: stress_command_injection
+    node: attacker_3
+    percentage: 0.10  # 10%
+    script: /scripts/unified_attack.sh
+    script_args: ["--mode", "basic", "--type", "cmd", "--interval", "2"]
+    
+  - name: stress_directory_traversal
+    node: attacker_4
+    percentage: 0.08  # 8%
+    script: /scripts/unified_attack.sh
+    script_args: ["--mode", "basic", "--type", "dir", "--interval", "2"]
+    
+  - name: stress_auth_bypass
+    node: attacker_5
+    percentage: 0.08  # 8%
+    script: /scripts/unified_attack.sh
+    script_args: ["--mode", "basic", "--type", "auth", "--interval", "2"]
+    
+  - name: stress_file_discovery
+    node: attacker_6
+    percentage: 0.09  # 9%
+    script: /scripts/unified_attack.sh
+    script_args: ["--mode", "basic", "--type", "file", "--interval", "2"]
+    
+  - name: stress_method_enumeration
+    node: attacker_7
+    percentage: 0.08  # 8%
+    script: /scripts/unified_attack.sh
+    script_args: ["--mode", "basic", "--type", "method", "--interval", "3"]
+    
+  # High-frequency advanced attacks (10%)
+  - name: stress_advanced_attacks
+    node: attacker_8
+    percentage: 0.05  # 5%
+    script: /scripts/advanced_attack.sh
+    script_args: ["--phase", "all", "--interval", "15"]
+    
+  - name: stress_advanced_secondary
+    node: attacker_9
+    percentage: 0.05  # 5%
+    script: /scripts/advanced_attack.sh
+    script_args: ["--phase", "all", "--interval", "20"]
+
+  # Minimal benign traffic (20%)
+  benign_traffic:
+  - name: stress_benign_browsing
+    node: benign_user_1
+    percentage: 0.10  # 10%
+    script: /scripts/benign.sh
+    script_args: ["--target", "http://fancystore.com", "--behavior", "browse", "--interval", "3"]
+    
+  - name: stress_benign_api
+    node: benign_user_2
+    percentage: 0.10  # 10%
+    script: /scripts/benign.sh
+    script_args: ["--target", "http://fancystore.com", "--behavior", "api", "--interval", "2"]
+
+# Infrastructure configuration for stress testing
+infrastructure:
+  networks:
+  - name: internal-net
+    driver: bridge
+  - name: external-net
+    driver: bridge
+    
+  nodes:
+  # Target: Juice Shop with resource limits
+  - name: juice-shop
+    role: target
+    image: bkimminich/juice-shop
+    networks: ['internal-net']
+    ports: ['3000:3000']
+    environment: ['NODE_ENV=stress_test']
+    resources:
+      limits:
+        cpus: '4.0'
+        memory: 4G
+    
+  # Nginx proxy optimized for high load
+  - name: nginx
+    role: proxy
+    image: nginx:latest
+    networks: ['internal-net', 'external-net']
+    network_aliases:
+      internal-net: ['fancystore.com']
+      external-net: ['fancystore.com']
+    ports: ['80:80']
+    volumes:
+    - ./scenario-securitylogs/confs/nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+    - ./logs/nginx:/var/log/nginx
+    resources:
+      limits:
+        cpus: '2.0'
+        memory: 2G
+    
+  # Multiple attackers for concurrent stress testing
+  - name: attacker_1
+    role: attacker
+    image: ras-attacker:latest
+    networks: ['external-net']
+    environment:
+    - TARGET_URL=http://fancystore.com
+    - ATTACK_MODE=stress
+    - ATTACK_TYPE=sql_injection
+    volumes:
+    - ./scenario-securitylogs/confs/attacker:/scripts
+    - ./logs/attacker_1:/logs
+    
+  - name: attacker_2
+    role: attacker
+    image: ras-attacker:latest
+    networks: ['external-net']
+    environment:
+    - TARGET_URL=http://fancystore.com
+    - ATTACK_MODE=stress
+    - ATTACK_TYPE=xss
+    volumes:
+    - ./scenario-securitylogs/confs/attacker:/scripts
+    - ./logs/attacker_2:/logs
+    
+  - name: attacker_3
+    role: attacker
+    image: ras-attacker:latest
+    networks: ['external-net']
+    environment:
+    - TARGET_URL=http://fancystore.com
+    - ATTACK_MODE=stress
+    - ATTACK_TYPE=command_injection
+    volumes:
+    - ./scenario-securitylogs/confs/attacker:/scripts
+    - ./logs/attacker_3:/logs
+    
+  - name: attacker_4
+    role: attacker
+    image: ras-attacker:latest
+    networks: ['external-net']
+    environment:
+    - TARGET_URL=http://fancystore.com
+    - ATTACK_MODE=stress
+    - ATTACK_TYPE=directory_traversal
+    volumes:
+    - ./scenario-securitylogs/confs/attacker:/scripts
+    - ./logs/attacker_4:/logs
+    
+  - name: attacker_5
+    role: attacker
+    image: ras-attacker:latest
+    networks: ['external-net']
+    environment:
+    - TARGET_URL=http://fancystore.com
+    - ATTACK_MODE=stress
+    - ATTACK_TYPE=auth_bypass
+    volumes:
+    - ./scenario-securitylogs/confs/attacker:/scripts
+    - ./logs/attacker_5:/logs
+    
+  - name: attacker_6
+    role: attacker
+    image: ras-attacker:latest
+    networks: ['external-net']
+    environment:
+    - TARGET_URL=http://fancystore.com
+    - ATTACK_MODE=stress
+    - ATTACK_TYPE=file_discovery
+    volumes:
+    - ./scenario-securitylogs/confs/attacker:/scripts
+    - ./logs/attacker_6:/logs
+    
+  - name: attacker_7
+    role: attacker
+    image: ras-attacker:latest
+    networks: ['external-net']
+    environment:
+    - TARGET_URL=http://fancystore.com
+    - ATTACK_MODE=stress
+    - ATTACK_TYPE=method_enumeration
+    volumes:
+    - ./scenario-securitylogs/confs/attacker:/scripts
+    - ./logs/attacker_7:/logs
+    
+  - name: attacker_8
+    role: attacker
+    image: ras-attacker:latest
+    networks: ['external-net']
+    ports: ['8080:8080', '8443:8443']  # exfiltration port
+    command: ["/bin/bash", "-c", "/scripts/start_services.sh"]  # start services
+    environment:
+    - TARGET_URL=http://fancystore.com
+    - ATTACK_MODE=stress
+    - ATTACK_TYPE=advanced_primary
+    - EXPERIMENT_NAME=stress-test
+    volumes:
+    - ./scenario-securitylogs/confs/attacker:/scripts
+    - ./scenario-securitylogs/scripts:/common_scripts
+    - ./logs/attacker_8:/logs
+    - ./shared_data:/shared_data  # shared data
+    - ./exfiltrated_data:/exfiltrated_data  # exfiltrated data
+    
+  - name: attacker_9
+    role: attacker
+    image: ras-attacker:latest
+    networks: ['external-net']
+    ports: ['8081:8080', '8444:8443']  # exfiltration port (avoid conflict)
+    command: ["/bin/bash", "-c", "/scripts/start_services.sh"]  # start services
+    environment:
+    - TARGET_URL=http://fancystore.com
+    - ATTACK_MODE=stress
+    - ATTACK_TYPE=advanced_secondary
+    - EXPERIMENT_NAME=stress-test
+    volumes:
+    - ./scenario-securitylogs/confs/attacker:/scripts
+    - ./scenario-securitylogs/scripts:/common_scripts
+    - ./logs/attacker_9:/logs
+    - ./shared_data:/shared_data  # shared data
+    - ./exfiltrated_data:/exfiltrated_data  # exfiltrated data
+    
+  # Minimal benign users
+  - name: benign_user_1
+    role: user
+    image: python:3.9-slim
+    command: tail -f /dev/null
+    networks: ['external-net']
+    environment:
+    - TARGET_URL=http://fancystore.com
+    - USER_TYPE=stress_browser
+    volumes:
+    - ./scenario-securitylogs/confs/user:/scripts
+    - ./logs/benign_user/benign_user_1:/logs
+    
+  - name: benign_user_2
+    role: user
+    image: python:3.9-slim
+    command: tail -f /dev/null
+    networks: ['external-net']
+    environment:
+    - TARGET_URL=http://fancystore.com
+    - USER_TYPE=stress_api
+    volumes:
+    - ./scenario-securitylogs/confs/user:/scripts
+    - ./logs/benign_user/benign_user_2:/logs
+
+# Data collection optimized for high-volume stress testing
+data_collection:
+  logs:
+  - source: nginx
+    path: /var/log/nginx/detailed.log
+    output: stress_test_nginx_detailed.csv
+    parser: nginx_parser
+    real_time: true
+    rotation: 50MB  # Smaller rotation for high volume
+  - source: attacker_1
+    path: /logs/attacker/attack_*.log
+    output: stress_test_sql_injection.csv
+    parser: attacker_parser
+    real_time: true
+  - source: attacker_2
+    path: /logs/attacker/attack_*.log
+    output: stress_test_xss.csv
+    parser: attacker_parser
+    real_time: true
+  - source: attacker_3
+    path: /logs/attacker/attack_*.log
+    output: stress_test_cmd_injection.csv
+    parser: attacker_parser
+    real_time: true
+  - source: attacker_4
+    path: /logs/attacker/attack_*.log
+    output: stress_test_dir_traversal.csv
+    parser: attacker_parser
+    real_time: true
+  - source: attacker_5
+    path: /logs/attacker/attack_*.log
+    output: stress_test_auth_bypass.csv
+    parser: attacker_parser
+    real_time: true
+  - source: attacker_6
+    path: /logs/attacker/attack_*.log
+    output: stress_test_file_discovery.csv
+    parser: attacker_parser
+    real_time: true
+  - source: attacker_7
+    path: /logs/attacker/attack_*.log
+    output: stress_test_method_enum.csv
+    parser: attacker_parser
+    real_time: true
+  - source: attacker_8
+    path: /logs/attacker/attack_*.log
+    output: stress_test_advanced_1.csv
+    parser: attacker_parser
+    real_time: true
+  - source: attacker_9
+    path: /logs/attacker/attack_*.log
+    output: stress_test_advanced_2.csv
+    parser: attacker_parser
+    real_time: true
+  - source: benign_user_1
+    path: /logs/benign_user_*/user.log
+    output: stress_test_benign_1.csv
+    parser: user_parser
+    real_time: true
+  - source: benign_user_2
+    path: /logs/benign_user_*/user.log
+    output: stress_test_benign_2.csv
+    parser: user_parser
+    real_time: true
+  network:
+  - interface: any
+    filter: net 172.27.0.0/16 or net 172.28.0.0/16
+    output: stress_test_network_traffic.pcap
+    capture_size: 200MB  # Smaller capture size for high volume
+    rotation: true
+
+# Stress testing specific hooks
+hooks:
+  post_node_start:
+  - name: verify_stress_setup
+    script: ./hooks/verify_stress_setup.py
+    timeout: 60
+  periodic:
+  - name: monitor_system_performance
+    script: ./hooks/monitor_stress_metrics.py
+    interval: 30  # Monitor every 30 seconds during stress test
+  post_collection:
+  - name: generate_stress_report
+    script: ./hooks/auto_parse_logs.py
+    timeout: 300
+  - name: analyze_performance_metrics
+    script: ./hooks/analyze_stress_performance.py
+    timeout: 300

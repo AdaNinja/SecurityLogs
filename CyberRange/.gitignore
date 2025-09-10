@@ -1,0 +1,41 @@
+# CyberRange Git Ignore File
+
+# Large binary files
+*.pcap
+*.pcapng
+
+# Log files
+logs/*.pcap
+logs/*/network_traffic.pcap
+output/*.pcap
+
+# Experiment data (keep structure, ignore content)
+logs/*/
+!logs/*/.gitkeep
+
+# Python cache
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+*.so
+
+# IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Temporary files
+*.tmp
+*.temp
+*.log
+scenario.log
+
+# Docker
+.dockerignore 

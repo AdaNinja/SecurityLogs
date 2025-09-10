@@ -1,7 +1,0 @@
-{
-  "algorithm": "ChaCha20",
-  "key_size": 256,
-  "nonce_size": 12,
-  "timestamp": "2025-06-27T00:50:42.389524",
-  "session_id": "c81e728d9d4c2f636f067f89cc14862c"
-}

@@ -1,0 +1,74 @@
+# HTTP Method Enumeration Attack Payloads
+# Format: method|endpoint|payload|expected_code|attack_id|description
+
+# ============================================
+# Standard HTTP Methods
+# ============================================
+OPTIONS|/rest/user/login||204|method_enum_001|OPTIONS method test on login
+TRACE|/rest/user/login||404|method_enum_002|TRACE method test on login
+HEAD|/rest/user/login||405|method_enum_003|HEAD method test on login
+PUT|/rest/user/login|{"email":"test","password":"test"}|405|method_enum_004|PUT method test on login
+DELETE|/rest/user/login||405|method_enum_005|DELETE method test on login
+
+# ============================================
+# Extended HTTP Methods
+# ============================================
+PATCH|/rest/user/login|{"email":"test"}|405|method_enum_006|PATCH method test on login
+CONNECT|/rest/user/login||405|method_enum_007|CONNECT method test
+PROPFIND|/rest/user/login||405|method_enum_008|WebDAV PROPFIND method
+PROPPATCH|/rest/user/login||405|method_enum_009|WebDAV PROPPATCH method
+MKCOL|/rest/user/login||405|method_enum_010|WebDAV MKCOL method
+
+# ============================================
+# Product API Methods
+# ============================================
+OPTIONS|/rest/products/1||204|method_enum_011|OPTIONS on product endpoint
+PUT|/rest/products/1|{"name":"Hacked Product","price":0}|401|method_enum_012|PUT to modify product
+DELETE|/rest/products/1||401|method_enum_013|DELETE product attempt
+PATCH|/rest/products/1|{"price":0}|401|method_enum_014|PATCH product price
+TRACE|/rest/products/1||404|method_enum_015|TRACE on product endpoint
+
+# ============================================
+# User API Methods
+# ============================================
+OPTIONS|/api/Users||204|method_enum_016|OPTIONS on users endpoint
+PUT|/api/Users/1|{"role":"admin"}|401|method_enum_017|PUT to elevate user role
+DELETE|/api/Users/1||401|method_enum_018|DELETE user attempt
+PATCH|/api/Users/1|{"isAdmin":true}|401|method_enum_019|PATCH admin privilege
+HEAD|/api/Users||405|method_enum_020|HEAD on users list
+
+# ============================================
+# Admin Endpoint Methods
+# ============================================
+OPTIONS|/rest/admin/application-configuration||204|method_enum_021|OPTIONS on admin config
+PUT|/rest/admin/application-configuration|{"serverName":"hacked"}|401|method_enum_022|PUT admin configuration
+DELETE|/rest/admin/application-configuration||401|method_enum_023|DELETE admin config
+PATCH|/rest/admin/application-configuration|{"config":"test"}|401|method_enum_024|PATCH admin settings
+TRACE|/rest/admin/application-configuration||404|method_enum_025|TRACE on admin endpoint
+
+# ============================================
+# Basket/Cart Methods
+# ============================================
+OPTIONS|/rest/basket/1||204|method_enum_026|OPTIONS on basket
+PUT|/rest/basket/1|{"products":[]}|401|method_enum_027|PUT basket modification
+DELETE|/rest/basket/1||401|method_enum_028|DELETE basket attempt
+PATCH|/rest/basket/1|{"total":0}|401|method_enum_029|PATCH basket total
+HEAD|/rest/basket/1||405|method_enum_030|HEAD on basket
+
+# ============================================
+# Feedback Methods
+# ============================================
+OPTIONS|/api/Feedbacks||204|method_enum_031|OPTIONS on feedback
+PUT|/api/Feedbacks/1|{"rating":5,"comment":"hacked"}|401|method_enum_032|PUT feedback modification
+DELETE|/api/Feedbacks/1||401|method_enum_033|DELETE feedback attempt
+PATCH|/api/Feedbacks/1|{"rating":1}|401|method_enum_034|PATCH feedback rating
+TRACE|/api/Feedbacks||404|method_enum_035|TRACE on feedback endpoint
+
+# ============================================
+# Custom/Proprietary Methods
+# ============================================
+COPY|/rest/user/login||405|method_enum_036|COPY method test
+MOVE|/rest/user/login||405|method_enum_037|MOVE method test
+LOCK|/rest/user/login||405|method_enum_038|WebDAV LOCK method
+UNLOCK|/rest/user/login||405|method_enum_039|WebDAV UNLOCK method
+SEARCH|/rest/products||405|method_enum_040|SEARCH method test

@@ -1,0 +1,444 @@
+# APT Simulation Scenario - Advanced Persistent Threat Attack Chain
+# Traffic ratio: 5% attack (3% basic reconnaissance + 2% advanced multi-phase) + 95% benign
+# Duration: 6 hours (21600 seconds) - Complete APT lifecycle simulation
+
+scenario:
+  name: "apt-simulation"
+  description: "6-hour APT attack chain simulation with 5% attack traffic following MITRE ATT&CK framework"
+  duration: 21600  # 6 hours for complete APT lifecycle
+  random_seed: 20250830
+  attack_types: ["sql_injection", "xss", "command_injection", "directory_traversal", "auth_bypass", "file_discovery", "method_enumeration"]
+  waf_mode: "detect"  # WAF in detection mode for realistic APT evasion
+  validation_mode: "apt_simulation"  # Enable APT-specific validation
+
+# Behavior configuration - APT attack timeline simulation
+behaviors:
+  attacks:
+  # Phase 1: Reconnaissance & Initial Access (Hours 0-1)
+  - name: apt_reconnaissance
+    node: apt_attacker_recon
+    percentage: 0.008  # 0.8% - Low frequency, high stealth
+    script: /scripts/unified_attack.sh
+    script_args: ["--mode", "basic", "--type", "method", "--interval", "300"]  # 5 minutes
+    
+  - name: apt_vulnerability_scanning
+    node: apt_attacker_recon
+    percentage: 0.005  # 0.5%
+    script: /scripts/unified_attack.sh
+    script_args: ["--mode", "basic", "--type", "dir", "--interval", "450"]  # 7.5 minutes
+    
+  - name: apt_initial_access
+    node: apt_attacker_initial
+    percentage: 0.007  # 0.7%
+    script: /scripts/unified_attack.sh
+    script_args: ["--mode", "basic", "--type", "sql", "--interval", "600"]  # 10 minutes
+    
+  # Phase 2: Persistence & Privilege Escalation (Hours 1-3)
+  - name: apt_persistence_establishment
+    node: apt_attacker_persist
+    percentage: 0.003  # 0.3%
+    script: /scripts/advanced_attack.sh
+    script_args: ["--phase", "1", "--interval", "900"]  # 15 minutes
+    
+  - name: apt_privilege_escalation
+    node: apt_attacker_persist
+    percentage: 0.004  # 0.4%
+    script: /scripts/unified_attack.sh
+    script_args: ["--mode", "basic", "--type", "auth", "--interval", "720"]  # 12 minutes
+    
+  # Phase 3: Lateral Movement & Discovery (Hours 2-4)
+  - name: apt_lateral_movement
+    node: apt_attacker_lateral
+    percentage: 0.006  # 0.6%
+    script: /scripts/advanced_attack.sh
+    script_args: ["--phase", "2", "--interval", "800"]  # 13.3 minutes
+    
+  - name: apt_internal_reconnaissance
+    node: apt_attacker_lateral
+    percentage: 0.005  # 0.5%
+    script: /scripts/unified_attack.sh
+    script_args: ["--mode", "basic", "--type", "file", "--interval", "540"]  # 9 minutes
+    
+  # Phase 4: Data Collection & Exfiltration (Hours 3-6)
+  - name: apt_data_collection
+    node: apt_attacker_exfil
+    percentage: 0.004  # 0.4%
+    script: /scripts/advanced_attack.sh
+    script_args: ["--phase", "3", "--interval", "1200"]  # 20 minutes
+    
+  - name: apt_command_control
+    node: apt_attacker_c2
+    percentage: 0.003  # 0.3%
+    script: /scripts/unified_attack.sh
+    script_args: ["--mode", "basic", "--type", "cmd", "--interval", "1800"]  # 30 minutes
+    
+  # Phase 5: Covering Tracks & Maintaining Access (Hours 4-6)
+  - name: apt_evasion_techniques
+    node: apt_attacker_stealth
+    percentage: 0.005  # 0.5%
+    script: /scripts/unified_attack.sh
+    script_args: ["--mode", "basic", "--type", "xss", "--interval", "1080"]  # 18 minutes
+
+  # Realistic benign traffic (95%) - Simulating normal business operations
+  benign_traffic:
+  # Business hours pattern (Hours 0-4: High activity, Hours 4-6: Low activity)
+  - name: business_browsing
+    node: business_user_1
+    percentage: 0.35  # 35% - Primary business activity
+    script: /scripts/benign.sh
+    script_args: ["--target", "http://fancystore.com", "--behavior", "browse", "--interval", "20"]
+    
+  - name: business_transactions
+    node: business_user_2
+    percentage: 0.25  # 25% - E-commerce transactions
+    script: /scripts/benign.sh
+    script_args: ["--target", "http://fancystore.com", "--behavior", "shopping", "--interval", "45"]
+    
+  - name: business_searches
+    node: business_user_3
+    percentage: 0.15  # 15% - Product searches
+    script: /scripts/benign.sh
+    script_args: ["--target", "http://fancystore.com", "--behavior", "search", "--interval", "30"]
+    
+  - name: business_api_calls
+    node: business_user_4
+    percentage: 0.10  # 10% - API integrations
+    script: /scripts/benign.sh
+    script_args: ["--target", "http://fancystore.com", "--behavior", "api", "--interval", "15"]
+    
+  - name: business_admin
+    node: business_user_5
+    percentage: 0.05  # 5% - Administrative tasks
+    script: /scripts/benign.sh
+    script_args: ["--target", "http://fancystore.com", "--behavior", "login", "--interval", "120"]
+    
+  - name: business_registration
+    node: business_user_6
+    percentage: 0.05  # 5% - New user registrations
+    script: /scripts/benign.sh
+    script_args: ["--target", "http://fancystore.com", "--behavior", "register", "--interval", "600"]
+
+# Infrastructure configuration for APT simulation
+infrastructure:
+  networks:
+  - name: internal-net
+    driver: bridge
+  - name: external-net
+    driver: bridge
+  - name: apt-c2-net
+    driver: bridge  # Separate network for C2 simulation
+    
+  nodes:
+  # Target: Juice Shop configured for APT simulation
+  - name: juice-shop
+    role: target
+    image: bkimminich/juice-shop
+    networks: ['internal-net']
+    ports: ['3000:3000']
+    environment: ['NODE_ENV=apt_target']
+    resources:
+      limits:
+        cpus: '2.0'
+        memory: 2G
+    
+  # Nginx proxy with enhanced logging for APT detection
+  - name: nginx
+    role: proxy
+    image: nginx:latest
+    networks: ['internal-net', 'external-net']
+    network_aliases:
+      internal-net: ['fancystore.com']
+      external-net: ['fancystore.com']
+    ports: ['80:80']
+    volumes:
+    - ./scenario-securitylogs/confs/nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+    - ./logs/nginx:/var/log/nginx
+    
+  # APT Attackers - Different roles in the attack chain
+  - name: apt_attacker_recon
+    role: attacker
+    image: ras-attacker:latest
+    networks: ['external-net']
+    environment:
+    - TARGET_URL=http://fancystore.com
+    - ATTACK_MODE=apt_recon
+    - APT_PHASE=reconnaissance
+    volumes:
+    - ./scenario-securitylogs/confs/attacker:/scripts
+    - ./logs/apt_attacker_recon:/logs
+    
+  - name: apt_attacker_initial
+    role: attacker
+    image: ras-attacker:latest
+    networks: ['external-net']
+    environment:
+    - TARGET_URL=http://fancystore.com
+    - ATTACK_MODE=apt_initial
+    - APT_PHASE=initial_access
+    volumes:
+    - ./scenario-securitylogs/confs/attacker:/scripts
+    - ./logs/apt_attacker_initial:/logs
+    
+  - name: apt_attacker_persist
+    role: attacker
+    image: ras-attacker:latest
+    networks: ['external-net']
+    ports: ['8082:8080', '8445:8443']  # exfiltration port (avoid conflict)
+    command: ["/bin/bash", "-c", "/scripts/start_services.sh"]  # start services
+    environment:
+    - TARGET_URL=http://fancystore.com
+    - ATTACK_MODE=apt_persist
+    - APT_PHASE=persistence
+    - EXPERIMENT_NAME=apt-simulation
+    volumes:
+    - ./scenario-securitylogs/confs/attacker:/scripts
+    - ./scenario-securitylogs/scripts:/common_scripts
+    - ./logs/apt_attacker_persist:/logs
+    - ./shared_data:/shared_data  # shared data
+    - ./exfiltrated_data:/exfiltrated_data  # exfiltrated data
+    
+  - name: apt_attacker_lateral
+    role: attacker
+    image: ras-attacker:latest
+    networks: ['external-net', 'apt-c2-net']
+    ports: ['8083:8080', '8446:8443']  # exfiltration port (avoid conflict)
+    command: ["/bin/bash", "-c", "/scripts/start_services.sh"]  # start services
+    environment:
+    - TARGET_URL=http://fancystore.com
+    - ATTACK_MODE=apt_lateral
+    - APT_PHASE=lateral_movement
+    - EXPERIMENT_NAME=apt-simulation
+    volumes:
+    - ./scenario-securitylogs/confs/attacker:/scripts
+    - ./scenario-securitylogs/scripts:/common_scripts
+    - ./logs/apt_attacker_lateral:/logs
+    - ./shared_data:/shared_data  # shared data
+    - ./exfiltrated_data:/exfiltrated_data  # exfiltrated data
+    
+  - name: apt_attacker_exfil
+    role: attacker
+    image: ras-attacker:latest
+    networks: ['external-net', 'apt-c2-net']
+    ports: ['8080:8080', '8443:8443']  # exfiltration port
+    command: ["/bin/bash", "-c", "/scripts/start_services.sh"]  # start services
+    environment:
+    - TARGET_URL=http://fancystore.com
+    - ATTACK_MODE=apt_exfil
+    - APT_PHASE=exfiltration
+    - EXPERIMENT_NAME=apt-simulation
+    volumes:
+    - ./scenario-securitylogs/confs/attacker:/scripts
+    - ./scenario-securitylogs/scripts:/common_scripts
+    - ./logs/apt_attacker_exfil:/logs
+    - ./shared_data:/shared_data  # shared data
+    - ./exfiltrated_data:/exfiltrated_data  # exfiltrated data
+    
+  - name: apt_attacker_c2
+    role: attacker
+    image: ras-attacker:latest
+    networks: ['apt-c2-net']
+    ports: ['8080:8080', '8443:8443']  # C2 communication port
+    command: ["/bin/bash", "-c", "/scripts/start_services.sh"]  # start services
+    environment:
+    - TARGET_URL=http://fancystore.com
+    - ATTACK_MODE=apt_c2
+    - APT_PHASE=command_control
+    - EXPERIMENT_NAME=apt-simulation
+    volumes:
+    - ./scenario-securitylogs/confs/attacker:/scripts
+    - ./scenario-securitylogs/scripts:/common_scripts
+    - ./logs/apt_attacker_c2:/logs
+    - ./shared_data:/shared_data  # shared data
+    - ./exfiltrated_data:/exfiltrated_data  # exfiltrated data
+    
+  - name: apt_attacker_stealth
+    role: attacker
+    image: ras-attacker:latest
+    networks: ['external-net']
+    environment:
+    - TARGET_URL=http://fancystore.com
+    - ATTACK_MODE=apt_stealth
+    - APT_PHASE=defense_evasion
+    volumes:
+    - ./scenario-securitylogs/confs/attacker:/scripts
+    - ./logs/apt_attacker_stealth:/logs
+    
+  # Business users simulating normal operations
+  - name: business_user_1
+    role: user
+    image: python:3.9-slim
+    command: tail -f /dev/null
+    networks: ['external-net']
+    environment:
+    - TARGET_URL=http://fancystore.com
+    - USER_TYPE=business_browser
+    volumes:
+    - ./scenario-securitylogs/confs/user:/scripts
+    - ./logs/benign_user/business_user_1:/logs
+    
+  - name: business_user_2
+    role: user
+    image: python:3.9-slim
+    command: tail -f /dev/null
+    networks: ['external-net']
+    environment:
+    - TARGET_URL=http://fancystore.com
+    - USER_TYPE=business_shopper
+    volumes:
+    - ./scenario-securitylogs/confs/user:/scripts
+    - ./logs/benign_user/business_user_2:/logs
+    
+  - name: business_user_3
+    role: user
+    image: python:3.9-slim
+    command: tail -f /dev/null
+    networks: ['external-net']
+    environment:
+    - TARGET_URL=http://fancystore.com
+    - USER_TYPE=business_searcher
+    volumes:
+    - ./scenario-securitylogs/confs/user:/scripts
+    - ./logs/benign_user/business_user_3:/logs
+    
+  - name: business_user_4
+    role: user
+    image: python:3.9-slim
+    command: tail -f /dev/null
+    networks: ['external-net']
+    environment:
+    - TARGET_URL=http://fancystore.com
+    - USER_TYPE=business_api
+    volumes:
+    - ./scenario-securitylogs/confs/user:/scripts
+    - ./logs/benign_user/business_user_4:/logs
+    
+  - name: business_user_5
+    role: user
+    image: python:3.9-slim
+    command: tail -f /dev/null
+    networks: ['external-net']
+    environment:
+    - TARGET_URL=http://fancystore.com
+    - USER_TYPE=business_admin
+    volumes:
+    - ./scenario-securitylogs/confs/user:/scripts
+    - ./logs/benign_user/business_user_5:/logs
+    
+  - name: business_user_6
+    role: user
+    image: python:3.9-slim
+    command: tail -f /dev/null
+    networks: ['external-net']
+    environment:
+    - TARGET_URL=http://fancystore.com
+    - USER_TYPE=business_new_user
+    volumes:
+    - ./scenario-securitylogs/confs/user:/scripts
+    - ./logs/benign_user/business_user_6:/logs
+
+# Data collection optimized for APT analysis and forensics
+data_collection:
+  logs:
+  - source: nginx
+    path: /var/log/nginx/detailed.log
+    output: apt_simulation_nginx_detailed.csv
+    parser: nginx_parser
+    real_time: true
+    rotation: 100MB
+  # APT Attacker logs - organized by attack phase
+  - source: apt_attacker_recon
+    path: /logs/attacker/attack_*.log
+    output: apt_phase1_reconnaissance.csv
+    parser: attacker_parser
+    real_time: true
+  - source: apt_attacker_initial
+    path: /logs/attacker/attack_*.log
+    output: apt_phase1_initial_access.csv
+    parser: attacker_parser
+    real_time: true
+  - source: apt_attacker_persist
+    path: /logs/attacker/attack_*.log
+    output: apt_phase2_persistence.csv
+    parser: attacker_parser
+    real_time: true
+  - source: apt_attacker_lateral
+    path: /logs/attacker/attack_*.log
+    output: apt_phase3_lateral_movement.csv
+    parser: attacker_parser
+    real_time: true
+  - source: apt_attacker_exfil
+    path: /logs/attacker/attack_*.log
+    output: apt_phase4_exfiltration.csv
+    parser: attacker_parser
+    real_time: true
+  - source: apt_attacker_c2
+    path: /logs/attacker/attack_*.log
+    output: apt_phase5_command_control.csv
+    parser: attacker_parser
+    real_time: true
+  - source: apt_attacker_stealth
+    path: /logs/attacker/attack_*.log
+    output: apt_phase6_defense_evasion.csv
+    parser: attacker_parser
+    real_time: true
+  # Business user logs
+  - source: business_user_1
+    path: /logs/benign_user_*/user.log
+    output: apt_business_browsing.csv
+    parser: user_parser
+    real_time: true
+  - source: business_user_2
+    path: /logs/benign_user_*/user.log
+    output: apt_business_transactions.csv
+    parser: user_parser
+    real_time: true
+  - source: business_user_3
+    path: /logs/benign_user_*/user.log
+    output: apt_business_searches.csv
+    parser: user_parser
+    real_time: true
+  - source: business_user_4
+    path: /logs/benign_user_*/user.log
+    output: apt_business_api.csv
+    parser: user_parser
+    real_time: true
+  - source: business_user_5
+    path: /logs/benign_user_*/user.log
+    output: apt_business_admin.csv
+    parser: user_parser
+    real_time: true
+  - source: business_user_6
+    path: /logs/benign_user_*/user.log
+    output: apt_business_registration.csv
+    parser: user_parser
+    real_time: true
+  network:
+  - interface: any
+    filter: net 172.27.0.0/16 or net 172.28.0.0/16 or net 172.29.0.0/16
+    output: apt_simulation_network_traffic.pcap
+    capture_size: 500MB
+    rotation: true
+
+# APT-specific hooks for forensic analysis
+hooks:
+  post_node_start:
+  - name: verify_apt_setup
+    script: ./hooks/verify_apt_setup.py
+    timeout: 120
+  periodic:
+  - name: monitor_apt_timeline
+    script: ./hooks/monitor_apt_progress.py
+    interval: 600  # Monitor every 10 minutes
+  - name: detect_apt_indicators
+    script: ./hooks/detect_apt_iocs.py
+    interval: 300  # Check for IOCs every 5 minutes
+  post_collection:
+  - name: generate_apt_timeline
+    script: ./hooks/generate_apt_timeline.py
+    timeout: 600
+  - name: create_forensic_report
+    script: ./hooks/create_apt_forensic_report.py
+    timeout: 900
+  - name: auto_parse_logs
+    script: ./hooks/auto_parse_logs.py
+    timeout: 600

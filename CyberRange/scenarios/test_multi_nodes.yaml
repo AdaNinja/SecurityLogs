@@ -1,0 +1,213 @@
+# Multi-Node Test Scenario - Verify Multiple Attackers and Benign Users
+# Duration: 5 minutes for quick validation
+# Purpose: Test multi-attacker and multi-benign user node functionality
+
+scenario:
+  name: "test-multi-nodes"
+  description: "5-minute test to verify multiple attacker and benign user nodes work correctly"
+  duration: 120  # 5 minutes
+  random_seed: 20240106
+  attack_types: ["sql_injection", "xss", "command_injection"]
+  waf_mode: "off"
+  validation_mode: "multi_node_test"
+
+# Behavior configuration - test multiple nodes
+behaviors:
+  attacks:
+  # Test 3 different attackers
+  - name: test_sql_attacker
+    node: attacker_1
+    percentage: 0.15  # 15%
+    script: /scripts/unified_attack.sh
+    script_args: ["--mode", "basic", "--type", "sql", "--interval", "5"]
+    
+  - name: test_xss_attacker
+    node: attacker_2
+    percentage: 0.15  # 15%
+    script: /scripts/unified_attack.sh
+    script_args: ["--mode", "basic", "--type", "xss", "--interval", "6"]
+    
+  - name: test_cmd_attacker
+    node: attacker_3
+    percentage: 0.10  # 10%
+    script: /scripts/unified_attack.sh
+    script_args: ["--mode", "basic", "--type", "cmd", "--interval", "8"]
+
+  # Test multiple benign users
+  benign_traffic:
+  - name: test_benign_browser
+    node: benign_user_1
+    percentage: 0.20  # 20%
+    script: /scripts/benign.sh
+    script_args: ["--target", "http://fancystore.com", "--behavior", "browse", "--interval", "4"]
+    
+  - name: test_benign_shopper
+    node: benign_user_2
+    percentage: 0.20  # 20%
+    script: /scripts/benign.sh
+    script_args: ["--target", "http://fancystore.com", "--behavior", "shopping", "--interval", "5"]
+    
+  - name: test_benign_searcher
+    node: benign_user_3
+    percentage: 0.20  # 20%
+    script: /scripts/benign.sh
+    script_args: ["--target", "http://fancystore.com", "--behavior", "search", "--interval", "6"]
+
+# Infrastructure configuration
+infrastructure:
+  networks:
+  - name: internal-net
+    driver: bridge
+  - name: external-net
+    driver: bridge
+    
+  nodes:
+  # Target: Juice Shop
+  - name: juice-shop
+    role: target
+    image: bkimminich/juice-shop
+    networks: ['internal-net']
+    ports: ['3000:3000']
+    environment: ['NODE_ENV=test']
+    
+  # Nginx proxy
+  - name: nginx
+    role: proxy
+    image: nginx:latest
+    networks: ['internal-net', 'external-net']
+    network_aliases:
+      internal-net: ['fancystore.com']
+      external-net: ['fancystore.com']
+    ports: ['80:80']
+    volumes:
+    - ./scenario-securitylogs/confs/nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+    - ./logs/nginx:/var/log/nginx
+    
+  # Multiple attackers
+  - name: attacker_1
+    role: attacker
+    image: ras-attacker:latest
+    networks: ['external-net']
+    environment:
+    - TARGET_URL=http://fancystore.com
+    - ATTACK_MODE=test
+    - ATTACK_TYPE=sql_injection
+    volumes:
+    - ./scenario-securitylogs/confs/attacker:/scripts
+    - ./logs/attacker_1:/logs
+    
+  - name: attacker_2
+    role: attacker
+    image: ras-attacker:latest
+    networks: ['external-net']
+    environment:
+    - TARGET_URL=http://fancystore.com
+    - ATTACK_MODE=test
+    - ATTACK_TYPE=xss
+    volumes:
+    - ./scenario-securitylogs/confs/attacker:/scripts
+    - ./logs/attacker_2:/logs
+    
+  - name: attacker_3
+    role: attacker
+    image: ras-attacker:latest
+    networks: ['external-net']
+    environment:
+    - TARGET_URL=http://fancystore.com
+    - ATTACK_MODE=test
+    - ATTACK_TYPE=command_injection
+    volumes:
+    - ./scenario-securitylogs/confs/attacker:/scripts
+    - ./logs/attacker_3:/logs
+    
+  # Multiple benign users
+  - name: benign_user_1
+    role: user
+    image: python:3.9-slim
+    command: tail -f /dev/null
+    networks: ['external-net']
+    environment:
+    - TARGET_URL=http://fancystore.com
+    - USER_TYPE=browser_user
+    volumes:
+    - ./scenario-securitylogs/confs/user:/scripts
+    - ./logs/benign_user/benign_user_1:/logs
+    
+  - name: benign_user_2
+    role: user
+    image: python:3.9-slim
+    command: tail -f /dev/null
+    networks: ['external-net']
+    environment:
+    - TARGET_URL=http://fancystore.com
+    - USER_TYPE=shopper_user
+    volumes:
+    - ./scenario-securitylogs/confs/user:/scripts
+    - ./logs/benign_user/benign_user_2:/logs
+    
+  - name: benign_user_3
+    role: user
+    image: python:3.9-slim
+    command: tail -f /dev/null
+    networks: ['external-net']
+    environment:
+    - TARGET_URL=http://fancystore.com
+    - USER_TYPE=search_user
+    volumes:
+    - ./scenario-securitylogs/confs/user:/scripts
+    - ./logs/benign_user/benign_user_3:/logs
+
+# Data collection
+data_collection:
+  logs:
+  - source: nginx
+    path: /var/log/nginx/detailed.log
+    output: multi_node_test_nginx_detailed.csv
+    parser: nginx_parser
+    real_time: true
+  - source: attacker_1
+    path: /logs/attacker/attack_*.log
+    output: multi_node_test_attacker_1.csv
+    parser: attacker_parser
+    real_time: true
+  - source: attacker_2
+    path: /logs/attacker/attack_*.log
+    output: multi_node_test_attacker_2.csv
+    parser: attacker_parser
+    real_time: true
+  - source: attacker_3
+    path: /logs/attacker/attack_*.log
+    output: multi_node_test_attacker_3.csv
+    parser: attacker_parser
+    real_time: true
+  - source: benign_user_1
+    path: /logs/benign_user_*/user.log
+    output: multi_node_test_benign_1.csv
+    parser: user_parser
+    real_time: true
+  - source: benign_user_2
+    path: /logs/benign_user_*/user.log
+    output: multi_node_test_benign_2.csv
+    parser: user_parser
+    real_time: true
+  - source: benign_user_3
+    path: /logs/benign_user_*/user.log
+    output: multi_node_test_benign_3.csv
+    parser: user_parser
+    real_time: true
+  network:
+  - interface: any
+    filter: net 172.27.0.0/16 or net 172.28.0.0/16
+    output: multi_node_test_network_traffic.pcap
+    capture_size: 50MB
+
+# Hooks
+hooks:
+  post_node_start:
+  - name: verify_multi_nodes
+    script: ./hooks/verify_juice_shop.py
+    timeout: 60
+  post_collection:
+  - name: auto_parse_logs
+    script: ./hooks/auto_parse_logs.py
+    timeout: 300

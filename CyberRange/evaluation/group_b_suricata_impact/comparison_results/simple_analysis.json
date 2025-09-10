@@ -1,0 +1,26 @@
+{
+  "group_a": [
+    {
+      "run": "run_01",
+      "attack_count": 847,
+      "attack_types": {}
+    },
+    {
+      "run": "run_02",
+      "attack_count": 815,
+      "attack_types": {}
+    },
+    {
+      "run": "run_03",
+      "attack_count": 815,
+      "attack_types": {}
+    }
+  ],
+  "group_b": [
+    {
+      "run": "run_01",
+      "suricata_alerts": 0
+    }
+  ],
+  "validation_ready": true
+}

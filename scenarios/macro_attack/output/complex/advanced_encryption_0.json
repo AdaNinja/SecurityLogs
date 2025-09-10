@@ -1,7 +1,0 @@
-{
-  "algorithm": "AES-256",
-  "mode": "CBC",
-  "key_size": 256,
-  "timestamp": "2025-06-27T00:50:41.977301",
-  "session_id": "cfcd208495d565ef66e7dff9f98764da"
-}

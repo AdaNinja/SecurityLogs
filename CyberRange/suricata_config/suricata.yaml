@@ -1,0 +1,131 @@
+%YAML 1.1
+---
+# Suricata configuration file
+# This configuration is designed for pure IDS monitoring
+# No traffic blocking, only detection and alerting
+
+# Network interface configuration
+pcap:
+  - interface: any
+    checksum-checks: no
+    bpf-filter: port 80 or port 3000 or port 8080 or port 8443
+    buffer-size: 64kb
+
+# Rule configuration - IDS mode only
+default-rule-path: /var/lib/suricata/rules
+rule-files:
+  - custom.rules
+
+# Disable all blocking actions - IDS only
+action-order:
+  - pass
+  - drop
+  - alert
+  - reject
+
+# Logging configuration
+logging:
+  default-log-level: info
+  outputs:
+    - console:
+        enabled: yes
+    - file:
+        enabled: yes
+        filename: /var/log/suricata/suricata.log
+    - eve-log:
+        enabled: yes
+        filetype: regular
+        filename: /var/log/suricata/eve.json
+        types:
+          - alert
+          - http
+          - dns
+          - tls
+          - files
+          - ssh
+          - flows
+          - smtp
+          - stats
+
+# Detection engine configuration
+detect:
+  profile: medium
+  custom-values:
+    toclient-servers: 5
+    toserver-clients: 5
+  sgh-mpm-context: auto
+  inspection-recursion-limit: 3000
+
+# Performance tuning for monitoring
+threading:
+  set-cpu-affinity: no
+  cpu-affinity:
+    - management-cpu-set:
+        cpu: [ 0 ]
+        mode: "balanced"
+        prio:
+          default: "low"
+    - receive-cpu-set:
+        cpu: [ 0 ]
+        mode: "balanced"
+        prio:
+          default: "medium"
+    - worker-cpu-set:
+        cpu: [ "all" ]
+        mode: "exclusive"
+        prio:
+          default: "high"
+          low: [ "reject" ]
+          medium: [ "reject" ]
+          high: [ "accept" ]
+
+# App layer configuration
+app-layer:
+  protocols:
+    http:
+      enabled: yes
+      libhtp:
+        default-config:
+          personality: IDS
+          request-body-limit: 100kb
+          response-body-limit: 100kb
+    tls:
+      enabled: yes
+    dns:
+      enabled: yes
+    smtp:
+      enabled: yes
+    ssh:
+      enabled: yes
+
+# Flow configuration
+flow:
+  memcap: 64mb
+  hash-size: 65536
+  prealloc: 10000
+  emergency-recovery: 30
+  stats-interval: 5
+
+# Stream configuration
+stream:
+  memcap: 64mb
+  checksum-validation: no
+  prealloc-sessions: 10000
+  midstream: false
+  async-oneside: false
+  reassemble:
+    client: true
+    server: true
+    timeout: 60
+
+# Host configuration
+host:
+  hash-size: 4096
+  prealloc: 1000
+  memcap: 16777216
+
+# Detection configuration (removed duplicate)
+
+# Performance configuration
+max-pending-packets: 1024
+max-pending-drops: 1000

@@ -1,0 +1,74 @@
+# File Discovery Attack Payloads
+# Format: method|endpoint|payload|expected_code|attack_id|description
+
+# ============================================
+# Common Web Files
+# ============================================
+GET|/robots.txt||200|file_discovery_001|Robots file discovery
+GET|/sitemap.xml||404|file_discovery_002|Sitemap file discovery
+GET|/.htaccess||404|file_discovery_003|Apache htaccess file
+GET|/web.config||404|file_discovery_004|IIS web config file
+GET|/crossdomain.xml||404|file_discovery_005|Flash crossdomain file
+
+# ============================================
+# Configuration Files
+# ============================================
+GET|/.env||404|file_discovery_006|Environment configuration
+GET|/config.php||404|file_discovery_007|PHP configuration file
+GET|/config.json||404|file_discovery_008|JSON configuration file
+GET|/application.properties||404|file_discovery_009|Java properties file
+GET|/settings.ini||404|file_discovery_010|INI settings file
+
+# ============================================
+# Backup Files
+# ============================================
+GET|/backup.zip||404|file_discovery_011|ZIP backup file
+GET|/backup.tar.gz||404|file_discovery_012|Tar.gz backup file
+GET|/database.sql||404|file_discovery_013|SQL database dump
+GET|/site_backup.tar||404|file_discovery_014|Site backup archive
+GET|/data.bak||404|file_discovery_015|Generic backup file
+
+# ============================================
+# Development Files
+# ============================================
+GET|/.git/config||404|file_discovery_016|Git repository config
+GET|/.git/HEAD||404|file_discovery_017|Git HEAD file
+GET|/.svn/entries||404|file_discovery_018|SVN entries file
+GET|/package.json||404|file_discovery_019|Node.js package file
+GET|/composer.json||404|file_discovery_020|PHP Composer file
+
+# ============================================
+# Server Information Files
+# ============================================
+GET|/phpinfo.php||404|file_discovery_021|PHP info disclosure
+GET|/info.php||404|file_discovery_022|PHP information file
+GET|/test.php||404|file_discovery_023|PHP test file
+GET|/server-status||404|file_discovery_024|Apache server status
+GET|/server-info||404|file_discovery_025|Apache server info
+
+# ============================================
+# Log Files
+# ============================================
+GET|/access.log||404|file_discovery_026|Web server access log
+GET|/error.log||404|file_discovery_027|Web server error log
+GET|/logs/access.log||404|file_discovery_028|Logs directory access
+GET|/logs/error.log||404|file_discovery_029|Logs directory error
+GET|/var/log/apache2/access.log||404|file_discovery_030|System access log
+
+# ============================================
+# Administrative Files
+# ============================================
+GET|/admin/||401|file_discovery_031|Admin directory discovery
+GET|/administrator/||404|file_discovery_032|Administrator directory
+GET|/wp-admin/||404|file_discovery_033|WordPress admin
+GET|/phpmyadmin/||404|file_discovery_034|phpMyAdmin interface
+GET|/adminer.php||404|file_discovery_035|Adminer database tool
+
+# ============================================
+# Application-specific Files
+# ============================================
+GET|/WEB-INF/web.xml||404|file_discovery_036|Java web.xml file
+GET|/META-INF/MANIFEST.MF||404|file_discovery_037|Java manifest file
+GET|/application.yml||404|file_discovery_038|YAML application config
+GET|/appsettings.json||404|file_discovery_039|.NET app settings
+GET|/connection.xml||404|file_discovery_040|Database connection config

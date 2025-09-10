@@ -1,0 +1,210 @@
+# Test Scenario - Validate All Attack Types and Features
+# Purpose: Test that all attack types and benign user activities work correctly
+
+scenario:
+  name: "test-all-features"
+  description: "Comprehensive 10-minute test to validate all attack types with enhanced verification"
+  duration: 180  # 3 minutes for comprehensive testing
+  random_seed: 20250830
+  attack_types: ["sql_injection", "xss", "command_injection", "directory_traversal", "auth_bypass", "file_discovery", "method_enumeration"]
+  waf_mode: "off"  # Disable WAF for clean testing
+  validation_mode: "strict"  # Enable strict attack validation
+
+# Behavior configuration - equal distribution for testing
+behaviors: #90%
+  attacks:
+  # Test each attack type separately
+  - name: test_sql_injection
+    node: attacker
+    percentage: 0.1  # 10% of time
+    script: /scripts/unified_attack.sh
+    script_args: ["--mode", "basic", "--type", "sql", "--interval", "10"]
+    
+  - name: test_xss
+    node: attacker
+    percentage: 0.1
+    script: /scripts/unified_attack.sh
+    script_args: ["--mode", "basic", "--type", "xss", "--interval", "10"]
+    
+  - name: test_command_injection
+    node: attacker
+    percentage: 0.1
+    script: /scripts/unified_attack.sh
+    script_args: ["--mode", "basic", "--type", "cmd", "--interval", "10"]
+    
+  - name: test_directory_traversal
+    node: attacker
+    percentage: 0.1
+    script: /scripts/unified_attack.sh
+    script_args: ["--mode", "basic", "--type", "dir", "--interval", "10"]
+    
+  - name: test_auth_bypass
+    node: attacker
+    percentage: 0.1
+    script: /scripts/unified_attack.sh
+    script_args: ["--mode", "basic", "--type", "auth", "--interval", "10"]
+    
+  - name: test_file_discovery
+    node: attacker
+    percentage: 0.1
+    script: /scripts/unified_attack.sh
+    script_args: ["--mode", "basic", "--type", "file", "--interval", "10"]
+    
+  - name: test_method_enumeration
+    node: attacker
+    percentage: 0.1
+    script: /scripts/unified_attack.sh
+    script_args: ["--mode", "basic", "--type", "method", "--interval", "10"]
+    
+  # Test advanced multi-phase attack
+  - name: test_advanced_attack
+    node: attacker
+    percentage: 0.15  # 20% for multi-phase testing
+    script: /scripts/advanced_attack.sh
+    script_args: ["--phase", "all", "--interval", "5"]
+
+    # Benign user activities
+  benign_traffic:
+    - name: normal_browsing
+      node: benign_user_1
+      percentage: 0.05  # 38%
+      script: /scripts/benign.sh
+      script_args: ["--target", "http://fancystore.com", "--behavior", "browse", "--interval", "5", "--pages", "10"]
+      
+    - name: product_search
+      node: benign_user_2
+      percentage: 0.05  # 19%
+      script: /scripts/benign.sh
+      script_args: ["--target", "http://fancystore.com", "--behavior", "search", "--interval", "8", "--keywords", "juice,fruit,organic"]
+ 
+# Infrastructure configuration
+infrastructure:
+  networks:
+  - name: internal-net
+    driver: bridge
+  - name: external-net
+    driver: bridge
+    
+  nodes:
+  # Target: Juice Shop
+  - name: juice-shop
+    role: target
+    image: bkimminich/juice-shop
+    networks: ['internal-net']
+    ports: ['3000:3000']
+    environment: ['NODE_ENV=test']
+    
+  # Nginx proxy
+  - name: nginx
+    role: proxy
+    image: nginx:latest
+    networks: ['internal-net', 'external-net']
+    network_aliases:
+      internal-net: ['fancystore.com']
+      external-net: ['fancystore.com']
+    ports: ['80:80']
+    volumes:
+    - ./scenario-securitylogs/confs/nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+    - ./logs/nginx:/var/log/nginx
+    
+  # Attacker container
+  - name: attacker
+    role: attacker
+    image: ras-attacker:latest
+    networks: ['external-net']
+    ports: ['8080:8080', '8443:8443']  # open data receiving port
+    command: ["/bin/bash", "-c", "/scripts/start_services.sh"]  # start services
+    environment:
+    - TARGET_URL=http://fancystore.com
+    - ATTACK_MODE=test
+    - EXPERIMENT_NAME=test-all-features
+    volumes:
+    - ./scenario-securitylogs/confs/attacker:/scripts
+    - ./scenario-securitylogs/scripts:/common_scripts  # common scripts
+    - ./logs/attacker:/logs
+    - ./shared_data:/shared_data  # shared data
+    - ./exfiltrated_data:/exfiltrated_data  # exfiltrated data
+    
+  # Benign user containers
+  - name: benign_user_1
+    role: user
+    image: python:3.9-slim
+    command: tail -f /dev/null
+    networks: ['external-net']
+    environment:
+    - TARGET_URL=http://fancystore.com
+    - USER_TYPE=browser_user
+    volumes:
+    - ./scenario-securitylogs/confs/user:/scripts
+    - ./logs/benign_user_1:/logs
+    
+  - name: benign_user_2
+    role: user
+    image: python:3.9-slim
+    command: tail -f /dev/null
+    networks: ['external-net']
+    environment:
+    - TARGET_URL=http://fancystore.com
+    - USER_TYPE=search_user
+    volumes:
+    - ./scenario-securitylogs/confs/user:/scripts
+    - ./logs/benign_user_2:/logs
+    
+ 
+# Data collection
+data_collection:
+  logs:
+  - source: nginx
+    path: /var/log/nginx/detailed.log
+    output: test_nginx_detailed.csv
+    parser: nginx_parser
+    real_time: true
+  - source: attacker
+    path: /logs/attacker/attacker/attack_*.log
+    output: test_attack_log.csv
+    parser: attacker_parser
+    real_time: true
+  - source: attacker
+    path: /logs/attacker/attacker/data_exfiltration.log
+    output: test_data_exfiltration.csv
+    parser: attacker_parser
+    real_time: true
+  - source: attacker
+    path: /logs/attacker/attacker/exfiltration_events.jsonl
+    output: test_exfiltration_events.json
+    parser: json_parser
+    real_time: true
+  - source: benign_user_1
+    path: /logs/benign_user/benign_user_1/user.log
+    output: test_user_1_log.csv
+    parser: user_parser
+    real_time: true
+  - source: benign_user_2
+    path: /logs/benign_user/benign_user_2/user.log
+    output: test_user_2_log.csv
+    parser: user_parser
+    real_time: true
+  - source: benign_user_3
+    path: /logs/benign_user_3/user.log
+    output: test_user_3_log.csv
+    parser: user_parser
+    real_time: true
+  network:
+  - interface: any
+    filter: net 172.27.0.0/16 or net 172.28.0.0/16
+    output: test_network_traffic.pcap
+    capture_size: 100MB
+
+# Hooks for validation
+hooks:
+  post_node_start:
+  - name: verify_services
+    script: ./hooks/verify_juice_shop.py
+    timeout: 60
+  post_collection:
+  - name: auto_parse_logs
+    script: ./hooks/auto_parse_logs.py
+    timeout: 300
+  - name: validate_attacks
+    script: ./hooks/validate_test_results.py
+    timeout: 300

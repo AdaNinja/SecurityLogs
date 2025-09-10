@@ -1,0 +1,194 @@
+# Test Scenario - Validate All Attack Types and Features with Suricata
+# Purpose: Test that all attack types and benign user activities work correctly with Suricata monitoring
+
+scenario:
+  name: "test-all-features-with-suricata"
+  description: "Comprehensive 3-minute test to validate all attack types with Suricata monitoring"
+  duration: 180  # 3 minutes for comprehensive testing
+  random_seed: 20250830
+  attack_types: ["sql_injection", "xss", "command_injection", "directory_traversal", "auth_bypass", "file_discovery", "method_enumeration"]
+  waf_mode: "off"  # Disable WAF for clean testing
+  validation_mode: "strict"  # Enable strict attack validation
+
+# Behavior configuration - equal distribution for testing
+behaviors: #90%
+  attacks:
+  # Test each attack type separately
+  - name: test_sql_injection
+    node: attacker
+    percentage: 0.1  # 10% of time
+    script: /scripts/unified_attack.sh
+    script_args: ["--mode", "basic", "--type", "sql", "--interval", "10"]
+    
+  - name: test_xss
+    node: attacker
+    percentage: 0.1
+    script: /scripts/unified_attack.sh
+    script_args: ["--mode", "basic", "--type", "xss", "--interval", "10"]
+    
+  - name: test_command_injection
+    node: attacker
+    percentage: 0.1
+    script: /scripts/unified_attack.sh
+    script_args: ["--mode", "basic", "--type", "cmd", "--interval", "10"]
+    
+  - name: test_directory_traversal
+    node: attacker
+    percentage: 0.1
+    script: /scripts/unified_attack.sh
+    script_args: ["--mode", "basic", "--type", "dir", "--interval", "10"]
+    
+  - name: test_auth_bypass
+    node: attacker
+    percentage: 0.1
+    script: /scripts/unified_attack.sh
+    script_args: ["--mode", "basic", "--type", "auth", "--interval", "10"]
+    
+  - name: test_file_discovery
+    node: attacker
+    percentage: 0.1
+    script: /scripts/unified_attack.sh
+    script_args: ["--mode", "basic", "--type", "file", "--interval", "10"]
+    
+  - name: test_method_enumeration
+    node: attacker
+    percentage: 0.1
+    script: /scripts/unified_attack.sh
+    script_args: ["--mode", "basic", "--type", "method", "--interval", "10"]
+
+  # Benign user activities - 10% of time
+  benign_traffic:
+  - name: normal_browsing
+    node: benign_user
+    percentage: 0.05  # 5% of time
+    script: /scripts/benign.sh
+    script_args: ["--target", "http://nginx", "--behavior", "browse", "--frequency", "normal"]
+    
+  - name: product_search
+    node: benign_user
+    percentage: 0.05  # 5% of time
+    script: /scripts/benign.sh
+    script_args: ["--target", "http://nginx", "--behavior", "search", "--frequency", "normal"]
+
+# Infrastructure configuration
+infrastructure:
+  networks:
+  - name: external-net
+    driver: bridge
+  - name: internal-net
+    driver: bridge
+
+  nodes:
+  # Juice Shop application
+  - name: juice-shop
+    role: target
+    image: bkimminich/juice-shop:latest
+    networks: ['internal-net']
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=production
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # Nginx reverse proxy
+  - name: nginx
+    role: proxy
+    image: nginx:alpine
+    networks: ['external-net', 'internal-net']
+    ports:
+      - "80:80"
+    volumes:
+      - ./scenario-securitylogs/confs/nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./logs/nginx:/var/log/nginx
+    depends_on:
+      - juice-shop
+
+  # Attacker node
+  - name: attacker
+    role: attacker
+    image: ras-attacker:latest
+    networks: ['external-net', 'internal-net']
+    ports:
+      - "8080:8080"
+      - "8443:8443"
+    volumes:
+      - ./scenario-securitylogs/confs/attacker:/scripts
+      - ./scenario-securitylogs/scripts:/common_scripts
+      - ./logs/attacker:/logs
+    environment:
+      - TARGET_URL=http://nginx
+      - ATTACK_MODE=comprehensive
+
+  # Benign user node
+  - name: benign_user
+    role: benign
+    image: ras-attacker:latest
+    networks: ['external-net', 'internal-net']
+    volumes:
+      - ./scenario-securitylogs/confs/user:/scripts
+      - ./logs/benign_user:/logs
+    environment:
+      - TARGET_URL=http://nginx
+      - USER_MODE=benign
+
+  # Suricata monitoring node - 新增
+  - name: suricata
+    role: monitor
+    image: cyberrange-suricata:latest
+    networks: ['external-net', 'internal-net']
+    privileged: true
+    cap_add: ['NET_ADMIN', 'NET_RAW']
+    volumes:
+      - ./suricata_config/suricata.yaml:/etc/suricata/suricata.yaml:ro
+      - ./suricata_config/custom.rules:/var/lib/suricata/rules/custom.rules:ro
+      - ./logs/suricata:/var/log/suricata
+    command: ["/start-suricata.sh"]
+
+# Data collection configuration
+data_collection:
+  logs:
+  # Nginx access logs
+  - source: nginx
+    path: /var/log/nginx/detailed.log
+    output: test_nginx_detailed.csv
+    parser: nginx_parser
+    real_time: true
+  
+  # Attacker logs
+  - source: attacker
+    path: /logs/attack_*.log
+    output: test_attack_log.csv
+    parser: attacker_parser
+    real_time: true
+  
+  # Benign user logs
+  - source: benign_user
+    path: /logs/user.log
+    output: test_user_log.csv
+    parser: benign_parser
+    real_time: true
+
+  # Suricata alerts - 新增
+  - source: suricata
+    path: /var/log/suricata/eve.json
+    output: test_suricata_alerts.json
+    parser: suricata_parser
+    real_time: true
+
+  # Network traffic capture
+  network:
+    interface: any
+    filter: "port 80 or port 3000 or port 8080 or port 8443"
+    buffer_size: 64kb
+
+# Validation rules
+validation:
+  min_attacks: 5  # Minimum attacks per type
+  max_attacks: 50  # Maximum attacks per type
+  min_benign: 10  # Minimum benign activities
+  max_benign: 100  # Maximum benign activities
+  timeout: 30  # Validation timeout in seconds

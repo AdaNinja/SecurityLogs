@@ -1,0 +1,151 @@
+# Balanced Dataset for Machine Learning Research
+# Traffic ratio: 7 attack classes evenly distributed (≈12.86% each) + 10% benign
+# Duration: 60 minutes (3600 seconds)
+
+scenario:
+  name: "balanced-ml-dataset"
+  description: "Balanced 1-hour dataset with 30% attack traffic (7 types @ 4.3% each) + 70% benign for ML research"
+  duration: 3600  # 1 hour focused on data quality over quantity
+  random_seed: 20250830
+  attack_types: ["sql_injection", "xss", "command_injection", "directory_traversal", "auth_bypass", "file_discovery", "method_enumeration"]
+  waf_mode: "off"  # No WAF for clean dataset
+  validation_mode: "ml_dataset"  # Enable ML-focused validation
+
+# Behavior configuration - balanced distribution for ML
+behaviors:
+  attacks:
+  # Basic attacks (20% total) - using unified attacker
+  - name: basic_attacks
+    node: attacker
+    percentage: 0.20
+    script: /scripts/unified_attack.sh
+    script_args: ["--mode", "basic", "--type", "all", "--interval", "15"]
+    
+  # Advanced multi-phase attacks (10% total)
+  - name: advanced_attacks
+    node: attacker
+    percentage: 0.10
+    script: /scripts/advanced_attack.sh
+    script_args: ["--phase", "all", "--interval", "30"]
+
+  # Benign user activities (70%)
+  benign_traffic:
+  - name: benign_browsing
+    node: benign_user
+    percentage: 0.40
+    script: /scripts/benign.sh
+    script_args: ["--target", "http://fancystore.com", "--behavior", "browse", "--interval", "8"]
+    
+  - name: benign_shopping
+    node: benign_user
+    percentage: 0.20
+    script: /scripts/benign.sh
+    script_args: ["--target", "http://fancystore.com", "--behavior", "shopping", "--interval", "12"]
+    
+  - name: benign_search
+    node: benign_user
+    percentage: 0.10
+    script: /scripts/benign.sh
+    script_args: ["--target", "http://fancystore.com", "--behavior", "search", "--interval", "15"]
+
+# Infrastructure configuration for ML dataset generation
+infrastructure:
+  networks:
+  - name: internal-net
+    driver: bridge
+  - name: external-net
+    driver: bridge
+    
+  nodes:
+  # Target: Juice Shop
+  - name: juice-shop
+    role: target
+    image: bkimminich/juice-shop
+    networks: ['internal-net']
+    ports: ['3000:3000']
+    environment: ['NODE_ENV=ml_research']
+    
+  # Nginx proxy (no WAF for clean labels)
+  - name: nginx
+    role: proxy
+    image: nginx:latest
+    networks: ['internal-net', 'external-net']
+    network_aliases:
+      internal-net: ['fancystore.com']
+      external-net: ['fancystore.com']
+    ports: ['80:80']
+    volumes:
+    - ./scenario-securitylogs/confs/nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+    - /mnt/mypassport/cyberrange_data/runs/current_run/logs/nginx:/var/log/nginx
+    
+  # Unified attacker for all attack types
+  - name: attacker
+    role: attacker
+    image: ras-attacker:latest
+    networks: ['external-net']
+    ports: ['8080:8080', '8443:8443']  # exfiltration port
+    command: ["/bin/bash", "-c", "/scripts/start_services.sh"]  # start services
+    environment:
+    - TARGET_URL=http://fancystore.com
+    - ATTACK_MODE=balanced_ml
+    - EXPERIMENT_NAME=balanced-ml-dataset
+    volumes:
+    - ./scenario-securitylogs/confs/attacker:/scripts
+    - ./scenario-securitylogs/scripts:/common_scripts
+    - /mnt/mypassport/cyberrange_data/runs/current_run/logs/attacker:/logs
+    - /mnt/mypassport/cyberrange_data/runs/current_run/shared_data:/shared_data  # shared data
+    - /mnt/mypassport/cyberrange_data/runs/current_run/exfiltrated_data:/exfiltrated_data  # exfiltrated data
+    
+  # Benign user
+  - name: benign_user
+    role: user
+    image: python:3.9-slim
+    command: tail -f /dev/null
+    networks: ['external-net']
+    environment:
+    - TARGET_URL=http://fancystore.com
+    - USER_TYPE=ml_benign
+    volumes:
+    - ./scenario-securitylogs/confs/user:/scripts
+    - /mnt/mypassport/cyberrange_data/runs/current_run/logs/benign_user:/logs
+
+# Data collection optimized for ML
+data_collection:
+  logs:
+  - source: nginx
+    path: /var/log/nginx/detailed.log
+    output: /mnt/mypassport/cyberrange_data/runs/current_run/output/ml_dataset_nginx_detailed.csv
+    parser: nginx_parser
+    real_time: true
+  - source: attacker
+    path: /logs/attacker/attack_*.log
+    output: /mnt/mypassport/cyberrange_data/runs/current_run/output/ml_dataset_attacks.csv
+    parser: attacker_parser
+    real_time: true
+  - source: benign_user
+    path: /logs/benign_user/user.log
+    output: /mnt/mypassport/cyberrange_data/runs/current_run/output/ml_dataset_benign.csv
+    parser: user_parser
+    real_time: true
+  network:
+  - interface: any
+    filter: net 172.27.0.0/16 or net 172.28.0.0/16
+    output: /mnt/mypassport/cyberrange_data/runs/current_run/output/ml_dataset_network_traffic.pcap
+    capture_size: 500MB
+
+# ML-specific hooks
+hooks:
+  post_node_start:
+  - name: verify_ml_setup
+    script: ./hooks/verify_ml_setup.py
+    timeout: 60
+  post_collection:
+  - name: generate_ml_features
+    script: ./hooks/extract_ml_features.py
+    timeout: 600
+  - name: validate_class_balance
+    script: ./hooks/validate_balance.py
+    timeout: 300
+  - name: create_ml_splits
+    script: ./hooks/create_train_test_splits.py
+    timeout: 300

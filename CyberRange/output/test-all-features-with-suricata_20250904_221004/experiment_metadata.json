@@ -1,0 +1,12 @@
+{
+  "experiment_name": "test-all-features-with-suricata",
+  "full_experiment_name": "test-all-features-with-suricata_20250904_221004",
+  "config_file": "scenarios/test_all_features_with_suricata.yaml",
+  "created_at": "2025-09-04T22:10:04.605053",
+  "directories": {
+    "exfiltrated_data": "exfiltrated_data/test-all-features-with-suricata_20250904_221004",
+    "shared_data": "shared_data/test-all-features-with-suricata_20250904_221004",
+    "logs": "logs/test-all-features-with-suricata_20250904_221004",
+    "output": "output/test-all-features-with-suricata_20250904_221004"
+  }
+}

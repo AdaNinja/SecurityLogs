@@ -1,7 +1,0 @@
-{
-  "algorithm": "AES-256",
-  "key_size": 256,
-  "mode": "CBC",
-  "iv": "rnIoSeTGZMKQQ2OMfseqmg==",
-  "encrypted_payload": "M8+fFqWrYjzBMvwWeD9JmTFJCjo1tow0iVYNnTvkaKkjnXfppxSLs+fwoR7BvRnt6VsJYVh7YNCyf3XJiPHZ8Q=="
-}

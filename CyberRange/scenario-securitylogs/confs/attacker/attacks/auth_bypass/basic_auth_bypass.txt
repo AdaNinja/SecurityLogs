@@ -1,0 +1,47 @@
+# Authentication Bypass Attack Payloads
+# Format: method|endpoint|payload|expected_code|attack_id|description
+
+# ============================================
+# Default Credentials Attacks
+# ============================================
+POST|/rest/user/login|{"email":"admin@juice-sh.op","password":"admin123"}|401|auth_bypass_001|Default admin credentials
+POST|/rest/user/login|{"email":"administrator@test.com","password":"password"}|401|auth_bypass_002|Common admin password
+POST|/rest/user/login|{"email":"admin@test.com","password":"admin"}|401|auth_bypass_003|Simple admin/admin
+POST|/rest/user/login|{"email":"root@localhost","password":"root"}|401|auth_bypass_004|Root credentials
+POST|/rest/user/login|{"email":"guest@guest.com","password":"guest"}|401|auth_bypass_005|Guest account
+
+# ============================================
+# SQL Injection Authentication Bypass
+# ============================================
+POST|/rest/user/login|{"email":"admin' OR '1'='1' --","password":""}|401|auth_bypass_006|Classic SQL injection bypass
+POST|/rest/user/login|{"email":"admin' OR 1=1#","password":""}|401|auth_bypass_007|MySQL comment bypass
+POST|/rest/user/login|{"email":"admin'/**/OR/**/1=1--","password":""}|401|auth_bypass_008|SQL comment obfuscation
+POST|/rest/user/login|{"email":"admin'; DROP TABLE users; --","password":""}|401|auth_bypass_009|Destructive SQL injection
+POST|/rest/user/login|{"email":"' UNION SELECT email,password FROM users --","password":""}|401|auth_bypass_010|Union-based auth bypass
+
+# ============================================
+# Session Manipulation
+# ============================================
+POST|/rest/user/change-password|{"current":"","new":"hacked","repeat":"hacked"}|401|auth_bypass_011|Password change without current
+GET|/rest/admin/application-configuration||401|auth_bypass_012|Admin endpoint without auth
+GET|/rest/wallet/balance||401|auth_bypass_013|Protected resource access
+POST|/rest/user/reset-password|{"email":"admin@juice-sh.op","answer":"test"}|200|auth_bypass_014|Password reset bypass
+GET|/rest/admin/application-version||401|auth_bypass_015|Admin version endpoint
+
+# ============================================
+# Authorization Bypass
+# ============================================
+PUT|/rest/products/1|{"name":"Hacked Product","price":0}|401|auth_bypass_016|Product modification without auth
+DELETE|/rest/products/1||401|auth_bypass_017|Product deletion without auth
+POST|/api/Users|{"email":"hacker@test.com","password":"test","role":"admin"}|400|auth_bypass_018|Admin role escalation
+GET|/rest/user/whoami||200|auth_bypass_019|User information disclosure
+POST|/rest/user/data-export||401|auth_bypass_020|Data export without auth
+
+# ============================================
+# JWT Token Manipulation
+# ============================================
+GET|/rest/user/authentication-details||401|auth_bypass_021|JWT token enumeration
+POST|/rest/user/login|{"email":"test@test.com","password":"test"}|401|auth_bypass_022|Valid user enumeration
+GET|/api/Users||401|auth_bypass_023|User list enumeration
+POST|/rest/basket/4/checkout||401|auth_bypass_024|Checkout bypass
+GET|/rest/basket/1||401|auth_bypass_025|Basket access bypass

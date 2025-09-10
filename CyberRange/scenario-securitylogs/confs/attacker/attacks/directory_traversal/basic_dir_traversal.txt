@@ -1,0 +1,56 @@
+# Directory Traversal Attack Payloads
+# Format: method|endpoint|payload|expected_code|attack_id|description
+
+# ============================================
+# Basic Directory Traversal
+# ============================================
+GET|/ftp/..%2f..%2f..%2fetc%2fpasswd||404|dir_traversal_001|Basic Unix passwd file access
+GET|/ftp/....//....//etc/passwd||404|dir_traversal_002|Double encoding traversal
+GET|/ftp/../../../etc/shadow||404|dir_traversal_003|Shadow file access
+GET|/ftp/..%5c..%5c..%5cwindows%5csystem32%5cconfig%5csam||404|dir_traversal_004|Windows SAM file access
+GET|/ftp/%2e%2e%2f%2e%2e%2f%2e%2e%2fetc%2fpasswd||404|dir_traversal_005|URL encoded traversal
+
+# ============================================
+# API Endpoint Traversal
+# ============================================
+GET|/rest/products/1/reviews/../../../etc/passwd||404|dir_traversal_006|API endpoint traversal to passwd
+GET|/rest/user/../../etc/hosts||404|dir_traversal_007|User API traversal to hosts
+GET|/api/Users/../../../etc/passwd||404|dir_traversal_008|Users API traversal
+GET|/rest/admin/../../../etc/shadow||404|dir_traversal_009|Admin API traversal
+GET|/rest/basket/../../../proc/version||404|dir_traversal_010|Basket API to proc info
+
+# ============================================
+# Parameter-based Traversal
+# ============================================
+GET|/download?file=../../../etc/passwd||404|dir_traversal_011|Download parameter traversal
+GET|/export?path=../../../../etc/hosts||404|dir_traversal_012|Export path traversal
+GET|/view?template=../../../etc/shadow||404|dir_traversal_013|Template parameter traversal
+GET|/load?config=../../../../etc/fstab||404|dir_traversal_014|Config parameter traversal
+GET|/include?page=../../../proc/cpuinfo||404|dir_traversal_015|Include parameter traversal
+
+# ============================================
+# Windows Directory Traversal
+# ============================================
+GET|/ftp/..%5c..%5c..%5cwindows%5csystem32%5cdrivers%5cetc%5chosts||404|dir_traversal_016|Windows hosts file
+GET|/static/....\\....\\windows\\system32\\config\\sam||404|dir_traversal_017|Windows registry access
+GET|/download?file=..\\..\\..\\windows\\win.ini||404|dir_traversal_018|Windows ini file access
+GET|/view?file=....\\....\\boot.ini||404|dir_traversal_019|Boot configuration access
+GET|/export?path=..\\..\\..\\windows\\system32\\drivers\\etc\\hosts||404|dir_traversal_020|Windows network config
+
+# ============================================
+# Null Byte Injection
+# ============================================
+GET|/download?file=../../../etc/passwd%00.txt||404|dir_traversal_021|Null byte passwd access
+GET|/view?template=../../../../etc/shadow%00.php||404|dir_traversal_022|Null byte shadow access
+GET|/include?page=../../../proc/version%00.html||404|dir_traversal_023|Null byte proc access
+GET|/load?config=../../../../etc/hosts%00.conf||404|dir_traversal_024|Null byte hosts access
+GET|/export?file=../../../etc/fstab%00.xml||404|dir_traversal_025|Null byte fstab access
+
+# ============================================
+# Advanced Traversal Techniques
+# ============================================
+GET|/static/..;/..;/..;/etc/passwd||404|dir_traversal_026|Semicolon separator traversal
+GET|/ftp/..%00../..%00../etc/passwd||404|dir_traversal_027|Null byte in path
+GET|/download?file=....%2f....%2f....%2fetc%2fpasswd||404|dir_traversal_028|Multiple encoding
+GET|/view?path=%2e%2e%5c%2e%2e%5c%2e%2e%5cetc%5cpasswd||404|dir_traversal_029|Mixed encoding
+GET|/api/files?name=..%252f..%252f..%252fetc%252fpasswd||404|dir_traversal_030|Double URL encoding
